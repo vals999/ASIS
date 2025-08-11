@@ -1,0 +1,104 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Jornadas</h2>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" (click)="toggleFormularioAlta()">
+        Crear Jornada
+      </button>
+      <input type="text" class="form-control" style="width: 250px;" placeholder="Buscar..." 
+             [ngModel]="search()" (ngModelChange)="updateSearch($event)">
+    </div>
+  </div>
+
+  <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearJornada()" class="mb-4 border rounded p-3 bg-light">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label">Fecha de la jornada</label>
+        <input type="date" class="form-control" 
+               [ngModel]="nuevaJornada().fecha" 
+               (ngModelChange)="updateNuevaJornadaFecha($event)" 
+               name="fecha" required>
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-success w-100">Guardar</button>
+      </div>
+      <div class="col-md-3">
+        <button type="button" class="btn btn-secondary w-100" (click)="cancelarAlta()">Cancelar</button>
+      </div>
+    </div>
+    
+    <!-- Mensaje de confirmación -->
+    <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
+         [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
+      <i [class]="mensajeExito().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
+      {{ mensajeExito() }}
+    </div>
+  </form>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fecha</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let jornada of jornadasFiltradas()">
+        <!-- Fila normal de la jornada -->
+        <tr>
+          <td>#{{ jornada.id }}</td>
+          <td>{{ jornada.fecha }}</td>
+          <td>
+            <a href="#" class="me-2" (click)="$event.preventDefault(); editarJornada(jornada)">Editar</a>
+            <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarJornada(jornada.id)">Eliminar</a>
+          </td>
+        </tr>
+        
+        <!-- Fila del formulario de edición (solo se muestra si la jornada está siendo editada) -->
+        <tr *ngIf="jornadaEditando() === jornada.id" class="bg-light">
+          <td colspan="3">
+            <div class="p-3 border rounded">
+              <h6 class="mb-3">Editar Jornada #{{ jornada.id }}</h6>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label">Fecha de la jornada</label>
+                  <input type="date" class="form-control" 
+                         [ngModel]="jornadaEditada().fecha" 
+                         (ngModelChange)="updateJornadaEditadaFecha($event)" 
+                         required>
+                </div>
+                <div class="col-md-6">
+                  <div class="d-flex flex-column gap-1 mt-4">
+                    <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
+                      <i class="fa fa-check"></i> Confirmar
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
+                      <i class="fa fa-times"></i> Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Mensaje de validación dentro del formulario de edición -->
+              <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
+                   [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
+                <i [class]="mensajeEdicion().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
+                {{ mensajeEdicion() }}
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+  
+  <!-- Paginación simple (opcional) -->
+  <nav *ngIf="jornadasFiltradas().length > 10">
+    <ul class="pagination justify-content-end">
+      <li class="page-item disabled"><a class="page-link">Anterior</a></li>
+      <li class="page-item active"><a class="page-link">1</a></li>
+      <li class="page-item"><a class="page-link">Siguiente</a></li>
+    </ul>
+  </nav>
+</div>
