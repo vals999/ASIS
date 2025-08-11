@@ -1,0 +1,57 @@
+/* Estilos específicos para el componente de campañas */
+/*.container {
+  max-width: 100%;
+}
+
+.table {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.btn {
+  border-radius: 6px;
+}
+
+.form-control {
+  border-radius: 6px;
+}
+
+.alert {
+  border-radius: 6px;
+  border: none;
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+.border {
+  border: 1px solid #dee2e6 !important;
+}
+
+.text-success {
+  color: #198754 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}*/
