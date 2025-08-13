@@ -1,50 +1,96 @@
-<div class="d-flex">
-  <!-- Sidebar -->
-  <nav class="bg-dark sidebar-nav">
-    <div class="p-4">
-      <h4 class="text-white mb-1">Sistema ASIS</h4>
-      <p class="text-muted small mb-0">Panel de Administración</p>
-    </div>
-    
-    <div class="px-3">
-      <h6 class="text-uppercase text-muted small fw-bold mb-3 px-2">Gestión</h6>
-      <ul class="nav nav-pills flex-column">
-        <li class="nav-item mb-1">
-          <a routerLink="/usuarios" routerLinkActive="active" class="nav-link text-white">
-            Usuarios
-          </a>
-        </li>
-        <li class="nav-item mb-1">
-          <a routerLink="/campanias" routerLinkActive="active" class="nav-link text-white">
-            Campañas
-          </a>
-        </li>
-        <li class="nav-item mb-1">
-          <a routerLink="/jornadas" routerLinkActive="active" class="nav-link text-white">
-            Jornadas
-          </a>
-        </li>
-        <li class="nav-item mb-1">
-          <a routerLink="/barrios" routerLinkActive="active" class="nav-link text-white">
-            Barrios
-          </a>
-        </li>
-        <li class="nav-item mb-1">
-          <a routerLink="/zonas" routerLinkActive="active" class="nav-link text-white">
-            Zonas
-          </a>
-        </li>
-        <li class="nav-item mb-1">
-          <a routerLink="/encuestadores" routerLinkActive="active" class="nav-link text-white">
-            Encuestadores
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+@if (authService.isAuthenticated()) {
+  <div class="d-flex">
+    <!-- Sidebar -->
+    <nav class="bg-dark sidebar-nav">
+      <div class="p-4">
+        <h4 class="text-white mb-1">Sistema ASIS</h4>
+        <p class="text-muted small mb-0">Panel de Administración</p>
+        @if (authService.currentUser()) {
+          <p class="text-muted small mt-2">
+            Bienvenido, {{ authService.currentUser()?.nombreUsuario }}
+          </p>
+        }
+      </div>
+      
+      <div class="px-3">
+        <h6 class="text-uppercase text-muted small fw-bold mb-3 px-2">Gestión</h6>
+        <ul class="nav nav-pills flex-column">
+          <!-- Menú de Usuarios con submenú -->
+          <li class="nav-item mb-1">
+            <div class="dropdown">
+              <button 
+                class="nav-link text-white w-100 text-start border-0 bg-transparent dropdown-toggle d-flex justify-content-between align-items-center"
+                type="button"
+                (click)="toggleUsuariosMenu()"
+                [class.active]="isUsuariosMenuOpen() || isUsuariosRoute()"
+              >
+                <span>Usuarios</span>
+                <i class="bi" [class.bi-chevron-down]="!isUsuariosMenuOpen()" [class.bi-chevron-up]="isUsuariosMenuOpen()"></i>
+              </button>
+              @if (isUsuariosMenuOpen()) {
+                <ul class="nav nav-pills flex-column ms-3 mt-1">
+                  <li class="nav-item mb-1">
+                    <a routerLink="/usuarios" routerLinkActive="active" class="nav-link text-white-50 py-1">
+                      <i class="bi bi-people me-2"></i>Todos los Usuarios
+                    </a>
+                  </li>
+                  @if (authService.currentUser()?.perfil === 'ADMINISTRADOR') {
+                    <li class="nav-item mb-1">
+                      <a routerLink="/usuarios-pendientes" routerLinkActive="active" class="nav-link text-white-50 py-1">
+                        <i class="bi bi-clock me-2"></i>Usuarios Pendientes
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </li>
+          
+          <li class="nav-item mb-1">
+            <a routerLink="/campanias" routerLinkActive="active" class="nav-link text-white">
+              Campañas
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a routerLink="/jornadas" routerLinkActive="active" class="nav-link text-white">
+              Jornadas
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a routerLink="/barrios" routerLinkActive="active" class="nav-link text-white">
+              Barrios
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a routerLink="/zonas" routerLinkActive="active" class="nav-link text-white">
+              Zonas
+            </a>
+          </li>
+          <li class="nav-item mb-1">
+            <a routerLink="/encuestadores" routerLinkActive="active" class="nav-link text-white">
+              Encuestadores
+            </a>
+          </li>
+        </ul>
+        
+        <!-- Logout button -->
+        <div class="px-2 mt-4">
+          <button 
+            (click)="logout()" 
+            class="btn btn-outline-light btn-sm w-100"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </nav>
 
-  <!-- Main Content -->
-  <main class="flex-fill">
-    <router-outlet></router-outlet>
-  </main>
-</div>
+    <!-- Main Content -->
+    <main class="flex-fill">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+} @else {
+  <!-- Solo mostrar el outlet cuando no está autenticado (login) -->
+  <router-outlet></router-outlet>
+}

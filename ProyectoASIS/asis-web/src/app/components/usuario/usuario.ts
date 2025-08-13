@@ -56,9 +56,12 @@ export class UsuarioComponent implements OnInit, OnDestroy {
     const usuarios = this.usuariosService.usuarios();
     const searchTerm = this._search().toLowerCase();
     
-    if (!searchTerm) return usuarios;
+    // Filtrar solo usuarios habilitados
+    const usuariosHabilitados = usuarios.filter(u => u.habilitado);
     
-    return usuarios.filter(u =>
+    if (!searchTerm) return usuariosHabilitados;
+    
+    return usuariosHabilitados.filter(u =>
       u.nombreUsuario.toLowerCase().includes(searchTerm) ||
       u.email.toLowerCase().includes(searchTerm) ||
       u.perfil.toLowerCase().includes(searchTerm)

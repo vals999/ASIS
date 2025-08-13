@@ -18,11 +18,13 @@ export class UsuariosService {
 
   // Signals para el estado global
   private _usuarios = signal<Usuario[]>([]);
+  private _usuariosPendientes = signal<Usuario[]>([]);
   private _loading = signal<boolean>(false);
   private _error = signal<string | null>(null);
 
   // Signals públicos de solo lectura
   readonly usuarios = this._usuarios.asReadonly();
+  readonly usuariosPendientes = this._usuariosPendientes.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
 
@@ -31,6 +33,7 @@ export class UsuariosService {
   readonly usuariosHabilitados = computed(() => 
     this._usuarios().filter(u => u.habilitado).length
   );
+  readonly totalUsuariosPendientes = computed(() => this._usuariosPendientes().length);
 
   constructor(private http: HttpClient) {}
 
@@ -106,6 +109,44 @@ export class UsuariosService {
         catchError(error => {
           console.error('Error al eliminar usuario:', error);
           this._error.set('Error al eliminar usuario');
+          this._loading.set(false);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  getUsuariosPendientes(): Observable<Usuario[]> {
+    this._loading.set(true);
+    this._error.set(null);
+    
+    return this.http.get<Usuario[]>(`${this.apiUrl}/pendientes`)
+      .pipe(
+        tap(usuarios => {
+          this._usuariosPendientes.set(usuarios);
+          this._loading.set(false);
+        }),
+        catchError(error => {
+          console.error('Error al obtener usuarios pendientes:', error);
+          this._error.set('Error al cargar usuarios pendientes');
+          this._loading.set(false);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  habilitarUsuario(id: number): Observable<any> {
+    this._loading.set(true);
+    
+    return this.http.put(`${this.apiUrl}/${id}/habilitar`, {}, { responseType: 'text' })
+      .pipe(
+        tap(() => {
+          // Remover el usuario de la lista de pendientes
+          this._usuariosPendientes.update(usuarios => usuarios.filter(u => u.id !== id));
+          this._loading.set(false);
+        }),
+        catchError(error => {
+          console.error('Error al habilitar usuario:', error);
+          this._error.set('Error al habilitar usuario');
           this._loading.set(false);
           return throwError(() => error);
         })
