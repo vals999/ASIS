@@ -1,0 +1,199 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Usuarios</h2>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" (click)="toggleFormularioAlta()">
+        Crear Usuario
+      </button>
+      <input type="text" 
+             class="form-control" 
+             style="width: 250px;" 
+             placeholder="Buscar..." 
+             [value]="search()"
+             (input)="updateSearch($any($event.target).value)">
+    </div>
+  </div>
+
+  <!-- Indicador de carga -->
+  <div *ngIf="usuariosService.loading()" class="text-center py-3">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Mensaje de error global -->
+  <div *ngIf="usuariosService.error()" class="alert alert-danger">
+    {{ usuariosService.error() }}
+    <button class="btn btn-sm btn-outline-danger ms-2" 
+            (click)="usuariosService.clearError()">
+      Cerrar
+    </button>
+  </div>
+
+  <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearUsuario()" class="mb-4 border rounded p-3 bg-light">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Nombre de usuario</label>
+        <input type="text" 
+               class="form-control" 
+               [value]="nuevoUsuario().nombreUsuario"
+               (input)="updateNuevoUsuarioNombre($any($event.target).value)"
+               required>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Email</label>
+        <input type="email" 
+               class="form-control" 
+               [value]="nuevoUsuario().email"
+               (input)="updateNuevoUsuarioEmail($any($event.target).value)"
+               required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Contraseña</label>
+        <input type="password" 
+               class="form-control" 
+               [value]="nuevoUsuario().contrasena"
+               (input)="updateNuevoUsuarioContrasena($any($event.target).value)"
+               required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Rol</label>
+        <select class="form-select" 
+                [value]="nuevoUsuario().perfil"
+                (change)="updateNuevoUsuarioPerfil($any($event.target).value)"
+                required>
+          <option value="">Seleccionar rol</option>
+          <option *ngFor="let opcion of opcionesPerfiles" [value]="opcion.value">
+            {{ opcion.label }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <label class="form-label">Habilitado</label>
+        <select class="form-select" 
+                [value]="nuevoUsuario().habilitado"
+                (change)="updateNuevoUsuarioHabilitado($any($event.target).value)">
+          <option [value]="true">Sí</option>
+          <option [value]="false">No</option>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-success w-100">Guardar</button>
+      </div>
+      <div class="col-md-1">
+        <button type="button" class="btn btn-secondary w-100" (click)="cancelarAlta()">Cancelar</button>
+      </div>
+    </div>
+    
+    <!-- Mensaje de confirmación -->
+    <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
+         [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
+      {{ mensajeExito() }}
+    </div>
+  </form>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre de usuario</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Habilitado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let usuario of usuariosFiltrados()">
+        <!-- Fila normal del usuario -->
+        <tr>
+          <td>#{{ usuario.id }}</td>
+          <td>{{ usuario.nombreUsuario }}</td>
+          <td>{{ usuario.email }}</td>
+          <td>{{ usuario.perfil }}</td>
+          <td>
+            <span [ngClass]="usuario.habilitado ? 'text-success' : 'text-danger'">
+              {{ usuario.habilitado ? 'Sí' : 'No' }}
+            </span>
+          </td>
+          <td>
+            <a href="#" class="me-2" (click)="$event.preventDefault(); editarUsuario(usuario)">Editar</a>
+            <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarUsuario(usuario.id)">Eliminar</a>
+          </td>
+        </tr>
+        
+        <!-- Fila del formulario de edición -->
+        <tr *ngIf="usuarioEditando() === usuario.id" class="bg-light">
+          <td colspan="6">
+            <div class="p-3 border rounded">
+              <h6 class="mb-3">Editar Usuario #{{ usuario.id }}</h6>
+              <div class="row g-2">
+                <div class="col-md-3">
+                  <label class="form-label">Nombre de usuario</label>
+                  <input type="text" 
+                         class="form-control" 
+                         [value]="usuarioEditado().nombreUsuario"
+                         (input)="updateUsuarioEditadoNombre($any($event.target).value)"
+                         required>
+                </div>
+                <div class="col-md-3">
+                  <label class="form-label">Email</label>
+                  <input type="email" 
+                         class="form-control" 
+                         [value]="usuarioEditado().email"
+                         (input)="updateUsuarioEditadoEmail($any($event.target).value)"
+                         required>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Nueva Contraseña</label>
+                  <input type="password" 
+                         class="form-control" 
+                         [value]="usuarioEditado().contrasena"
+                         (input)="updateUsuarioEditadoContrasena($any($event.target).value)">
+                  <small class="text-muted">Opcional</small>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Rol</label>
+                  <select class="form-select" 
+                          [value]="usuarioEditado().perfil"
+                          (change)="updateUsuarioEditadoPerfil($any($event.target).value)"
+                          required>
+                    <option value="">Seleccionar rol</option>
+                    <option *ngFor="let opcion of opcionesPerfiles" [value]="opcion.value">
+                      {{ opcion.label }}
+                    </option>
+                  </select>
+                </div>
+                <div class="col-md-1">
+                  <label class="form-label">Habilitado</label>
+                  <select class="form-select" 
+                          [value]="usuarioEditado().habilitado"
+                          (change)="updateUsuarioEditadoHabilitado($any($event.target).value)">
+                    <option [value]="true">Sí</option>
+                    <option [value]="false">No</option>
+                  </select>
+                </div>
+                <div class="col-md-1">
+                  <div class="d-flex flex-column gap-1 mt-4">
+                    <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
+                      Confirmar
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Mensaje de validación dentro del formulario de edición -->
+              <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
+                   [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
+                {{ mensajeEdicion() }}
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+</div>

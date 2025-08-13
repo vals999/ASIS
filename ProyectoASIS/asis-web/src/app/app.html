@@ -1,0 +1,50 @@
+<div class="d-flex">
+  <!-- Sidebar -->
+  <nav class="bg-dark sidebar-nav">
+    <div class="p-4">
+      <h4 class="text-white mb-1">Sistema ASIS</h4>
+      <p class="text-muted small mb-0">Panel de Administración</p>
+    </div>
+    
+    <div class="px-3">
+      <h6 class="text-uppercase text-muted small fw-bold mb-3 px-2">Gestión</h6>
+      <ul class="nav nav-pills flex-column">
+        <li class="nav-item mb-1">
+          <a routerLink="/usuarios" routerLinkActive="active" class="nav-link text-white">
+            Usuarios
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a routerLink="/campanias" routerLinkActive="active" class="nav-link text-white">
+            Campañas
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a routerLink="/jornadas" routerLinkActive="active" class="nav-link text-white">
+            Jornadas
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a routerLink="/barrios" routerLinkActive="active" class="nav-link text-white">
+            Barrios
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a routerLink="/zonas" routerLinkActive="active" class="nav-link text-white">
+            Zonas
+          </a>
+        </li>
+        <li class="nav-item mb-1">
+          <a routerLink="/encuestadores" routerLinkActive="active" class="nav-link text-white">
+            Encuestadores
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="flex-fill">
+    <router-outlet></router-outlet>
+  </main>
+</div>

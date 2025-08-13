@@ -1,0 +1,125 @@
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Zonas</h2>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" (click)="toggleFormularioAlta()">
+        Crear Zona
+      </button>
+      <input type="text" class="form-control" style="width: 250px;" placeholder="Buscar..." 
+             [ngModel]="search()" (ngModelChange)="updateSearch($event)">
+    </div>
+  </div>
+
+  <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearZona()" class="mb-4 border rounded p-3 bg-light">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label">Nombre de la zona</label>
+        <input type="text" class="form-control" 
+               [ngModel]="nuevaZona().nombre" 
+               (ngModelChange)="updateNuevaZonaNombre($event)" 
+               name="nombre" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Geolocalización</label>
+        <input type="text" class="form-control" 
+               [ngModel]="nuevaZona().geolocalizacion" 
+               (ngModelChange)="updateNuevaZonaGeolocalizacion($event)" 
+               name="geolocalizacion" placeholder="-34.6037, -58.3816" required>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-success w-100">Guardar</button>
+      </div>
+      <div class="col-md-2">
+        <button type="button" class="btn btn-secondary w-100" (click)="cancelarAlta()">Cancelar</button>
+      </div>
+    </div>
+    
+    <!-- Mensaje de confirmación -->
+    <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
+         [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
+      <i [class]="mensajeExito().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
+      {{ mensajeExito() }}
+    </div>
+  </form>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Geolocalización</th>
+        <th>Barrio</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let zona of zonasFiltradas()">
+        <!-- Fila normal de la zona -->
+        <tr>
+          <td>#{{ zona.id }}</td>
+          <td>{{ zona.nombre }}</td>
+          <td>{{ zona.geolocalizacion }}</td>
+          <td>
+            <span *ngIf="zona.barrio" class="badge bg-secondary">{{ zona.barrio.nombre }}</span>
+            <span *ngIf="!zona.barrio" class="text-muted">Sin barrio</span>
+          </td>
+          <td>
+            <a href="#" class="me-2" (click)="$event.preventDefault(); editarZona(zona)">Editar</a>
+            <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarZona(zona.id)">Eliminar</a>
+          </td>
+        </tr>
+        
+        <!-- Fila del formulario de edición (solo se muestra si la zona está siendo editada) -->
+        <tr *ngIf="zonaEditando() === zona.id" class="bg-light">
+          <td colspan="5">
+            <div class="p-3 border rounded">
+              <h6 class="mb-3">Editar Zona #{{ zona.id }}</h6>
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label">Nombre de la zona</label>
+                  <input type="text" class="form-control" 
+                         [ngModel]="zonaEditada().nombre" 
+                         (ngModelChange)="updateZonaEditadaNombre($event)" 
+                         required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Geolocalización</label>
+                  <input type="text" class="form-control" 
+                         [ngModel]="zonaEditada().geolocalizacion" 
+                         (ngModelChange)="updateZonaEditadaGeolocalizacion($event)" 
+                         placeholder="-34.6037, -58.3816" required>
+                </div>
+                <div class="col-md-4">
+                  <div class="d-flex flex-column gap-1 mt-4">
+                    <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
+                      <i class="fa fa-check"></i> Confirmar
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
+                      <i class="fa fa-times"></i> Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Mensaje de validación dentro del formulario de edición -->
+              <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
+                   [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
+                <i [class]="mensajeEdicion().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
+                {{ mensajeEdicion() }}
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-container>
+    </tbody>
+  </table>
+  
+  <!-- Paginación simple (opcional) -->
+  <nav *ngIf="zonasFiltradas().length > 10">
+    <ul class="pagination justify-content-end">
+      <li class="page-item disabled"><a class="page-link">Anterior</a></li>
+      <li class="page-item active"><a class="page-link">1</a></li>
+      <li class="page-item"><a class="page-link">Siguiente</a></li>
+    </ul>
+  </nav>
+</div>

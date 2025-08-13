@@ -1,0 +1,117 @@
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>Encuestadores</h2>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" (click)="toggleFormularioAlta()">
+          Crear Encuestador
+        </button>
+        <input type="text" class="form-control" style="width: 250px;" placeholder="Buscar..." 
+               [ngModel]="search()" (ngModelChange)="updateSearch($event)">
+      </div>
+    </div>
+  
+    <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearEncuestador()" class="mb-4 border rounded p-3 bg-light">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label">Ocupación</label>
+          <input type="text" class="form-control" 
+                 [ngModel]="nuevoEncuestador().ocupacion" 
+                 (ngModelChange)="updateNuevoEncuestadorOcupacion($event)" 
+                 name="ocupacion" required>
+        </div>
+        <div class="col-md-3">
+          <button type="submit" class="btn btn-success w-100">Guardar</button>
+        </div>
+        <div class="col-md-3">
+          <button type="button" class="btn btn-secondary w-100" (click)="cancelarAlta()">Cancelar</button>
+        </div>
+      </div>
+      
+      <!-- Mensaje de confirmación -->
+      <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
+           [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
+        <i [class]="mensajeExito().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
+        {{ mensajeExito() }}
+      </div>
+    </form>
+  
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Ocupación</th>
+          <th>Datos Personales</th>
+          <th>Usuario</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let encuestador of encuestadoresFiltrados()">
+          <!-- Fila normal del encuestador -->
+          <tr>
+            <td>#{{ encuestador.id }}</td>
+            <td>{{ encuestador.ocupacion }}</td>
+            <td>
+              <div *ngIf="encuestador.datosPersonales" class="small">
+                <strong>{{ encuestador.datosPersonales.nombre }} {{ encuestador.datosPersonales.apellido }}</strong><br>
+                <span class="text-muted">DNI: {{ encuestador.datosPersonales.dni }}</span><br>
+                <span class="text-muted">{{ encuestador.datosPersonales.email }}</span>
+              </div>
+              <span *ngIf="!encuestador.datosPersonales" class="text-muted">Sin datos personales</span>
+            </td>
+            <td>
+              <span *ngIf="encuestador.usuario" class="badge bg-info">{{ encuestador.usuario.nombreUsuario }}</span>
+              <span *ngIf="!encuestador.usuario" class="text-muted">Sin usuario</span>
+            </td>
+            <td>
+              <a href="#" class="me-2" (click)="$event.preventDefault(); editarEncuestador(encuestador)">Editar</a>
+              <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarEncuestador(encuestador.id)">Eliminar</a>
+            </td>
+          </tr>
+          
+          <!-- Fila del formulario de edición (solo se muestra si el encuestador está siendo editado) -->
+          <tr *ngIf="encuestadorEditando() === encuestador.id" class="bg-light">
+            <td colspan="5">
+              <div class="p-3 border rounded">
+                <h6 class="mb-3">Editar Encuestador #{{ encuestador.id }}</h6>
+                <div class="row g-2">
+                  <div class="col-md-6">
+                    <label class="form-label">Ocupación</label>
+                    <input type="text" class="form-control" 
+                           [ngModel]="encuestadorEditado().ocupacion" 
+                           (ngModelChange)="updateEncuestadorEditadoOcupacion($event)" required>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="d-flex flex-column gap-1 mt-4">
+                      <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
+                        <i class="fa fa-check"></i> Confirmar
+                      </button>
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
+                        <i class="fa fa-times"></i> Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Mensaje de validación dentro del formulario de edición -->
+                <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
+                     [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
+                  <i [class]="mensajeEdicion().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
+                  {{ mensajeEdicion() }}
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+    
+    <!-- Paginación simple (opcional) -->
+    <nav *ngIf="encuestadoresFiltrados().length > 10">
+      <ul class="pagination justify-content-end">
+        <li class="page-item disabled"><a class="page-link">Anterior</a></li>
+        <li class="page-item active"><a class="page-link">1</a></li>
+        <li class="page-item"><a class="page-link">Siguiente</a></li>
+      </ul>
+    </nav>
+  </div>
