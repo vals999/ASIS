@@ -184,4 +184,56 @@ public class UsuarioController {
                     .entity("Error: " + e.getMessage()).build();
         }
     }
+
+    @GET
+    @Path("/pendientes")
+    @Operation(summary = "Obtener usuarios pendientes", 
+    description = "Retorna la lista de usuarios no habilitados",
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Lista de usuarios pendientes obtenida exitosamente"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public Response obtenerUsuariosPendientes() {
+        try {
+            List<Usuario> usuariosPendientes = usuarioDAO.obtenerUsuariosPendientes();
+            return Response.ok(usuariosPendientes).build();
+        } catch (Exception e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error: " + e.getMessage()).build();
+        }
+    }
+
+    @PUT
+    @Path("/{id}/habilitar")
+    @Operation(summary = "Habilitar usuario", 
+    description = "Habilita un usuario para que pueda acceder al sistema",
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Usuario habilitado exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+        @ApiResponse(responseCode = "400", description = "Usuario ya está habilitado"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public Response habilitarUsuario(@PathParam("id") Long id) {
+        try {
+            Usuario usuario = usuarioDAO.obtenerPorId(id);
+            if (usuario == null) {
+                return Response.status(Status.NOT_FOUND)
+                    .entity("Usuario no encontrado").build();
+            }
+
+            if (usuario.isHabilitado()) {
+                return Response.status(Status.BAD_REQUEST)
+                    .entity("El usuario ya está habilitado").build();
+            }
+
+            usuario.setHabilitado(true);
+            usuarioDAO.actualizar(usuario);
+
+            return Response.ok()
+                .entity("Usuario habilitado exitosamente").build();
+        } catch (Exception e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error: " + e.getMessage()).build();
+        }
+    }
 }

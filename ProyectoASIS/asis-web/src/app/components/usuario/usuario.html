@@ -99,7 +99,6 @@
         <th>Nombre de usuario</th>
         <th>Email</th>
         <th>Rol</th>
-        <th>Habilitado</th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -112,19 +111,13 @@
           <td>{{ usuario.email }}</td>
           <td>{{ usuario.perfil }}</td>
           <td>
-            <span [ngClass]="usuario.habilitado ? 'text-success' : 'text-danger'">
-              {{ usuario.habilitado ? 'Sí' : 'No' }}
-            </span>
-          </td>
-          <td>
             <a href="#" class="me-2" (click)="$event.preventDefault(); editarUsuario(usuario)">Editar</a>
             <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarUsuario(usuario.id)">Eliminar</a>
           </td>
         </tr>
-        
         <!-- Fila del formulario de edición -->
         <tr *ngIf="usuarioEditando() === usuario.id" class="bg-light">
-          <td colspan="6">
+          <td colspan="5">
             <div class="p-3 border rounded">
               <h6 class="mb-3">Editar Usuario #{{ usuario.id }}</h6>
               <div class="row g-2">
@@ -164,16 +157,7 @@
                     </option>
                   </select>
                 </div>
-                <div class="col-md-1">
-                  <label class="form-label">Habilitado</label>
-                  <select class="form-select" 
-                          [value]="usuarioEditado().habilitado"
-                          (change)="updateUsuarioEditadoHabilitado($any($event.target).value)">
-                    <option [value]="true">Sí</option>
-                    <option [value]="false">No</option>
-                  </select>
-                </div>
-                <div class="col-md-1">
+                <div class="col-md-2">
                   <div class="d-flex flex-column gap-1 mt-4">
                     <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
                       Confirmar
