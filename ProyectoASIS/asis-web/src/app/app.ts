@@ -27,4 +27,14 @@ export class App {
     const currentUrl = this.router.url;
     return currentUrl.includes('/usuarios');
   }
+
+  abmlMenuOpen = false;
+
+toggleAbmlMenu() {
+  this.abmlMenuOpen = !this.abmlMenuOpen;
+}
+
+isAbmlMenuOpen() {
+  return this.abmlMenuOpen;
+}
 }

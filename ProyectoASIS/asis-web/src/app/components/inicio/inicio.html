@@ -1,1 +1,6 @@
-<p>inicio works!</p>
+<div class="container mt-4">
+  <h2>Bienvenido {{ authService.currentUser()?.nombreUsuario ? ', ' + authService.currentUser()?.nombreUsuario: '' }}</h2>
+  <p *ngIf="perfil === 'ADMINISTRADOR'">Panel de administrador</p>
+  <p *ngIf="perfil === 'PERSONAL_SALUD'">Panel de personal de salud</p>
+  <p *ngIf="perfil === 'REFERENTE_ORG_SOCIAL'">Panel de referente de organización social</p>
+</div>
