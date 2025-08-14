@@ -1,0 +1,76 @@
+<div class="container-fluid vh-100 bg-light d-flex align-items-center justify-content-center">
+  <div class="row w-100">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4 col-xl-3 mx-auto">
+      <div class="card shadow">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <h2 class="card-title h3 fw-bold text-dark mb-2">Sistema ASIS</h2>
+            <p class="text-muted">Iniciar Sesión</p>
+          </div>
+          
+          <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+            <div class="mb-3">
+              <label for="nombreUsuario" class="form-label fw-medium">Usuario:</label>
+              <input
+                type="text"
+                id="nombreUsuario"
+                name="nombreUsuario"
+                [(ngModel)]="credentials.nombreUsuario"
+                required
+                class="form-control"
+                [disabled]="authService.loading()"
+                placeholder="Ingrese su usuario"
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="contrasena" class="form-label fw-medium">Contraseña:</label>
+              <input
+                type="password"
+                id="contrasena"
+                name="contrasena"
+                [(ngModel)]="credentials.contrasena"
+                required
+                class="form-control"
+                [disabled]="authService.loading()"
+                placeholder="Ingrese su contraseña"
+              />
+            </div>
+
+            @if (errorMessage()) {
+              <div class="alert alert-danger" role="alert">
+                {{ errorMessage() }}
+              </div>
+            }
+
+            <div class="d-grid">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="!loginForm.form.valid || authService.loading()"
+              >
+                @if (authService.loading()) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <span>Iniciando sesión...</span>
+                } @else {
+                  <span>Iniciar Sesión</span>
+                }
+              </button>
+            </div>
+
+            <div class="text-center mt-3">
+              <button
+                type="button"
+                class="btn btn-link text-decoration-none"
+                (click)="goToRegister()"
+                [disabled]="authService.loading()"
+              >
+                ¿No tienes cuenta? Registrarse
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

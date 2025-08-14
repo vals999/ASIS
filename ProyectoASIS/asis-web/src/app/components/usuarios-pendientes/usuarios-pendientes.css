@@ -1,0 +1,64 @@
+/* Estilos personalizados para usuarios pendientes */
+
+.card {
+  border: 1px solid #dee2e6;
+  overflow: hidden;
+}
+
+.card-header {
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+/* Eliminar la línea horizontal sobrante del último elemento */
+.card-body .row.border-bottom:last-child {
+  border-bottom: none !important;
+}
+
+/* Mejorar el efecto hover para que sea más sutil */
+.card-body .row.border-bottom {
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.card-body .row.border-bottom:hover {
+  background-color: #f7f9fc !important; /* Color azul muy claro en lugar del gris */
+  cursor: pointer;
+}
+
+/* Asegurar que los bordes se vean correctamente */
+.card-body {
+  border: none;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+}
+
+/* Mejorar el espaciado de los botones */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .col-md-3, .col-md-4, .col-md-2 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-header .row {
+    display: none;
+  }
+  
+  .card-body .row {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem !important;
+  }
+  
+  .card-body .row.border-bottom:hover {
+    background-color: transparent !important;
+  }
+}
