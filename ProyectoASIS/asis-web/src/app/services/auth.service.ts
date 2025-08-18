@@ -85,10 +85,11 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials)
       .pipe(
         tap(response => {
-          // Guardar token y usuario en localStorage solo si estamos en el navegador
+          // Guardar token y usuario en sessionStorage solo si estamos en el navegador
+          // sessionStorage se borra cuando se cierra el navegador o se reinicia
           if (this.isBrowser) {
-            localStorage.setItem(this.tokenKey, response.token);
-            localStorage.setItem(this.userKey, JSON.stringify(response.usuario));
+            sessionStorage.setItem(this.tokenKey, response.token);
+            sessionStorage.setItem(this.userKey, JSON.stringify(response.usuario));
           }
           
           // Actualizar signals
@@ -109,10 +110,10 @@ export class AuthService {
   }
 
   logout(): void {
-    // Limpiar localStorage solo si estamos en el navegador
+    // Limpiar sessionStorage solo si estamos en el navegador
     if (this.isBrowser) {
-      localStorage.removeItem(this.tokenKey);
-      localStorage.removeItem(this.userKey);
+      sessionStorage.removeItem(this.tokenKey);
+      sessionStorage.removeItem(this.userKey);
     }
     
     // Actualizar signals
@@ -125,7 +126,7 @@ export class AuthService {
 
   getToken(): string | null {
     if (!this.isBrowser) return null;
-    return localStorage.getItem(this.tokenKey);
+    return sessionStorage.getItem(this.tokenKey);
   }
 
   private hasValidToken(): boolean {
@@ -147,7 +148,7 @@ export class AuthService {
   private getUserFromStorage(): AuthUser | null {
     if (!this.isBrowser) return null;
     
-    const userStr = localStorage.getItem(this.userKey);
+    const userStr = sessionStorage.getItem(this.userKey);
     if (!userStr) return null;
     
     try {

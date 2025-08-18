@@ -37,7 +37,7 @@ public class AuthController {
 
     // Clave secreta para JWT (en producción debe estar en variables de entorno)
     private static final String JWT_SECRET = "miClaveSecretaParaJWTDeProyectoASIS2024";
-    private static final long JWT_EXPIRATION = 86400000; // 24 horas en milisegundos
+    private static final long JWT_EXPIRATION = 1800000; // 30 minutos
 
     @POST
     @Path("/login")

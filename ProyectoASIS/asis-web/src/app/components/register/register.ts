@@ -72,6 +72,11 @@ export class RegisterComponent {
           contrasena: '',
           perfil: 'PERSONAL_SALUD'
         };
+        
+        // Redirección automática después de 3 segundos
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 3000);
       },
       error: (error) => {
         console.error('Error en registro:', error);

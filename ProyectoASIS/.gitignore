@@ -1,1 +1,7 @@
 /target/
+
+#eclipse
+ProyectoASIS/src/main/resources/META-INF/persistence.XML
+ProyectoASIS/.classpath
+ProyectoASIS/.project
+ProyectoASIS/.settings/
