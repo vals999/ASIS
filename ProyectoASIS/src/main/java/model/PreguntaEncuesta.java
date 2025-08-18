@@ -33,6 +33,9 @@ public class PreguntaEncuesta implements EliminableLogico{
 	
 	@Column(name = "fecha_eliminacion", columnDefinition = "TIMESTAMP(0)")
 	private LocalDateTime fechaEliminacion;
+
+	@Column(name = "pregunta_csv")
+	private String preguntaCsv;
 	
     @OneToMany(mappedBy = "preguntaEncuesta", fetch = FetchType.LAZY)
     private List<RespuestaEncuesta> respuestasEncuesta;
@@ -127,21 +130,29 @@ public class PreguntaEncuesta implements EliminableLogico{
 		this.fechaEliminacion = fechaEliminacion;
 	}
 	
-	 public void agregarRespuestaEncuesta(RespuestaEncuesta respuestaEncuesta) {
-		 if (respuestaEncuesta != null && !this.respuestasEncuesta.contains(respuestaEncuesta)) {
-			 this.respuestasEncuesta.add(respuestaEncuesta);
-			 respuestaEncuesta.setPregunta(this);   
-		 }
-	 }
+	public void agregarRespuestaEncuesta(RespuestaEncuesta respuestaEncuesta) {
+		if (respuestaEncuesta != null && !this.respuestasEncuesta.contains(respuestaEncuesta)) {
+			this.respuestasEncuesta.add(respuestaEncuesta);
+			respuestaEncuesta.setPregunta(this);   
+		}
+	}
 
-	 public void quitarRespuestaEncuesta(RespuestaEncuesta respuestaEncuesta) {
-		 if (respuestaEncuesta != null && this.respuestasEncuesta.remove(respuestaEncuesta)) {
-			 respuestaEncuesta.setPregunta(null);
-		 }
-	 }
+	public void quitarRespuestaEncuesta(RespuestaEncuesta respuestaEncuesta) {
+		if (respuestaEncuesta != null && this.respuestasEncuesta.remove(respuestaEncuesta)) {
+			respuestaEncuesta.setPregunta(null);
+		}
+	}
 
-	 public boolean tieneRespuestaEncuesta(RespuestaEncuesta respuestaEncuesta) {
-		 return respuestaEncuesta != null && this.respuestasEncuesta.contains(respuestaEncuesta);
-	 }
+	public boolean tieneRespuestaEncuesta(RespuestaEncuesta respuestaEncuesta) {
+		return respuestaEncuesta != null && this.respuestasEncuesta.contains(respuestaEncuesta);
+	}
+
+	public String getPreguntaCsv() {
+    	return preguntaCsv;
+	}
+
+	public void setPreguntaCsv(String preguntaCsv) {
+		this.preguntaCsv = preguntaCsv;
+	}
 	
 }
