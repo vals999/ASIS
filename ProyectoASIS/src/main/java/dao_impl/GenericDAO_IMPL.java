@@ -22,40 +22,38 @@ public abstract class GenericDAO_IMPL<T extends EliminableLogico, ID> implements
 		this.clasePersistente = clasePersistente;
 	}
 	
-	public void crear(T entidad) {
-		EntityTransaction tx = em.getTransaction();		
-		try {
-			tx.begin(); // INICIA la transacción
-			em.persist(entidad); // Persiste la entidad
-			tx.commit(); // CONFIRMA la transacción
+    public void crear(T entidad) {
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            em.persist(entidad);
+            tx.commit();
         } catch (RuntimeException e) {
             if (tx.isActive()) tx.rollback();
             throw e;
-        } finally {
-            em.close();
-        }		
-	}
+        }
+    }
 
 	@Override
-	public T obtenerPorId(Long id) {
-		return em.find(clasePersistente, id);
-	}
+    public T obtenerPorId(Long id) {
+        return em.find(clasePersistente, id);
+    }
 
 	@Override
-	public List<T> obtenerTodos() {
-		String qlString = "SELECT e FROM " + clasePersistente.getSimpleName() + " e";
-		TypedQuery<T> query = em.createQuery(qlString, clasePersistente); // garantiza que la lista devuelta sea de objetos T, con seguridad de tipos
-		return query.getResultList();
-	}
+    public List<T> obtenerTodos() {
+        String qlString = "SELECT e FROM " + clasePersistente.getSimpleName() + " e";
+        TypedQuery<T> query = em.createQuery(qlString, clasePersistente);
+        return query.getResultList();
+    }
 
-	public List<T> obtenerNoBorrados() {
-		String qlString = "SELECT e FROM " + clasePersistente.getSimpleName() + " e WHERE e.fechaEliminacion IS NULL";
-		TypedQuery<T> query = em.createQuery(qlString, clasePersistente); // garantiza que la lista devuelta sea de objetos T, con seguridad de tipos
-		return query.getResultList();
-	}
+    public List<T> obtenerNoBorrados() {
+        String qlString = "SELECT e FROM " + clasePersistente.getSimpleName() + " e WHERE e.fechaEliminacion IS NULL";
+        TypedQuery<T> query = em.createQuery(qlString, clasePersistente);
+        return query.getResultList();
+    }
 	
 	@Override
-	public void actualizar(T entidad) {
+    public void actualizar(T entidad) {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -64,15 +62,11 @@ public abstract class GenericDAO_IMPL<T extends EliminableLogico, ID> implements
         } catch (RuntimeException e) {
             if (tx.isActive()) tx.rollback();
             throw e;
-        } finally {
-            em.close();
         }
-		
-	}
+    }
 
 	@Override
-	public void eliminar(Long id) {
-
+    public void eliminar(Long id) {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -85,13 +79,11 @@ public abstract class GenericDAO_IMPL<T extends EliminableLogico, ID> implements
         } catch (RuntimeException e) {
             if (tx.isActive()) tx.rollback();
             throw e;
-        } finally {
-            em.close();
         }
     }
 
 	@Override
-	public void recuperar(Long id) {
+    public void recuperar(Long id) {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -104,9 +96,7 @@ public abstract class GenericDAO_IMPL<T extends EliminableLogico, ID> implements
         } catch (RuntimeException e) {
             if (tx.isActive()) tx.rollback();
             throw e;
-        } finally {
-            em.close();
         }
-	}
+    }
 
 }
