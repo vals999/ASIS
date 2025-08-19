@@ -16,7 +16,12 @@ export class RegisterComponent {
     nombreUsuario: '',
     email: '',
     contrasena: '',
-    perfil: 'PERSONAL_SALUD'
+    perfil: 'PERSONAL_SALUD',
+    nombre: '',
+    apellido: '',
+    edad: 18,
+    dni: '',
+    genero: 'Masculino'
   };
 
   errorMessage = signal<string>('');
@@ -28,14 +33,22 @@ export class RegisterComponent {
     { value: 'REFERENTE_ORG_SOCIAL', label: 'Referente Organización Social' }
   ];
 
+  // Opciones de género
+  generoOptions = [
+    { value: 'Masculino', label: 'Masculino' },
+    { value: 'Femenino', label: 'Femenino' },
+    { value: 'Otro', label: 'Otro' }
+  ];
+
   constructor(
     public authService: AuthService,
     private router: Router
   ) {}
 
   onSubmit(): void {
-    if (!this.userData.nombreUsuario || !this.userData.email || !this.userData.contrasena) {
-      this.errorMessage.set('Por favor complete todos los campos');
+    if (!this.userData.nombreUsuario || !this.userData.email || !this.userData.contrasena || 
+        !this.userData.nombre || !this.userData.apellido || !this.userData.dni) {
+      this.errorMessage.set('Por favor complete todos los campos obligatorios');
       return;
     }
 
@@ -58,6 +71,18 @@ export class RegisterComponent {
       return;
     }
 
+    // Validación de edad
+    if (this.userData.edad < 16 || this.userData.edad > 120) {
+      this.errorMessage.set('La edad debe estar entre 16 y 120 años');
+      return;
+    }
+
+    // Validación de DNI
+    if (this.userData.dni.length < 7 || this.userData.dni.length > 8) {
+      this.errorMessage.set('El DNI debe tener entre 7 y 8 dígitos');
+      return;
+    }
+
     this.errorMessage.set('');
     this.successMessage.set('');
     
@@ -70,8 +95,18 @@ export class RegisterComponent {
           nombreUsuario: '',
           email: '',
           contrasena: '',
-          perfil: 'PERSONAL_SALUD'
+          perfil: 'PERSONAL_SALUD',
+          nombre: '',
+          apellido: '',
+          edad: 18,
+          dni: '',
+          genero: 'Masculino'
         };
+        
+        // Redirección automática después de 3 segundos
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 3000);
       },
       error: (error) => {
         console.error('Error en registro:', error);

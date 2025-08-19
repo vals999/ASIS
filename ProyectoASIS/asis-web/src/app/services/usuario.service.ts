@@ -7,7 +7,7 @@ export interface Usuario {
   id?: number;
   nombreUsuario: string;
   email: string;
-  contrasena: string;
+  contrasena?: string;  // Hacer opcional para permitir ediciones sin contraseña
   perfil: string;
   habilitado: boolean;
 }

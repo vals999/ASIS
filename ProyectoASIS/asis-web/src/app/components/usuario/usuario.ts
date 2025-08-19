@@ -44,7 +44,6 @@ export class UsuarioComponent implements OnInit, OnDestroy {
   usuarioEditado = signal<Usuario>({
     nombreUsuario: '',
     email: '',
-    contrasena: '',
     perfil: '',
     habilitado: true
   });
@@ -157,10 +156,6 @@ export class UsuarioComponent implements OnInit, OnDestroy {
     this.usuarioEditado.update(u => ({...u, email: value}));
   }
 
-  updateUsuarioEditadoContrasena(value: string) {
-    this.usuarioEditado.update(u => ({...u, contrasena: value}));
-  }
-
   updateUsuarioEditadoPerfil(value: string) {
     this.usuarioEditado.update(u => ({...u, perfil: value}));
   }
@@ -234,7 +229,6 @@ export class UsuarioComponent implements OnInit, OnDestroy {
       id: usuario.id,
       nombreUsuario: usuario.nombreUsuario,
       email: usuario.email,
-      contrasena: '',
       perfil: usuario.perfil,
       habilitado: usuario.habilitado
     });
@@ -258,7 +252,6 @@ export class UsuarioComponent implements OnInit, OnDestroy {
               id: usuarioActualizado.id,
               nombreUsuario: usuarioActualizado.nombreUsuario,
               email: usuarioActualizado.email,
-              contrasena: '',
               perfil: usuarioActualizado.perfil,
               habilitado: usuarioActualizado.habilitado
             });
@@ -280,7 +273,6 @@ export class UsuarioComponent implements OnInit, OnDestroy {
     this.usuarioEditado.set({
       nombreUsuario: '',
       email: '',
-      contrasena: '',
       perfil: '',
       habilitado: true
     });

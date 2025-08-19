@@ -1,8 +1,11 @@
 package controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import dao_interfaces.I_UsuarioDAO;
+import dto.UsuarioDTO;
+import dto.DTOMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -44,7 +47,10 @@ public class UsuarioController {
     public Response obtenerTodosLosUsuarios() {
         try {
             List<Usuario> usuarios = usuarioDAO.obtenerTodos();
-            return Response.ok(usuarios).build();
+            List<UsuarioDTO> usuariosDTO = usuarios.stream()
+                .map(DTOMapper::toUsuarioDTO)
+                .collect(Collectors.toList());
+            return Response.ok(usuariosDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -62,7 +68,10 @@ public class UsuarioController {
     public Response obtenerUsuariosActivos() {
         try {
             List<Usuario> usuarios = usuarioDAO.obtenerNoBorrados();
-            return Response.ok(usuarios).build();
+            List<UsuarioDTO> usuariosDTO = usuarios.stream()
+                .map(DTOMapper::toUsuarioDTO)
+                .collect(Collectors.toList());
+            return Response.ok(usuariosDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -84,7 +93,8 @@ public class UsuarioController {
             if (usuario == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            return Response.ok(usuario).build();
+            UsuarioDTO usuarioDTO = DTOMapper.toUsuarioDTO(usuario);
+            return Response.ok(usuarioDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -120,7 +130,8 @@ public class UsuarioController {
     public Response crearUsuario(Usuario usuario) {
         try {
             usuarioDAO.crear(usuario);
-            return Response.status(Status.CREATED).entity(usuario).build();
+            UsuarioDTO usuarioDTO = DTOMapper.toUsuarioDTO(usuario);
+            return Response.status(Status.CREATED).entity(usuarioDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -138,9 +149,24 @@ public class UsuarioController {
     })
     public Response actualizarUsuario(@PathParam("id") Long id, Usuario usuario) {
         try {
+            // Obtener el usuario existente
+            Usuario usuarioExistente = usuarioDAO.obtenerPorId(id);
+            if (usuarioExistente == null) {
+                return Response.status(Status.NOT_FOUND)
+                    .entity("Usuario no encontrado").build();
+            }
+
+            // Actualizar solo los campos proporcionados
             usuario.setId(id);
+            
+            // Si no se proporciona contraseña, conservar la existente
+            if (usuario.getContrasena() == null || usuario.getContrasena().trim().isEmpty()) {
+                usuario.setContrasena(usuarioExistente.getContrasena());
+            }
+            
             usuarioDAO.actualizar(usuario);
-            return Response.ok(usuario).build();
+            UsuarioDTO usuarioDTO = DTOMapper.toUsuarioDTO(usuario);
+            return Response.ok(usuarioDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -196,7 +222,10 @@ public class UsuarioController {
     public Response obtenerUsuariosPendientes() {
         try {
             List<Usuario> usuariosPendientes = usuarioDAO.obtenerUsuariosPendientes();
-            return Response.ok(usuariosPendientes).build();
+            List<UsuarioDTO> usuariosPendientesDTO = usuariosPendientes.stream()
+                .map(DTOMapper::toUsuarioDTO)
+                .collect(Collectors.toList());
+            return Response.ok(usuariosPendientesDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();

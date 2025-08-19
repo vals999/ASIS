@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 import dao_interfaces.I_UsuarioDAO;
+import dao_interfaces.I_PersonaDAO;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -16,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -24,6 +27,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import model.Usuario;
 import model.Perfil;
+import model.DatosPersonales;
 
 @Path("/auth")
 @RequestScoped
@@ -34,10 +38,16 @@ public class AuthController {
 
     @Inject
     private I_UsuarioDAO usuarioDAO;
+    
+    @Inject
+    private I_PersonaDAO personaDAO;
+    
+    @Inject
+    private EntityManager em;
 
     // Clave secreta para JWT (en producción debe estar en variables de entorno)
     private static final String JWT_SECRET = "miClaveSecretaParaJWTDeProyectoASIS2024";
-    private static final long JWT_EXPIRATION = 86400000; // 24 horas en milisegundos
+    private static final long JWT_EXPIRATION = 1800000; // 30 minutos
 
     @POST
     @Path("/login")
@@ -124,6 +134,7 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Error interno del servidor")
         })
     public Response register(RegisterRequest registerRequest) {
+        EntityTransaction tx = em.getTransaction();
         try {
             // Validar que no exista un usuario con el mismo nombre de usuario
             Usuario usuarioExistentePorNombre = usuarioDAO.obtenerPorNombreUsuario(registerRequest.getNombreUsuario());
@@ -158,6 +169,9 @@ public class AuthController {
                     .build();
             }
 
+            // Iniciar transacción manual
+            tx.begin();
+
             // Crear nuevo usuario
             Usuario nuevoUsuario = new Usuario();
             nuevoUsuario.setNombreUsuario(registerRequest.getNombreUsuario());
@@ -166,8 +180,24 @@ public class AuthController {
             nuevoUsuario.setPerfil(perfilEnum);
             nuevoUsuario.setHabilitado(false); // Por defecto deshabilitado
 
-            // Guardar en la base de datos
-            usuarioDAO.crear(nuevoUsuario);
+            // Persistir usuario
+            em.persist(nuevoUsuario);
+            em.flush(); // Forzar el ID antes de crear datos personales
+
+            // Crear automáticamente los datos personales del usuario
+            DatosPersonales datosPersonales = new DatosPersonales();
+            datosPersonales.setUsuario(nuevoUsuario);
+            datosPersonales.setNombre(registerRequest.getNombre());
+            datosPersonales.setApellido(registerRequest.getApellido());
+            datosPersonales.setDni(registerRequest.getDni());
+            datosPersonales.setEdad(registerRequest.getEdad());
+            datosPersonales.setGenero(registerRequest.getGenero());
+            
+            // Persistir datos personales
+            em.persist(datosPersonales);
+
+            // Confirmar transacción
+            tx.commit();
 
             // Preparar respuesta (sin incluir la contraseña)
             Map<String, Object> response = new HashMap<>();
@@ -182,6 +212,10 @@ public class AuthController {
             return Response.status(Response.Status.CREATED).entity(response).build();
 
         } catch (Exception e) {
+            // Rollback en caso de error
+            if (tx.isActive()) {
+                tx.rollback();
+            }
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(Map.of("message", "Error interno: " + e.getMessage()))
                 .build();
@@ -232,9 +266,16 @@ public class AuthController {
         private String email;
         private String contrasena;
         private String perfil;
+        // Nuevos campos de datos personales
+        private String nombre;
+        private String apellido;
+        private int edad;
+        private String dni;
+        private String genero;
 
         public RegisterRequest() {}
 
+        // Getters y setters existentes
         public String getNombreUsuario() {
             return nombreUsuario;
         }
@@ -265,6 +306,47 @@ public class AuthController {
 
         public void setPerfil(String perfil) {
             this.perfil = perfil;
+        }
+
+        // Nuevos getters y setters para datos personales
+        public String getNombre() {
+            return nombre;
+        }
+
+        public void setNombre(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public String getApellido() {
+            return apellido;
+        }
+
+        public void setApellido(String apellido) {
+            this.apellido = apellido;
+        }
+
+        public int getEdad() {
+            return edad;
+        }
+
+        public void setEdad(int edad) {
+            this.edad = edad;
+        }
+
+        public String getDni() {
+            return dni;
+        }
+
+        public void setDni(String dni) {
+            this.dni = dni;
+        }
+
+        public String getGenero() {
+            return genero;
+        }
+
+        public void setGenero(String genero) {
+            this.genero = genero;
         }
     }
 }
