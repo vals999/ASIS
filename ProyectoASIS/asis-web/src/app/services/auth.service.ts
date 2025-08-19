@@ -15,6 +15,12 @@ export interface RegisterRequest {
   email: string;
   contrasena: string;
   perfil: string;
+  // Nuevos campos de datos personales
+  nombre: string;
+  apellido: string;
+  edad: number;
+  dni: string;
+  genero: string;
 }
 
 export interface RegisterResponse {

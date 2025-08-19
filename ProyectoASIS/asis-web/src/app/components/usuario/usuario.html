@@ -137,15 +137,7 @@
                          (input)="updateUsuarioEditadoEmail($any($event.target).value)"
                          required>
                 </div>
-                <div class="col-md-2">
-                  <label class="form-label">Nueva Contraseña</label>
-                  <input type="password" 
-                         class="form-control" 
-                         [value]="usuarioEditado().contrasena"
-                         (input)="updateUsuarioEditadoContrasena($any($event.target).value)">
-                  <small class="text-muted">Opcional</small>
-                </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                   <label class="form-label">Rol</label>
                   <select class="form-select" 
                           [value]="usuarioEditado().perfil"
