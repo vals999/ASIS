@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Path("/import-csv")
+@jakarta.ws.rs.Path("/import-csv")
 public class ImportCsvResource {
 
     @Inject

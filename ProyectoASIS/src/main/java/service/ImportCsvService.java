@@ -39,7 +39,7 @@ public class ImportCsvService {
                     pregunta = new PreguntaEncuesta();
                     pregunta.setPreguntaCsv(preguntaCsv);
                     pregunta.setTexto(preguntaCsv); // Puedes mapear a un texto más legible si lo deseas
-                    preguntaDao.save(pregunta);
+                    preguntaDao.crear(pregunta);
                 }
                 preguntasMap.put(i, pregunta);
             }
@@ -52,9 +52,9 @@ public class ImportCsvService {
                     PreguntaEncuesta pregunta = preguntasMap.get(i);
                     if (pregunta != null && respuesta != null && !respuesta.trim().isEmpty()) {
                         RespuestaEncuesta resp = new RespuestaEncuesta();
-                        resp.setPreguntaEncuesta(pregunta);
-                        resp.setTextoRespuesta(respuesta);
-                        respuestaDao.save(resp);
+                        resp.setPregunta(pregunta);
+                        resp.setValor(respuesta);
+                        respuestaDao.crear(resp);
                     }
                 }
             }
