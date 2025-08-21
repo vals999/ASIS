@@ -91,47 +91,13 @@
               </div>
             </li>
           }
-        </ul>
-                    <!-- @if (authService.currentUser()?.perfil === 'ADMINISTRADOR') {
-                      <li class="nav-item mb-1">
-                        <a routerLink="/usuarios-pendientes" routerLinkActive="active" class="nav-link text-white-50 py-1">
-                          <i class="bi bi-clock me-2"></i>Usuarios Pendientes
-                        </a>
-                      </li>
-                    }
-                  </ul>
-                }
-              </div>
-            </li>
-          }
+          <!-- Enlace directo a Estadísticas -->
           <li class="nav-item mb-1">
-            <a routerLink="/campanias" routerLinkActive="active" class="nav-link text-white">
-              Campañas
-            </a>
-          </li>
-          <li class="nav-item mb-1">
-            <a routerLink="/jornadas" routerLinkActive="active" class="nav-link text-white">
-              Jornadas
-            </a>
-          </li>
-          <li class="nav-item mb-1">
-            <a routerLink="/barrios" routerLinkActive="active" class="nav-link text-white">
-              Barrios
-            </a>
-          </li>
-          <li class="nav-item mb-1">
-            <a routerLink="/zonas" routerLinkActive="active" class="nav-link text-white">
-              Zonas
-            </a>
-          </li>
-          <li class="nav-item mb-1">
-            <a routerLink="/encuestadores" routerLinkActive="active" class="nav-link text-white">
-              Encuestadores
+            <a routerLink="/estadisticas" routerLinkActive="active" class="nav-link text-white">
+              Estadísticas
             </a>
           </li>
         </ul>
-         -->
-        <!-- Logout button -->
         <div class="px-2 mt-4">
           <button 
             (click)="logout()" 
