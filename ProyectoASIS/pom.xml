@@ -28,6 +28,12 @@
 			<artifactId>jersey-cdi1x</artifactId>
 			<version>${jersey.version}</version>
 		</dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
 		<!--  CDI Implementation (Weld)  -->
 		<dependency>
 			<groupId>org.jboss.weld.servlet</groupId>
@@ -120,6 +126,14 @@
         <version>0.12.3</version>
         <scope>runtime</scope>
     </dependency>
+
+    <!-- CSV Dependencies -->
+    <dependency>
+        <groupId>com.opencsv</groupId>
+        <artifactId>opencsv</artifactId>
+        <version>5.7.1</version>
+    </dependency>
+    
     </dependencies>
     <build>
         <plugins>

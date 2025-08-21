@@ -10,7 +10,7 @@
  <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
  <init-param>
  <param-name>jersey.config.server.provider.packages</param-name>
- <param-value>controller,config</param-value>
+ <param-value>controller,config,rest</param-value>
  </init-param>
 <load-on-startup>1</load-on-startup>
 </servlet>
@@ -20,7 +20,7 @@
     <servlet-class>io.swagger.v3.jaxrs2.integration.OpenApiServlet</servlet-class>
     <init-param>
       <param-name>openApi.configuration.resourcePackages</param-name>
-      <param-value>controller,config</param-value>
+      <param-value>controller,config,rest</param-value>
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>

@@ -13,7 +13,7 @@ public class RespuestaEncuesta implements EliminableLogico{
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@Column(name = "valor_respuesta")
+	@Column(name = "valor_respuesta", columnDefinition = "TEXT")
 	private String valor;
 	
 	@Column(name = "fecha_creacion", nullable = false, updatable = false, columnDefinition = "TIMESTAMP(0)")

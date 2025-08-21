@@ -31,18 +31,22 @@ public class PreguntaEncuestaDTO {
     @Schema(description = "Lista de respuestas a esta pregunta")
     private List<RespuestaEncuestaSimpleDTO> respuestasEncuesta;
 
+    @Schema(description = "Texto de la pregunta para exportación CSV", example = "Edad")
+    private String preguntaCsv;
+
     // Constructores
     public PreguntaEncuestaDTO() {}
 
     public PreguntaEncuestaDTO(Long id, String texto, TipoCategoria categoria, 
                               TipoRespuesta tipoRespuesta, LocalDateTime fechaCreacion, 
-                              LocalDateTime fechaEditado) {
+                              LocalDateTime fechaEditado, String preguntaCsv) {
         this.id = id;
         this.texto = texto;
         this.categoria = categoria;
         this.tipoRespuesta = tipoRespuesta;
         this.fechaCreacion = fechaCreacion;
         this.fechaEditado = fechaEditado;
+        this.preguntaCsv = preguntaCsv;
     }
 
     // Getters y Setters
@@ -100,5 +104,13 @@ public class PreguntaEncuestaDTO {
 
     public void setRespuestasEncuesta(List<RespuestaEncuestaSimpleDTO> respuestasEncuesta) {
         this.respuestasEncuesta = respuestasEncuesta;
+    }
+
+    public String getPreguntaCsv() {
+        return preguntaCsv;
+    }
+
+    public void setPreguntaCsv(String preguntaCsv) {
+        this.preguntaCsv = preguntaCsv;
     }
 }
