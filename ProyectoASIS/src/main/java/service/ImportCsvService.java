@@ -64,6 +64,8 @@ public class ImportCsvService {
 
     static {
         // Mapeo form (por vivienda)
+        MAPEO_VIVIENDA.put("lat_1_Presione_actualiza", "Latitud de la ubicación");
+        MAPEO_VIVIENDA.put("long_1_Presione_actualiza", "Longitud de la ubicación");
         MAPEO_VIVIENDA.put("2_Direccin_escribir_", "Dirección (en caso de no tener numeración, describirlo, por ej. 'casa cerca de la esquina con puerta roja')");
         MAPEO_VIVIENDA.put("3_Marque_segn_la_pos", "Marque según la posibilidad de realizar la entrevista");
         MAPEO_VIVIENDA.put("4_1_Cuntas_personas_", "¿Cuántas personas viven la mayor parte del tiempo en esta vivienda?");
