@@ -1,1 +1,4 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Importar estilos de Leaflet globalmente */
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');

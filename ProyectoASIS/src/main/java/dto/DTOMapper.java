@@ -240,6 +240,47 @@ public class DTOMapper {
         );
     }
 
+    // Método para convertir RespuestaEncuesta a RespuestaEncuestaDTO completo
+    public static RespuestaEncuestaDTO toRespuestaEncuestaDTO(RespuestaEncuesta respuesta) {
+        if (respuesta == null) return null;
+        
+        RespuestaEncuestaDTO dto = new RespuestaEncuestaDTO(
+            respuesta.getId(),
+            respuesta.getValor(),
+            respuesta.getFechaCreacion(),
+            respuesta.getFechaEditado()
+        );
+        
+        // Mapear relaciones usando DTOs simples para evitar ciclos
+        dto.setPreguntaEncuesta(toPreguntaEncuestaSimpleDTO(respuesta.getPregunta()));
+        dto.setEncuesta(toEncuestaSimpleDTO(respuesta.getEncuesta()));
+        
+        return dto;
+    }
+
+    // Método para convertir PreguntaEncuesta a PreguntaEncuestaDTO completo
+    public static PreguntaEncuestaDTO toPreguntaEncuestaDTO(PreguntaEncuesta pregunta) {
+        if (pregunta == null) return null;
+        
+        PreguntaEncuestaDTO dto = new PreguntaEncuestaDTO(
+            pregunta.getId(),
+            pregunta.getTexto(),
+            pregunta.getCategoria(),
+            pregunta.getTipoRespuesta(),
+            pregunta.getFechaCreacion(),
+            pregunta.getFechaEditado()
+        );
+        
+        // Mapear respuestas usando DTOs simples para evitar ciclos
+        if (pregunta.getRespuestaEncuesta() != null) {
+            dto.setRespuestasEncuesta(pregunta.getRespuestaEncuesta().stream()
+                .map(DTOMapper::toRespuestaEncuestaSimpleDTO)
+                .collect(Collectors.toList()));
+        }
+        
+        return dto;
+    }
+
     // Método para convertir listas
     public static List<BarrioDTO> toBarriosDTOList(List<Barrio> barrios) {
         if (barrios == null) return null;

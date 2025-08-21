@@ -39,6 +39,17 @@ public class PreguntaEncuestaDTO {
 
     public PreguntaEncuestaDTO(Long id, String texto, TipoCategoria categoria, 
                               TipoRespuesta tipoRespuesta, LocalDateTime fechaCreacion, 
+                              LocalDateTime fechaEditado) {
+        this.id = id;
+        this.texto = texto;
+        this.categoria = categoria;
+        this.tipoRespuesta = tipoRespuesta;
+        this.fechaCreacion = fechaCreacion;
+        this.fechaEditado = fechaEditado;
+    }
+
+    public PreguntaEncuestaDTO(Long id, String texto, TipoCategoria categoria, 
+                              TipoRespuesta tipoRespuesta, LocalDateTime fechaCreacion, 
                               LocalDateTime fechaEditado, String preguntaCsv) {
         this.id = id;
         this.texto = texto;

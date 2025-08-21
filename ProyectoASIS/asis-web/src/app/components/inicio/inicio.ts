@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -17,7 +18,8 @@ export class Inicio {
 
   constructor(
     public authService: AuthService,
-    private http: HttpClient
+    private http: HttpClient,
+    private router: Router
   ) {}
 
   get perfil(): string | undefined {
@@ -27,6 +29,7 @@ export class Inicio {
   onFileSelected(event: any) {
     this.selectedFile = event.target.files[0];
   }
+  
   onCsvUpload(event: Event) {
     event.preventDefault();
     if (!this.selectedFile) return;
@@ -37,5 +40,9 @@ export class Inicio {
       next: () => this.uploadMessage = 'Archivo importado correctamente.',
       error: () => this.uploadMessage = 'Error al importar el archivo.'
     });
+  }
+
+  navigateToMap(): void {
+    this.router.navigate(['/mapa']);
   }
 }

@@ -2,7 +2,15 @@
 package controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 import dao_interfaces.I_RespuestaEncuestaDAO;
+import dto.CoordenadaMapaDTO;
+import dto.RespuestaEncuestaDTO;
+import dto.DTOMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -26,7 +34,10 @@ public class RespuestaEncuestaController {
     public Response obtenerTodasLasRespuestas() {
         try {
             List<RespuestaEncuesta> respuestas = respuestaEncuestaDAO.obtenerTodos();
-            return Response.ok(respuestas).build();
+            List<RespuestaEncuestaDTO> respuestasDTO = respuestas.stream()
+                .map(DTOMapper::toRespuestaEncuestaDTO)
+                .collect(Collectors.toList());
+            return Response.ok(respuestasDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -38,8 +49,92 @@ public class RespuestaEncuestaController {
     public Response obtenerRespuestasActivas() {
         try {
             List<RespuestaEncuesta> respuestas = respuestaEncuestaDAO.obtenerNoBorrados();
-            return Response.ok(respuestas).build();
+            List<RespuestaEncuestaDTO> respuestasDTO = respuestas.stream()
+                .map(DTOMapper::toRespuestaEncuestaDTO)
+                .collect(Collectors.toList());
+            return Response.ok(respuestasDTO).build();
         } catch (Exception e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/coordenadas-mapa")
+    public Response obtenerCoordenadasParaMapa() {
+        try {
+            List<RespuestaEncuesta> respuestas = respuestaEncuestaDAO.obtenerNoBorrados();
+            
+            System.out.println("Total respuestas encontradas: " + respuestas.size());
+            
+            // Filtrar solo las respuestas de preguntas 1 y 2 (latitud y longitud)
+            // Sin depender de encuestas ya que están en NULL
+            List<RespuestaEncuesta> respuestasCoordenas = respuestas.stream()
+                .filter(r -> r.getPregunta() != null && 
+                           (r.getPregunta().getId() == 1 || r.getPregunta().getId() == 2))
+                .collect(Collectors.toList());
+                
+            System.out.println("Respuestas con coordenadas encontradas: " + respuestasCoordenas.size());
+            
+            // Como las encuestas están en NULL, vamos a agrupar por respuesta individual
+            // y crear un marcador por cada par de coordenadas que encontremos
+            Map<String, String> coordenadasValores = new HashMap<>();
+            
+            for (RespuestaEncuesta respuesta : respuestasCoordenas) {
+                Long preguntaId = respuesta.getPregunta().getId();
+                String valor = respuesta.getValor();
+                
+                System.out.println("Pregunta ID: " + preguntaId + ", Valor: " + valor);
+                
+                // Usar la respuesta ID como clave temporal para agrupar
+                String clave = preguntaId == 1 ? "latitud_" + respuesta.getId() : "longitud_" + respuesta.getId();
+                coordenadasValores.put(clave, valor);
+            }
+            
+            // Crear coordenadas válidas
+            List<CoordenadaMapaDTO> coordenadasCompletas = new ArrayList<>();
+            
+            // Buscar pares de latitud/longitud
+            for (RespuestaEncuesta respuesta : respuestasCoordenas) {
+                if (respuesta.getPregunta().getId() == 1) { // Si es latitud
+                    String latitudStr = respuesta.getValor();
+                    
+                    // Buscar si hay una respuesta de longitud cerca (mismo rango de IDs)
+                    for (RespuestaEncuesta respuesta2 : respuestasCoordenas) {
+                        if (respuesta2.getPregunta().getId() == 2) { // Si es longitud
+                            String longitudStr = respuesta2.getValor();
+                            
+                            try {
+                                Double latitud = Double.parseDouble(latitudStr);
+                                Double longitud = Double.parseDouble(longitudStr);
+                                
+                                // Validar rango de coordenadas
+                                if (latitud >= -90 && latitud <= 90 && longitud >= -180 && longitud <= 180) {
+                                    CoordenadaMapaDTO coordenada = new CoordenadaMapaDTO(
+                                        (long) coordenadasCompletas.size() + 1, // ID único temporal
+                                        respuesta.getId(),
+                                        latitud + "," + longitud,
+                                        respuesta.getPregunta().getId(),
+                                        "Ubicación " + (coordenadasCompletas.size() + 1)
+                                    );
+                                    coordenadasCompletas.add(coordenada);
+                                    
+                                    System.out.println("Coordenada válida agregada - Lat: " + latitud + ", Lng: " + longitud);
+                                    break; // Solo una vez por latitud
+                                }
+                            } catch (NumberFormatException e) {
+                                System.out.println("Valor no numérico ignorado - Lat: " + latitudStr + ", Lng: " + longitudStr);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            System.out.println("Coordenadas completas generadas: " + coordenadasCompletas.size());
+            return Response.ok(coordenadasCompletas).build();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
         }

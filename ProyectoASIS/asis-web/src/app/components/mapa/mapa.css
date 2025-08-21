@@ -1,0 +1,68 @@
+.mapa-container {
+  padding: 20px;
+  width: 100%;
+  height: calc(100vh - 40px); /* Altura completa menos el padding */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.mapa-container h2 {
+  margin: 0 0 20px 0;
+  color: #333;
+  text-align: center;
+  flex-shrink: 0; /* No se comprime */
+}
+
+.map-display {
+  flex: 1;
+  width: 100%;
+  min-height: 300px;
+  max-height: calc(100vh - 120px); /* Altura máxima considerando título y padding */
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Evita que el contenido se desborde */
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  background-color: #f8f9fa;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.loading-indicator p {
+  color: #6c757d;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Asegurar que el mapa de Leaflet ocupe todo el contenedor */
+#map {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Responsive para pantallas pequeñas */
+@media (max-width: 768px) {
+  .mapa-container {
+    padding: 10px;
+    height: calc(100vh - 20px);
+  }
+  
+  .map-display {
+    min-height: 250px;
+    max-height: calc(100vh - 80px);
+  }
+  
+  .mapa-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+  }
+}
