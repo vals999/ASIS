@@ -9,6 +9,7 @@ import { LoginComponent } from './components/login/login';
 import { RegisterComponent } from './components/register/register';
 import { UsuariosPendientesComponent } from './components/usuarios-pendientes/usuarios-pendientes';
 import { MapaComponent } from './components/mapa/mapa';
+import { ReportesComponent } from './components/reportes/reportes';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { Inicio } from './components/inicio/inicio';
@@ -25,6 +26,7 @@ export const routes: Routes = [
   { path: 'zonas', component: ZonaComponent, canActivate: [authGuard] },
   { path: 'encuestadores', component: EncuestadorComponent, canActivate: [authGuard] },
   { path: 'mapa', component: MapaComponent, canActivate: [authGuard] },
+  { path: 'reportes', component: ReportesComponent, canActivate: [authGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' }
 ];
