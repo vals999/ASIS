@@ -4,8 +4,6 @@ package controller;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import dao_interfaces.I_RespuestaEncuestaDAO;
 import dto.CoordenadaMapaDTO;
@@ -68,7 +66,6 @@ public class RespuestaEncuestaController {
             System.out.println("Total respuestas encontradas: " + respuestas.size());
             
             // Filtrar solo las respuestas de preguntas 1 y 2 (latitud y longitud)
-            // Sin depender de encuestas ya que están en NULL
             List<RespuestaEncuesta> respuestasCoordenas = respuestas.stream()
                 .filter(r -> r.getPregunta() != null && 
                            (r.getPregunta().getId() == 1 || r.getPregunta().getId() == 2))
@@ -76,57 +73,56 @@ public class RespuestaEncuestaController {
                 
             System.out.println("Respuestas con coordenadas encontradas: " + respuestasCoordenas.size());
             
-            // Como las encuestas están en NULL, vamos a agrupar por respuesta individual
-            // y crear un marcador por cada par de coordenadas que encontremos
-            Map<String, String> coordenadasValores = new HashMap<>();
-            
-            for (RespuestaEncuesta respuesta : respuestasCoordenas) {
-                Long preguntaId = respuesta.getPregunta().getId();
-                String valor = respuesta.getValor();
+            // Separar latitudes y longitudes
+            List<RespuestaEncuesta> latitudes = respuestasCoordenas.stream()
+                .filter(r -> r.getPregunta().getId() == 1)
+                .sorted((a, b) -> a.getId().compareTo(b.getId())) // Ordenar por ID
+                .collect(Collectors.toList());
                 
-                System.out.println("Pregunta ID: " + preguntaId + ", Valor: " + valor);
-                
-                // Usar la respuesta ID como clave temporal para agrupar
-                String clave = preguntaId == 1 ? "latitud_" + respuesta.getId() : "longitud_" + respuesta.getId();
-                coordenadasValores.put(clave, valor);
-            }
+            List<RespuestaEncuesta> longitudes = respuestasCoordenas.stream()
+                .filter(r -> r.getPregunta().getId() == 2)
+                .sorted((a, b) -> a.getId().compareTo(b.getId())) // Ordenar por ID
+                .collect(Collectors.toList());
             
-            // Crear coordenadas válidas
+            System.out.println("Latitudes encontradas: " + latitudes.size());
+            System.out.println("Longitudes encontradas: " + longitudes.size());
+            
+            // Crear coordenadas válidas emparejando secuencialmente
             List<CoordenadaMapaDTO> coordenadasCompletas = new ArrayList<>();
             
-            // Buscar pares de latitud/longitud
-            for (RespuestaEncuesta respuesta : respuestasCoordenas) {
-                if (respuesta.getPregunta().getId() == 1) { // Si es latitud
-                    String latitudStr = respuesta.getValor();
+            // Emparejar secuencialmente: latitud[i] con longitud[i]
+            int minSize = Math.min(latitudes.size(), longitudes.size());
+            
+            for (int i = 0; i < minSize; i++) {
+                try {
+                    RespuestaEncuesta respuestaLatitud = latitudes.get(i);
+                    RespuestaEncuesta respuestaLongitud = longitudes.get(i);
                     
-                    // Buscar si hay una respuesta de longitud cerca (mismo rango de IDs)
-                    for (RespuestaEncuesta respuesta2 : respuestasCoordenas) {
-                        if (respuesta2.getPregunta().getId() == 2) { // Si es longitud
-                            String longitudStr = respuesta2.getValor();
-                            
-                            try {
-                                Double latitud = Double.parseDouble(latitudStr);
-                                Double longitud = Double.parseDouble(longitudStr);
-                                
-                                // Validar rango de coordenadas
-                                if (latitud >= -90 && latitud <= 90 && longitud >= -180 && longitud <= 180) {
-                                    CoordenadaMapaDTO coordenada = new CoordenadaMapaDTO(
-                                        (long) coordenadasCompletas.size() + 1, // ID único temporal
-                                        respuesta.getId(),
-                                        latitud + "," + longitud,
-                                        respuesta.getPregunta().getId(),
-                                        "Ubicación " + (coordenadasCompletas.size() + 1)
-                                    );
-                                    coordenadasCompletas.add(coordenada);
-                                    
-                                    System.out.println("Coordenada válida agregada - Lat: " + latitud + ", Lng: " + longitud);
-                                    break; // Solo una vez por latitud
-                                }
-                            } catch (NumberFormatException e) {
-                                System.out.println("Valor no numérico ignorado - Lat: " + latitudStr + ", Lng: " + longitudStr);
-                            }
-                        }
+                    String latitudStr = respuestaLatitud.getValor();
+                    String longitudStr = respuestaLongitud.getValor();
+                    
+                    Double latitud = Double.parseDouble(latitudStr);
+                    Double longitud = Double.parseDouble(longitudStr);
+                    
+                    // Validar rango de coordenadas
+                    if (latitud >= -90 && latitud <= 90 && longitud >= -180 && longitud <= 180) {
+                        CoordenadaMapaDTO coordenada = new CoordenadaMapaDTO(
+                            (long) (i + 1), // ID único secuencial
+                            respuestaLatitud.getId(), // ID de respuesta de latitud
+                            latitud + "," + longitud,
+                            1L, // ID de pregunta de latitud
+                            "Ubicación " + (i + 1)
+                        );
+                        coordenadasCompletas.add(coordenada);
+                        
+                        System.out.println("Coordenada " + (i + 1) + " emparejada secuencialmente:");
+                        System.out.println("  Latitud: " + latitud + " (Respuesta ID: " + respuestaLatitud.getId() + ")");
+                        System.out.println("  Longitud: " + longitud + " (Respuesta ID: " + respuestaLongitud.getId() + ")");
+                    } else {
+                        System.out.println("Coordenada fuera de rango ignorada - Lat: " + latitud + ", Lng: " + longitud);
                     }
+                } catch (NumberFormatException e) {
+                    System.out.println("Error al parsear coordenadas en índice " + i + ": " + e.getMessage());
                 }
             }
             

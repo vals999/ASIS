@@ -41,8 +41,4 @@ export class Inicio {
       error: () => this.uploadMessage = 'Error al importar el archivo.'
     });
   }
-
-  navigateToMap(): void {
-    this.router.navigate(['/mapa']);
-  }
 }

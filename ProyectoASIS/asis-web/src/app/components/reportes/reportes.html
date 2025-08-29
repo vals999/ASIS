@@ -3,14 +3,18 @@
     <div class="col-12">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="text-primary">Reportes</h2>
-        <button 
-          type="button" 
-          class="btn btn-primary"
-          (click)="subirReporte()"
-        >
-          <i class="bi bi-upload me-2"></i>
-          Subir reporte
-        </button>
+        @if (puedeSubir()) {
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            (click)="subirReporte()"
+            [disabled]="reporteService.loading()"
+          >
+            <i class="bi bi-upload me-2"></i>
+            <span *ngIf="!reporteService.loading()">Subir reporte</span>
+            <span *ngIf="reporteService.loading()">Subiendo...</span>
+          </button>
+        }
       </div>
       
       <!-- Input de archivo oculto -->
@@ -22,55 +26,88 @@
         (change)="onFileSelected($event)"
         accept="*/*"
       >
+
+      <!-- Indicador de carga -->
+      <div *ngIf="reporteService.loading()" class="text-center py-3">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+
+      <!-- Mensaje de éxito -->
+      <div *ngIf="mensajeExito()" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        {{ mensajeExito() }}
+        <button type="button" class="btn-close" (click)="clearSuccess()" aria-label="Close"></button>
+      </div>
+
+      <!-- Mensaje de error global -->
+      <div *ngIf="mensajeError() || reporteService.error()" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ mensajeError() || reporteService.error() }}
+        <button type="button" class="btn-close" (click)="clearError()" aria-label="Close"></button>
+      </div>
       
       <!-- Tabla de archivos subidos -->
-      @if (archivosSubidos.length > 0) {
+      @if (reportesFiltrados().length > 0) {
         <div class="card">
           <div class="card-header">
-            <h5 class="mb-0">Archivos Subidos ({{ archivosSubidos.length }})</h5>
+            <h5 class="mb-0">Reportes Disponibles ({{ reportesFiltrados().length }})</h5>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
               <table class="table table-hover mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th scope="col">Nombre del Archivo</th>
-                    <th scope="col">Tipo</th>
+                    <th scope="col">Archivo</th>
                     <th scope="col">Tamaño</th>
+                    <th scope="col">Subido por</th>
                     <th scope="col">Fecha de Subida</th>
                     <th scope="col" class="text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  @for (archivo of archivosSubidos; track $index) {
+                  @for (reporte of reportesFiltrados(); track reporte.id) {
                     <tr>
                       <td>
-                        <i class="bi bi-file-earmark me-2 text-muted"></i>
-                        {{ archivo.nombre }}
+                        <i [class]="'me-2 text-muted ' + obtenerIconoArchivo(reporte.tipoMime)"></i>
+                        {{ reporte.nombreArchivoOriginal || reporte.nombre }}
                       </td>
+                      <td>{{ formatearTamano(reporte.tamanoArchivo) }}</td>
                       <td>
-                        <span class="badge bg-secondary">{{ archivo.tipo || 'Desconocido' }}</span>
+                        @if (reporte.creador) {
+                          <div>
+                            <strong>{{ reporte.creador.nombreUsuario }}</strong>
+                            <br>
+                            <small class="text-muted">{{ reporte.creador.email }}</small>
+                          </div>
+                        } @else {
+                          <span class="text-muted">Desconocido</span>
+                        }
                       </td>
-                      <td>{{ formatearTamano(archivo.tamano) }}</td>
-                      <td>{{ archivo.fechaSubida | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td>{{ reporte.fechaCreacion | date:'dd/MM/yyyy' }}</td>
                       <td class="text-center">
                         <div class="btn-group btn-group-sm" role="group">
                           <button 
                             type="button" 
                             class="btn btn-outline-primary"
-                            (click)="descargarArchivo(archivo)"
+                            (click)="descargarReporte(reporte)"
                             title="Descargar archivo"
+                            [disabled]="reporteService.loading()"
                           >
                             <i class="bi bi-download"></i>
                           </button>
-                          <button 
-                            type="button" 
-                            class="btn btn-outline-danger"
-                            (click)="eliminarArchivo($index)"
-                            title="Eliminar archivo"
-                          >
-                            <i class="bi bi-trash"></i>
-                          </button>
+                          @if (puedeEliminar(reporte)) {
+                            <button 
+                              type="button" 
+                              class="btn btn-outline-danger"
+                              (click)="eliminarReporte(reporte)"
+                              title="Eliminar archivo"
+                              [disabled]="reporteService.loading()"
+                            >
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          }
                         </div>
                       </td>
                     </tr>
@@ -80,11 +117,11 @@
             </div>
           </div>
         </div>
-      } @else {
+      } @else if (!reporteService.loading()) {
         <div class="card">
           <div class="card-body text-center py-5">
             <i class="bi bi-cloud-upload display-1 text-muted mb-3"></i>
-            <h5 class="text-muted">No hay archivos subidos</h5>
+            <h5 class="text-muted">No hay reportes disponibles</h5>
             <p class="text-muted">Haz clic en "Subir reporte" para agregar archivos</p>
           </div>
         </div>

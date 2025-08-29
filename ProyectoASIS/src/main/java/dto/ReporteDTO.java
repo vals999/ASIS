@@ -18,6 +18,15 @@ public class ReporteDTO {
     @Schema(description = "Fecha del reporte")
     private Date fecha;
     
+    @Schema(description = "Tipo MIME del archivo")
+    private String tipoMime;
+    
+    @Schema(description = "Tamaño del archivo en bytes")
+    private Long tamanoArchivo;
+    
+    @Schema(description = "Nombre original del archivo")
+    private String nombreArchivoOriginal;
+    
     @Schema(description = "Fecha de creación del registro")
     private LocalDateTime fechaCreacion;
     
@@ -65,6 +74,30 @@ public class ReporteDTO {
 
     public void setFecha(Date fecha) {
         this.fecha = fecha;
+    }
+
+    public String getTipoMime() {
+        return tipoMime;
+    }
+
+    public void setTipoMime(String tipoMime) {
+        this.tipoMime = tipoMime;
+    }
+
+    public Long getTamanoArchivo() {
+        return tamanoArchivo;
+    }
+
+    public void setTamanoArchivo(Long tamanoArchivo) {
+        this.tamanoArchivo = tamanoArchivo;
+    }
+
+    public String getNombreArchivoOriginal() {
+        return nombreArchivoOriginal;
+    }
+
+    public void setNombreArchivoOriginal(String nombreArchivoOriginal) {
+        this.nombreArchivoOriginal = nombreArchivoOriginal;
     }
 
     public LocalDateTime getFechaCreacion() {

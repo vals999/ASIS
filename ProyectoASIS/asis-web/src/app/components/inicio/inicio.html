@@ -4,13 +4,6 @@
   <p *ngIf="perfil === 'PERSONAL_SALUD'">Panel de personal de salud</p>
   <p *ngIf="perfil === 'REFERENTE_ORG_SOCIAL'">Panel de referente de organización social</p>
 
-  <!-- Botón para navegar al mapa -->
-  <div class="mb-4">
-    <button type="button" class="btn btn-success" (click)="navigateToMap()">
-      <i class="fas fa-map-marked-alt"></i> Ver Mapa Interactivo
-    </button>
-  </div>
-
   <form #csvForm="ngForm" (ngSubmit)="onCsvUpload($event)" enctype="multipart/form-data">
     <input type="file" (change)="onFileSelected($event)" accept=".csv">
     <button type="submit" class="btn btn-primary mt-2">Importar CSV</button>

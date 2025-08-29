@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -32,6 +33,20 @@ public class Reporte implements EliminableLogico{
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "usuario_creador")
 	private Usuario creador;
+	
+	// Campos para almacenar archivos como BLOB
+	@Lob
+	@Column(name = "contenido_archivo")
+	private byte[] contenidoArchivo;
+	
+	@Column(name = "tipo_mime")
+	private String tipoMime;
+	
+	@Column(name = "tamano_archivo")
+	private Long tamanoArchivo;
+	
+	@Column(name = "nombre_archivo_original")
+	private String nombreArchivoOriginal;
 	
 	@Column(name = "fecha_creacion", nullable = false, updatable = false, columnDefinition = "TIMESTAMP(0)")
 	private LocalDateTime fechaCreacion;
@@ -102,6 +117,37 @@ public class Reporte implements EliminableLogico{
 		this.creador = creador;
 	}
 
+	public byte[] getContenidoArchivo() {
+		return contenidoArchivo;
+	}
+
+	public void setContenidoArchivo(byte[] contenidoArchivo) {
+		this.contenidoArchivo = contenidoArchivo;
+	}
+
+	public String getTipoMime() {
+		return tipoMime;
+	}
+
+	public void setTipoMime(String tipoMime) {
+		this.tipoMime = tipoMime;
+	}
+
+	public Long getTamanoArchivo() {
+		return tamanoArchivo;
+	}
+
+	public void setTamanoArchivo(Long tamanoArchivo) {
+		this.tamanoArchivo = tamanoArchivo;
+	}
+
+	public String getNombreArchivoOriginal() {
+		return nombreArchivoOriginal;
+	}
+
+	public void setNombreArchivoOriginal(String nombreArchivoOriginal) {
+		this.nombreArchivoOriginal = nombreArchivoOriginal;
+	}
 
 	public LocalDateTime getFechaCreacion() {
 		return fechaCreacion;
