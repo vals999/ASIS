@@ -81,7 +81,8 @@ export class AuthService {
     if (this.isBrowser) {
       this._isAuthenticated.set(this.hasValidToken());
       this._currentUser.set(this.getUserFromStorage());
-      this.checkTokenValidity();
+      // Remover la verificación automática que redirige al login
+      // this.checkTokenValidity();
     }
   }
 

@@ -1,0 +1,144 @@
+<section id="contacto" class="py-5 contact-section">
+  <div class="container px-4">
+    <!-- Título principal -->
+    <div class="text-center mb-5">
+      <h2 class="display-4 fw-bold text-dark mb-4">Contáctanos</h2>
+      <p class="lead text-muted mx-auto contact-intro">
+        Estamos aquí para cuidar tu salud. Contacta con nosotros para agendar tu cita
+      </p>
+    </div>
+
+    <div class="row g-5">
+      <!-- Información de contacto -->
+      <div class="col-lg-6">
+        <div class="card contact-info-card h-100 border-0 shadow">
+          <div class="card-header bg-transparent border-0 pb-0">
+            <h3 class="h4 fw-bold text-dark">Información de Contacto</h3>
+          </div>
+          <div class="card-body">
+            <!-- Dirección -->
+            <div class="contact-item d-flex align-items-start mb-4">
+              <div class="contact-icon me-3">
+                <i class="bi bi-geo-alt text-primary"></i>
+              </div>
+              <div>
+                <h4 class="h6 fw-semibold text-dark mb-1">Dirección</h4>
+                <p class="text-muted mb-0">
+                  Campus Universitario, Edificio de Salud<br>
+                  Ciudad Universitaria, Piso 2
+                </p>
+              </div>
+            </div>
+
+            <!-- Teléfono -->
+            <div class="contact-item d-flex align-items-start mb-4">
+              <div class="contact-icon me-3">
+                <i class="bi bi-telephone text-primary"></i>
+              </div>
+              <div>
+                <h4 class="h6 fw-semibold text-dark mb-1">Teléfono</h4>
+                <p class="text-muted mb-0">
+                  (555) 123-4567<br>
+                  Emergencias: (555) 911-0000
+                </p>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="contact-item d-flex align-items-start mb-4">
+              <div class="contact-icon me-3">
+                <i class="bi bi-envelope text-primary"></i>
+              </div>
+              <div>
+                <h4 class="h6 fw-semibold text-dark mb-1">Email</h4>
+                <p class="text-muted mb-0">
+                  info&#64;asis.university.edu<br>
+                  citas&#64;asis.university.edu
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de contacto -->
+      <div class="col-lg-6">
+        <div class="card contact-form-card h-100 border-0 shadow">
+          <div class="card-header bg-transparent border-0 pb-0">
+            <h3 class="h4 fw-bold text-dark">Envíanos un Mensaje</h3>
+          </div>
+          <div class="card-body">
+            <form (ngSubmit)="onSubmit()" #contactFormRef="ngForm">
+              <!-- Nombre y Apellido -->
+              <div class="row g-3 mb-3">
+                <div class="col-6">
+                  <label class="form-label fw-medium text-dark">Nombre</label>
+                  <input 
+                    type="text" 
+                    class="form-control contact-input" 
+                    placeholder="Tu nombre"
+                    [(ngModel)]="contactForm.nombre"
+                    name="nombre"
+                    required>
+                </div>
+                <div class="col-6">
+                  <label class="form-label fw-medium text-dark">Apellido</label>
+                  <input 
+                    type="text" 
+                    class="form-control contact-input" 
+                    placeholder="Tu apellido"
+                    [(ngModel)]="contactForm.apellido"
+                    name="apellido"
+                    required>
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="mb-3">
+                <label class="form-label fw-medium text-dark">Email</label>
+                <input 
+                  type="email" 
+                  class="form-control contact-input" 
+                  placeholder="tu.email@universidad.edu"
+                  [(ngModel)]="contactForm.email"
+                  name="email"
+                  required>
+              </div>
+
+              <!-- Teléfono -->
+              <div class="mb-3">
+                <label class="form-label fw-medium text-dark">Teléfono</label>
+                <input 
+                  type="tel" 
+                  class="form-control contact-input" 
+                  placeholder="(555) 123-4567"
+                  [(ngModel)]="contactForm.telefono"
+                  name="telefono">
+              </div>
+
+              <!-- Mensaje -->
+              <div class="mb-4">
+                <label class="form-label fw-medium text-dark">Mensaje</label>
+                <textarea 
+                  class="form-control contact-textarea" 
+                  rows="4"
+                  placeholder="Cuéntanos cómo podemos ayudarte..."
+                  [(ngModel)]="contactForm.mensaje"
+                  name="mensaje"
+                  required></textarea>
+              </div>
+
+              <!-- Botón de envío -->
+              <button 
+                type="submit" 
+                class="btn btn-primary btn-lg w-100 contact-submit-btn"
+                [disabled]="!contactFormRef.form.valid">
+                Enviar Mensaje
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

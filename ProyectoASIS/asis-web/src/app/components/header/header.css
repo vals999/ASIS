@@ -1,0 +1,93 @@
+/* Header Component Styles */
+
+/* Header fijo y pegajoso */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  transition: all 0.3s ease;
+}
+
+/* Animación cuando el header está en scroll */
+header.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover-primary:hover {
+  color: #1e5a5a !important;
+  transition: color 0.3s ease;
+}
+
+.nav-link {
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  text-decoration: none;
+}
+
+/* Header logo styles */
+.header-logo {
+  transition: transform 0.3s ease;
+  border-radius: 8px;
+}
+
+.header-logo:hover {
+  transform: scale(1.05);
+}
+
+/* Button styles */
+.btn-primary {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #174a4a;
+  border-color: #174a4a;
+  transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .d-flex {
+    flex-wrap: wrap;
+  }
+  
+  .header-logo {
+    height: 32px !important;
+    width: 32px !important;
+  }
+  
+  /* Stack logo and button on small screens */
+  @media (max-width: 576px) {
+    .justify-content-between {
+      justify-content: center !important;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    header {
+      padding: 0.5rem 0;
+    }
+  }
+}

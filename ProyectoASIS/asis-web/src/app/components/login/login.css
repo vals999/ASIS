@@ -1,1 +1,262 @@
 /* Estilos personalizados para el componente login */
+
+/* Login Component Styles */
+
+/* Wrapper principal - ocupar toda la pantalla sin scroll */
+.login-wrapper {
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, 
+    rgba(30, 90, 90, 0.1) 0%, 
+    rgba(30, 90, 90, 0.05) 100%);
+  /* Resetear el padding del body para esta página */
+  margin-top: -80px;
+  padding-top: 0;
+}
+
+/* Header del login */
+.login-header {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 10;
+}
+
+/* Logo del header del login - cursor pointer */
+.login-header .cursor-pointer {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.login-header .cursor-pointer:hover {
+  transform: scale(1.02);
+}
+
+/* Contenido principal */
+.login-content {
+  height: calc(100vh - 88px); /* Altura total menos el header */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  overflow: hidden;
+}
+
+/* Tarjeta principal del login */
+.login-card {
+  background: white;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  max-height: calc(100vh - 120px);
+  width: 100%;
+}
+
+/* Lado de información (izquierdo) */
+.login-info-side {
+  background: linear-gradient(135deg, #1e5a5a 0%, #174a4a 100%);
+  position: relative;
+  min-height: 500px;
+}
+
+.login-info-side::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+  opacity: 0.3;
+}
+
+.login-info-side > div {
+  position: relative;
+  z-index: 1;
+}
+
+/* Features list */
+.feature-item {
+  transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateX(5px);
+}
+
+.feature-item i {
+  font-size: 1.25rem;
+}
+
+/* Lado del formulario (derecho) */
+.login-form-side {
+  background: white;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+}
+
+/* Contenedor del formulario */
+.login-form-side > div {
+  width: 100%;
+}
+
+/* Inputs del formulario */
+.login-input {
+  border: 2px solid #e9ecef;
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.login-input:focus {
+  border-color: #1e5a5a;
+  box-shadow: 0 0 0 0.2rem rgba(30, 90, 90, 0.25);
+  outline: none;
+}
+
+.login-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Botón de envío */
+.login-submit-btn {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+  font-weight: 600;
+  padding: 0.875rem 2rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+  background-color: #174a4a;
+  border-color: #174a4a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 90, 90, 0.3);
+}
+
+.login-submit-btn:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Botón de volver */
+.btn-outline-primary {
+  color: #1e5a5a;
+  border-color: #1e5a5a;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+  color: white;
+}
+
+/* Enlaces */
+.btn-link {
+  color: #6c757d;
+  transition: color 0.3s ease;
+}
+
+.btn-link:hover {
+  color: #1e5a5a;
+}
+
+.btn-link .fw-semibold {
+  color: #1e5a5a;
+}
+
+/* Alert personalizado */
+.alert-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border-radius: 0.75rem;
+}
+
+/* Labels */
+.form-label {
+  color: #374151;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+  .login-content {
+    height: calc(100vh - 100px);
+    padding: 1rem 0;
+  }
+  
+  .login-card {
+    max-height: calc(100vh - 140px);
+  }
+  
+  .login-info-side {
+    order: 2;
+    background: linear-gradient(90deg, #1e5a5a 0%, #174a4a 100%);
+    min-height: 300px;
+  }
+  
+  .login-form-side {
+    order: 1;
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-wrapper {
+    margin-top: -80px;
+  }
+  
+  .login-header .d-flex {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .login-content {
+    height: calc(100vh - 120px);
+    padding: 0.5rem 0;
+  }
+  
+  .login-card {
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+  }
+  
+  .login-card .p-5 {
+    padding: 2rem !important;
+  }
+  
+  .login-info-side {
+    min-height: 250px;
+  }
+  
+  .login-form-side {
+    min-height: 350px;
+  }
+  
+  .feature-item {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-card .p-5 {
+    padding: 1.5rem !important;
+  }
+  
+  .login-submit-btn {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .login-content {
+    height: calc(100vh - 140px);
+  }
+}

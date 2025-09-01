@@ -1,0 +1,103 @@
+/* Landing Page Styles */
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+}
+
+.hero-section h1 {
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Navigation */
+header {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-link {
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #1e5a5a !important;
+}
+
+/* Cards */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+/* Buttons */
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Section spacing */
+section {
+  scroll-margin-top: 80px;
+}
+
+/* Bootstrap Icons color */
+.text-primary {
+  color: #1e5a5a !important;
+}
+
+/* Custom primary color throughout */
+.btn-primary {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+}
+
+.btn-primary:hover {
+  background-color: #174a4a;
+  border-color: #174a4a;
+}
+
+.btn-outline-primary {
+  color: #1e5a5a;
+  border-color: #1e5a5a;
+}
+
+.btn-outline-primary:hover {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 2.5rem;
+  }
+  
+  header .col-md-3,
+  header .col-md-6,
+  header .col-md-3 {
+    text-align: center !important;
+    margin-bottom: 1rem;
+  }
+  
+  header .row {
+    flex-direction: column;
+  }
+  
+  .hero-section .col-lg-6:last-child {
+    text-align: center !important;
+    margin-top: 2rem;
+  }
+}

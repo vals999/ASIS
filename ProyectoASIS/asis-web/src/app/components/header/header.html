@@ -1,0 +1,47 @@
+<header class="bg-white shadow-sm border-bottom">
+  <div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center justify-content-between">
+      <!-- Logo y título -->
+      <div class="d-flex align-items-center">
+        <a (click)="goToHome()" class="d-flex align-items-center text-decoration-none cursor-pointer">
+          <img src="assets/logo/favicon-32x32.png" 
+               alt="ASIS Logo" 
+               class="me-3 header-logo"
+               style="height: 40px; width: 40px;">
+          <div>
+            <h1 class="h5 mb-0 fw-bold text-dark">ASIS</h1>
+            <p class="small text-muted mb-0">Centro de Salud Universitario</p>
+          </div>
+        </a>
+      </div>
+      
+      <!-- Navegación principal -->
+      <nav class="d-none d-md-flex align-items-center">
+        <a (click)="scrollToSection('inicio')" 
+           class="nav-link text-dark me-4 cursor-pointer hover-primary">
+          Inicio
+        </a>
+        <a (click)="scrollToSection('nosotros')" 
+           class="nav-link text-dark me-4 cursor-pointer hover-primary">
+          Acerca de
+        </a>
+        <a (click)="scrollToSection('servicios')" 
+           class="nav-link text-dark me-4 cursor-pointer hover-primary">
+          Servicios
+        </a>
+        <a (click)="scrollToSection('contacto')" 
+           class="nav-link text-dark me-4 cursor-pointer hover-primary">
+          Contacto
+        </a>
+      </nav>
+
+      <!-- Información de contacto y botón -->
+      <div class="d-flex align-items-center">
+        <button (click)="goToLogin()" 
+                class="btn btn-primary">
+          Ingresar
+        </button>
+      </div>
+    </div>
+  </div>
+</header>

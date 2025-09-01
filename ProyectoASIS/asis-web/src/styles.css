@@ -2,3 +2,18 @@
 
 /* Importar estilos de Leaflet globalmente */
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+/* Ajuste para el header fijo */
+body {
+  padding-top: 80px; /* Altura del header fijo */
+}
+
+/* Estilos globales para compensar el header fijo */
+section:target {
+  scroll-margin-top: 100px; /* Espacio adicional cuando se navega con enlaces */
+}
+
+/* Ajustes para el hero para que no se corte */
+.hero-gradient {
+  padding-top: 3rem !important;
+}

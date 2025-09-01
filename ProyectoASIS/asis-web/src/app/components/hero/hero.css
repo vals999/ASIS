@@ -1,0 +1,128 @@
+/* Hero Component Styles */
+
+/* Gradiente de fondo similar al original de React */
+.hero-gradient {
+  background: linear-gradient(135deg, 
+    rgba(30, 90, 90, 0.1) 0%, 
+    rgba(30, 90, 90, 0.05) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Título principal */
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #212529;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: #6c757d;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+/* Botones del hero */
+.hero-btn {
+  font-size: 1.125rem;
+  padding: 0.75rem 2rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+}
+
+.hero-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 90, 90, 0.25);
+}
+
+/* Contenedor de imagen */
+.hero-image-container {
+  position: relative;
+  padding: 2rem 1rem;
+}
+
+.hero-image {
+  max-width: 100%;
+  height: auto;
+  max-height: 400px;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.hero-image:hover {
+  transform: scale(1.02);
+}
+
+/* Colores primarios personalizados */
+.text-primary {
+  color: #1e5a5a !important;
+}
+
+.btn-primary {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+}
+
+.btn-primary:hover {
+  background-color: #174a4a;
+  border-color: #174a4a;
+}
+
+.btn-outline-primary {
+  color: #1e5a5a;
+  border-color: #1e5a5a;
+}
+
+.btn-outline-primary:hover {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+  color: white;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+  .hero-title {
+    font-size: 3rem;
+  }
+  
+  .hero-image-container {
+    margin-top: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+    text-align: center;
+  }
+  
+  .hero-subtitle {
+    text-align: center;
+  }
+  
+  .hero-image {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .hero-btn {
+    font-size: 1rem;
+    padding: 0.625rem 1.5rem;
+  }
+  
+  .hero-image {
+    max-height: 250px;
+  }
+}

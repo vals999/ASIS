@@ -20,9 +20,13 @@ export class LoginComponent {
   errorMessage = signal<string>('');
 
   constructor(
-    public authService: AuthService,
+    public authService: AuthService, 
     private router: Router
   ) {}
+
+  goToHome(): void {
+    this.router.navigate(['/']);
+  }
 
   onSubmit(): void {
     if (!this.credentials.nombreUsuario || !this.credentials.contrasena) {

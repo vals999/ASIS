@@ -1,74 +1,127 @@
-<div class="container-fluid vh-100 bg-light d-flex align-items-center justify-content-center">
-  <div class="row w-100">
-    <div class="col-12 col-sm-8 col-md-6 col-lg-4 col-xl-3 mx-auto">
-      <div class="card shadow">
-        <div class="card-body p-4">
-          <div class="text-center mb-4">
-            <h2 class="card-title h3 fw-bold text-dark mb-2">Sistema ASIS</h2>
-            <p class="text-muted">Iniciar Sesión</p>
+<div class="login-wrapper">
+  <!-- Header del login -->
+  <div class="login-header py-4">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between">
+        <a (click)="goToHome()" class="d-flex align-items-center text-decoration-none cursor-pointer">
+          <img src="assets/logo/favicon-32x32.png" 
+               alt="ASIS Logo" 
+               class="me-3"
+               style="height: 40px; width: 40px;">
+          <div>
+            <h1 class="h5 mb-0 fw-bold text-dark">ASIS</h1>
+            <p class="small text-muted mb-0">Centro de Salud Universitario</p>
           </div>
-          
-          <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
-            <div class="mb-3">
-              <label for="nombreUsuario" class="form-label fw-medium">Usuario:</label>
-              <input
-                type="text"
-                id="nombreUsuario"
-                name="nombreUsuario"
-                [(ngModel)]="credentials.nombreUsuario"
-                required
-                class="form-control"
-                [disabled]="authService.loading()"
-                placeholder="Ingrese su usuario"
-              />
-            </div>
+        </a>
+        <a href="/" class="btn btn-outline-primary btn-sm">
+          ← Volver al inicio
+        </a>
+      </div>
+    </div>
+  </div>
 
-            <div class="mb-3">
-              <label for="contrasena" class="form-label fw-medium">Contraseña:</label>
-              <input
-                type="password"
-                id="contrasena"
-                name="contrasena"
-                [(ngModel)]="credentials.contrasena"
-                required
-                class="form-control"
-                [disabled]="authService.loading()"
-                placeholder="Ingrese su contraseña"
-              />
-            </div>
-
-            @if (errorMessage()) {
-              <div class="alert alert-danger" role="alert">
-                {{ errorMessage() }}
+  <!-- Contenido principal del login -->
+  <div class="login-content">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+          <div class="row g-0 login-card shadow-lg">
+            <!-- Lado izquierdo - Información -->
+            <div class="col-lg-6 login-info-side">
+              <div class="p-5 h-100 d-flex flex-column justify-content-center">
+                <h2 class="h3 fw-bold text-white mb-4">
+                  Bienvenido al Sistema ASIS
+                </h2>
+                <div class="feature-list">
+                  <div class="feature-item d-flex align-items-center mb-3">
+                    <i class="bi bi-clipboard-data text-white me-3"></i>
+                    <span class="text-white-50">Gestión de encuestas</span>
+                  </div>
+                  <div class="feature-item d-flex align-items-center mb-3">
+                    <i class="bi bi-graph-up text-white me-3"></i>
+                    <span class="text-white-50">Reportes estadísticos</span>
+                  </div>
+                  <div class="feature-item d-flex align-items-center">
+                    <i class="bi bi-people text-white me-3"></i>
+                    <span class="text-white-50">Administración de usuarios</span>
+                  </div>
+                </div>
               </div>
-            }
-
-            <div class="d-grid">
-              <button
-                type="submit"
-                class="btn btn-primary"
-                [disabled]="!loginForm.form.valid || authService.loading()"
-              >
-                @if (authService.loading()) {
-                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  <span>Iniciando sesión...</span>
-                } @else {
-                  <span>Iniciar Sesión</span>
-                }
-              </button>
             </div>
 
-            <div class="text-center mt-3">
-              <button
-                type="button"
-                class="btn btn-link text-decoration-none"
-                (click)="goToRegister()"
-                [disabled]="authService.loading()"
-              >
-                ¿No tienes cuenta? Registrarse
-              </button>
+            <!-- Lado derecho - Formulario -->
+            <div class="col-lg-6 login-form-side">
+              <div class="p-5">
+                <div class="text-center mb-4">
+                  <h3 class="h4 fw-bold text-dark mb-2">Iniciar Sesión</h3>
+                  <p class="text-muted">Ingresa tus credenciales para acceder</p>
+                </div>
+                
+                <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+                  <div class="mb-3">
+                    <label for="nombreUsuario" class="form-label fw-medium text-dark">Usuario</label>
+                    <input
+                      type="text"
+                      id="nombreUsuario"
+                      name="nombreUsuario"
+                      [(ngModel)]="credentials.nombreUsuario"
+                      required
+                      class="form-control login-input"
+                      [disabled]="authService.loading()"
+                      placeholder="Ingrese su usuario"
+                    />
+                  </div>
+
+                  <div class="mb-4">
+                    <label for="contrasena" class="form-label fw-medium text-dark">Contraseña</label>
+                    <input
+                      type="password"
+                      id="contrasena"
+                      name="contrasena"
+                      [(ngModel)]="credentials.contrasena"
+                      required
+                      class="form-control login-input"
+                      [disabled]="authService.loading()"
+                      placeholder="Ingrese su contraseña"
+                    />
+                  </div>
+
+                  @if (errorMessage()) {
+                    <div class="alert alert-danger border-0 mb-4" role="alert">
+                      <i class="bi bi-exclamation-triangle me-2"></i>
+                      {{ errorMessage() }}
+                    </div>
+                  }
+
+                  <div class="d-grid mb-4">
+                    <button
+                      type="submit"
+                      class="btn btn-primary btn-lg login-submit-btn"
+                      [disabled]="!loginForm.form.valid || authService.loading()"
+                    >
+                      @if (authService.loading()) {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Iniciando sesión...</span>
+                      } @else {
+                        <span>Iniciar Sesión</span>
+                      }
+                    </button>
+                  </div>
+
+                  <div class="text-center">
+                    <button
+                      type="button"
+                      class="btn btn-link text-decoration-none p-0"
+                      (click)="goToRegister()"
+                      [disabled]="authService.loading()"
+                    >
+                      ¿No tienes cuenta? <span class="fw-semibold">Registrarse</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>

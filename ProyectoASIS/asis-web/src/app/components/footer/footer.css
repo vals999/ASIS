@@ -1,0 +1,118 @@
+/* Footer Component Styles */
+
+/* Footer principal */
+footer {
+  background-color: #212529 !important;
+}
+
+/* Logo del footer */
+.footer-logo {
+  transition: transform 0.3s ease;
+  border-radius: 6px;
+}
+
+.footer-logo:hover {
+  transform: scale(1.05);
+}
+
+/* Enlaces del footer */
+.footer-link {
+  font-size: 0.875rem;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #1e5a5a !important;
+  text-decoration: none !important;
+}
+
+/* Cursor pointer para enlaces con click */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Enlaces de redes sociales */
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: rgba(30, 90, 90, 0.1);
+  border-radius: 0.5rem;
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.social-link:hover {
+  background-color: rgba(30, 90, 90, 0.2);
+  color: #1e5a5a;
+  transform: translateY(-2px);
+}
+
+.social-link i {
+  font-size: 1.125rem;
+}
+
+/* Títulos de secciones */
+footer h4 {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Separador */
+footer hr {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  footer {
+    text-align: center;
+  }
+  
+  .footer-links {
+    text-align: center;
+  }
+  
+  .social-link {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  
+  .social-link i {
+    font-size: 1rem;
+  }
+  
+  .d-flex.gap-2 {
+    justify-content: center;
+  }
+  
+  .d-flex.gap-4 {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 576px) {
+  footer .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  footer .py-5 {
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+  }
+  
+  .d-flex.flex-column.flex-md-row {
+    text-align: center;
+  }
+  
+  .d-flex.gap-4 {
+    margin-top: 1rem;
+    gap: 1rem !important;
+  }
+}

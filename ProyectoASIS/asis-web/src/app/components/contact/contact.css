@@ -1,0 +1,165 @@
+/* Contact Component Styles */
+
+/* Sección principal */
+.contact-section {
+  background-color: rgba(248, 249, 250, 0.3);
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+/* Introducción */
+.contact-intro {
+  max-width: 32rem;
+}
+
+/* Tarjetas */
+.contact-info-card,
+.contact-form-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 1rem;
+}
+
+.contact-info-card:hover,
+.contact-form-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Items de contacto */
+.contact-item {
+  padding: 1rem 0;
+  transition: all 0.3s ease;
+}
+
+.contact-item:hover {
+  background-color: rgba(30, 90, 90, 0.02);
+  border-radius: 0.5rem;
+  margin: 0 -1rem;
+  padding: 1rem;
+}
+
+/* Iconos de contacto */
+.contact-icon {
+  width: 3rem;
+  height: 3rem;
+  background-color: rgba(30, 90, 90, 0.1);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.contact-icon i {
+  font-size: 1.5rem;
+  color: #1e5a5a;
+}
+
+.contact-item:hover .contact-icon {
+  background-color: rgba(30, 90, 90, 0.2);
+  transform: scale(1.1);
+}
+
+/* Formulario */
+.contact-input,
+.contact-textarea {
+  border: 2px solid #e9ecef;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.contact-input:focus,
+.contact-textarea:focus {
+  border-color: #1e5a5a;
+  box-shadow: 0 0 0 0.2rem rgba(30, 90, 90, 0.25);
+  outline: none;
+}
+
+.contact-input::placeholder,
+.contact-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Botón de envío */
+.contact-submit-btn {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+  font-weight: 600;
+  padding: 0.875rem 2rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.contact-submit-btn:hover:not(:disabled) {
+  background-color: #174a4a;
+  border-color: #174a4a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 90, 90, 0.3);
+}
+
+.contact-submit-btn:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Labels del formulario */
+.form-label {
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Colores personalizados */
+.text-primary {
+  color: #1e5a5a !important;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+  .contact-section {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  
+  .contact-intro {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-item:hover {
+    margin: 0;
+    padding: 1rem 0;
+    background-color: transparent;
+  }
+  
+  .contact-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .contact-icon i {
+    font-size: 1.25rem;
+  }
+  
+  .row.g-3 .col-6 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .contact-info-card,
+  .contact-form-card {
+    margin-bottom: 2rem;
+  }
+  
+  .contact-submit-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}

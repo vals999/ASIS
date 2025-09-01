@@ -13,8 +13,11 @@ import { ReportesComponent } from './components/reportes/reportes';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { Inicio } from './components/inicio/inicio';
+import { LandingComponent } from './components/landing/landing';
 
 export const routes: Routes = [
+  { path: '', component: LandingComponent },
+  { path: 'landing', component: LandingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'inicio', component: Inicio, canActivate: [authGuard] },
@@ -27,6 +30,5 @@ export const routes: Routes = [
   { path: 'encuestadores', component: EncuestadorComponent, canActivate: [authGuard] },
   { path: 'mapa', component: MapaComponent, canActivate: [authGuard] },
   { path: 'reportes', component: ReportesComponent, canActivate: [authGuard] },
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: '**', redirectTo: '/login' }
+  { path: '**', redirectTo: '/' }
 ];
