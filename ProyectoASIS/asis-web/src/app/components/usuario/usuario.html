@@ -1,175 +1,278 @@
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Usuarios</h2>
+<div class="container-fluid p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 fw-bold text-dark mb-1">Usuarios</h2>
+      <p class="text-muted mb-0">Gestión de usuarios del sistema</p>
+    </div>
     <div class="d-flex gap-2">
       <button class="btn btn-primary" (click)="toggleFormularioAlta()">
+        <i class="bi bi-plus-circle me-2"></i>
         Crear Usuario
       </button>
       <input type="text" 
              class="form-control" 
              style="width: 250px;" 
-             placeholder="Buscar..." 
+             placeholder="Buscar usuario..." 
              [value]="search()"
              (input)="updateSearch($any($event.target).value)">
     </div>
   </div>
 
   <!-- Indicador de carga -->
-  <div *ngIf="usuariosService.loading()" class="text-center py-3">
-    <div class="spinner-border" role="status">
-      <span class="visually-hidden">Cargando...</span>
+  @if (usuariosService.loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2 text-muted">Cargando usuarios...</p>
     </div>
-  </div>
-
-  <!-- Mensaje de error global -->
-  <div *ngIf="usuariosService.error()" class="alert alert-danger">
-    {{ usuariosService.error() }}
-    <button class="btn btn-sm btn-outline-danger ms-2" 
-            (click)="usuariosService.clearError()">
-      Cerrar
-    </button>
-  </div>
-
-  <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearUsuario()" class="mb-4 border rounded p-3 bg-light">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-3">
-        <label class="form-label">Nombre de usuario</label>
-        <input type="text" 
-               class="form-control" 
-               [value]="nuevoUsuario().nombreUsuario"
-               (input)="updateNuevoUsuarioNombre($any($event.target).value)"
-               required>
-      </div>
-      <div class="col-md-3">
-        <label class="form-label">Email</label>
-        <input type="email" 
-               class="form-control" 
-               [value]="nuevoUsuario().email"
-               (input)="updateNuevoUsuarioEmail($any($event.target).value)"
-               required>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Contraseña</label>
-        <input type="password" 
-               class="form-control" 
-               [value]="nuevoUsuario().contrasena"
-               (input)="updateNuevoUsuarioContrasena($any($event.target).value)"
-               required>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Rol</label>
-        <select class="form-select" 
-                [value]="nuevoUsuario().perfil"
-                (change)="updateNuevoUsuarioPerfil($any($event.target).value)"
-                required>
-          <option value="">Seleccionar rol</option>
-          <option *ngFor="let opcion of opcionesPerfiles" [value]="opcion.value">
-            {{ opcion.label }}
-          </option>
-        </select>
-      </div>
-      <div class="col-md-1">
-        <label class="form-label">Habilitado</label>
-        <select class="form-select" 
-                [value]="nuevoUsuario().habilitado"
-                (change)="updateNuevoUsuarioHabilitado($any($event.target).value)">
-          <option [value]="true">Sí</option>
-          <option [value]="false">No</option>
-        </select>
-      </div>
-      <div class="col-md-1">
-        <button type="submit" class="btn btn-success w-100">Guardar</button>
-      </div>
-      <div class="col-md-1">
-        <button type="button" class="btn btn-secondary w-100" (click)="cancelarAlta()">Cancelar</button>
-      </div>
+  } @else if (usuariosService.error()) {
+    <!-- Mensaje de error global -->
+    <div class="alert alert-danger" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      {{ usuariosService.error() }}
+      <button class="btn btn-sm btn-outline-danger ms-2" 
+              (click)="usuariosService.clearError()">
+        Cerrar
+      </button>
     </div>
-    
-    <!-- Mensaje de confirmación -->
-    <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
-         [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
-      {{ mensajeExito() }}
-    </div>
-  </form>
+  } @else {
 
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre de usuario</th>
-        <th>Email</th>
-        <th>Rol</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let usuario of usuariosFiltrados()">
-        <!-- Fila normal del usuario -->
-        <tr>
-          <td>#{{ usuario.id }}</td>
-          <td>{{ usuario.nombreUsuario }}</td>
-          <td>{{ usuario.email }}</td>
-          <td>{{ usuario.perfil }}</td>
-          <td>
-            <a href="#" class="me-2" (click)="$event.preventDefault(); editarUsuario(usuario)">Editar</a>
-            <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarUsuario(usuario.id)">Eliminar</a>
-          </td>
-        </tr>
-        <!-- Fila del formulario de edición -->
-        <tr *ngIf="usuarioEditando() === usuario.id" class="bg-light">
-          <td colspan="5">
-            <div class="p-3 border rounded">
-              <h6 class="mb-3">Editar Usuario #{{ usuario.id }}</h6>
-              <div class="row g-2">
-                <div class="col-md-3">
-                  <label class="form-label">Nombre de usuario</label>
-                  <input type="text" 
-                         class="form-control" 
-                         [value]="usuarioEditado().nombreUsuario"
-                         (input)="updateUsuarioEditadoNombre($any($event.target).value)"
-                         required>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label">Email</label>
-                  <input type="email" 
-                         class="form-control" 
-                         [value]="usuarioEditado().email"
-                         (input)="updateUsuarioEditadoEmail($any($event.target).value)"
-                         required>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">Rol</label>
-                  <select class="form-select" 
-                          [value]="usuarioEditado().perfil"
-                          (change)="updateUsuarioEditadoPerfil($any($event.target).value)"
-                          required>
-                    <option value="">Seleccionar rol</option>
-                    <option *ngFor="let opcion of opcionesPerfiles" [value]="opcion.value">
-                      {{ opcion.label }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <div class="d-flex flex-column gap-1 mt-4">
-                    <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
-                      Confirmar
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
+    <!-- Formulario de creación -->
+    @if (mostrarFormularioAlta()) {
+      <div class="card mb-4">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-plus-circle me-2"></i>
+            Crear Nuevo Usuario
+          </h5>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="crearUsuario()">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label fw-medium">Nombre de usuario</label>
+                <input type="text" 
+                       class="form-control" 
+                       [value]="nuevoUsuario().nombreUsuario"
+                       (input)="updateNuevoUsuarioNombre($any($event.target).value)"
+                       required>
               </div>
-              
-              <!-- Mensaje de validación dentro del formulario de edición -->
-              <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
-                   [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
-                {{ mensajeEdicion() }}
+              <div class="col-md-3">
+                <label class="form-label fw-medium">Email</label>
+                <input type="email" 
+                       class="form-control" 
+                       [value]="nuevoUsuario().email"
+                       (input)="updateNuevoUsuarioEmail($any($event.target).value)"
+                       required>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label fw-medium">Contraseña</label>
+                <input type="password" 
+                       class="form-control" 
+                       [value]="nuevoUsuario().contrasena"
+                       (input)="updateNuevoUsuarioContrasena($any($event.target).value)"
+                       required>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label fw-medium">Rol</label>
+                <select class="form-select" 
+                        [value]="nuevoUsuario().perfil"
+                        (change)="updateNuevoUsuarioPerfil($any($event.target).value)"
+                        required>
+                  <option value="">Seleccionar rol</option>
+                  <option *ngFor="let opcion of opcionesPerfiles" [value]="opcion.value">
+                    {{ opcion.label }}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label fw-medium">Habilitado</label>
+                <select class="form-select" 
+                        [value]="nuevoUsuario().habilitado"
+                        (change)="updateNuevoUsuarioHabilitado($any($event.target).value)">
+                  <option [value]="true">Sí</option>
+                  <option [value]="false">No</option>
+                </select>
               </div>
             </div>
-          </td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
+            
+            <div class="d-flex gap-2 mt-3">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-lg me-1"></i>
+                Guardar
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="cancelarAlta()">
+                <i class="bi bi-x-lg me-1"></i>
+                Cancelar
+              </button>
+            </div>
+            
+            <!-- Mensaje de confirmación -->
+            @if (mensajeExito()) {
+              <div class="alert mt-3 mb-0" 
+                   [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
+                <i [class]="mensajeExito().includes('Error') ? 'bi bi-exclamation-triangle me-2' : 'bi bi-check-circle me-2'"></i>
+                {{ mensajeExito() }}
+              </div>
+            }
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- Tabla de usuarios -->
+    @if (usuariosFiltrados().length > 0) {
+      <div class="card">
+        <div class="card-header bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Usuarios Registrados ({{ usuariosFiltrados().length }})</h5>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Usuario</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Rol</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col" class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (usuario of usuariosFiltrados(); track usuario.id) {
+                  <!-- Fila normal del usuario -->
+                  <tr>
+                    <td class="fw-medium">#{{ usuario.id }}</td>
+                    <td>
+                      <div class="fw-medium">{{ usuario.nombreUsuario }}</div>
+                    </td>
+                    <td>
+                      <div class="text-muted">{{ usuario.email }}</div>
+                    </td>
+                    <td>
+                      <span class="badge bg-primary">{{ usuario.perfil }}</span>
+                    </td>
+                    <td>
+                      @if (usuario.habilitado) {
+                        <span class="badge bg-success">
+                          <i class="bi bi-check-circle me-1"></i>
+                          Habilitado
+                        </span>
+                      } @else {
+                        <span class="badge bg-warning">
+                          <i class="bi bi-clock me-1"></i>
+                          Deshabilitado
+                        </span>
+                      }
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" 
+                                class="btn btn-outline-primary"
+                                (click)="editarUsuario(usuario)"
+                                title="Editar usuario">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" 
+                                class="btn btn-outline-danger"
+                                (click)="eliminarUsuario(usuario.id)"
+                                title="Eliminar usuario">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <!-- Fila del formulario de edición -->
+                  @if (usuarioEditando() === usuario.id) {
+                    <tr class="table-secondary">
+                      <td colspan="6">
+                        <div class="p-3">
+                          <h6 class="mb-3">
+                            <i class="bi bi-pencil me-2"></i>
+                            Editar Usuario #{{ usuario.id }}
+                          </h6>
+                          <div class="row g-3">
+                            <div class="col-md-3">
+                              <label class="form-label fw-medium">Nombre de usuario</label>
+                              <input type="text" 
+                                     class="form-control" 
+                                     [value]="usuarioEditado().nombreUsuario"
+                                     (input)="updateUsuarioEditadoNombre($any($event.target).value)"
+                                     required>
+                            </div>
+                            <div class="col-md-3">
+                              <label class="form-label fw-medium">Email</label>
+                              <input type="email" 
+                                     class="form-control" 
+                                     [value]="usuarioEditado().email"
+                                     (input)="updateUsuarioEditadoEmail($any($event.target).value)"
+                                     required>
+                            </div>
+                            <div class="col-md-3">
+                              <label class="form-label fw-medium">Rol</label>
+                              <select class="form-select" 
+                                      [value]="usuarioEditado().perfil"
+                                      (change)="updateUsuarioEditadoPerfil($any($event.target).value)"
+                                      required>
+                                <option value="">Seleccionar rol</option>
+                                <option *ngFor="let opcion of opcionesPerfiles" [value]="opcion.value">
+                                  {{ opcion.label }}
+                                </option>
+                              </select>
+                            </div>
+                            <div class="col-md-3">
+                              <label class="form-label fw-medium">Estado</label>
+                              <select class="form-select" 
+                                      [value]="usuarioEditado().habilitado"
+                                      (change)="updateUsuarioEditadoHabilitado($any($event.target).value)">
+                                <option [value]="true">Habilitado</option>
+                                <option [value]="false">Deshabilitado</option>
+                              </select>
+                            </div>
+                          </div>
+                          
+                          <div class="d-flex gap-2 mt-3">
+                            <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
+                              <i class="bi bi-check-lg me-1"></i>
+                              Confirmar
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
+                              <i class="bi bi-x-lg me-1"></i>
+                              Cancelar
+                            </button>
+                          </div>
+                          
+                          <!-- Mensaje de validación dentro del formulario de edición -->
+                          @if (mensajeEdicion()) {
+                            <div class="alert mt-3 mb-0" 
+                                 [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
+                              <i [class]="mensajeEdicion().includes('Error') ? 'bi bi-exclamation-triangle me-2' : 'bi bi-check-circle me-2'"></i>
+                              {{ mensajeEdicion() }}
+                            </div>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-people display-1 text-muted mb-3"></i>
+          <h5 class="text-muted">No hay usuarios disponibles</h5>
+          <p class="text-muted">Haz clic en "Crear Usuario" para agregar el primer usuario</p>
+        </div>
+      </div>
+    }
+
+  }
 </div>

@@ -1,0 +1,55 @@
+<!-- Sección de Importar CSV (Solo Admin) -->
+<div class="row mb-4" *ngIf="perfil === 'ADMINISTRADOR'">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm csv-import-card">
+      <div class="card-header bg-white border-bottom">
+        <h5 class="card-title mb-0 d-flex align-items-center">
+          <i class="bi bi-upload me-2" style="color: #1e5a5a;"></i>
+          Importar Datos
+        </h5>
+        <p class="card-text text-muted small mb-0">Carga archivos CSV para importar datos al sistema</p>
+      </div>
+      <div class="card-body">
+        <form #csvForm="ngForm" (ngSubmit)="onCsvUpload($event)" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="csv-file" class="form-label">Seleccionar archivo CSV</label>
+            <input 
+              type="file" 
+              id="csv-file"
+              (change)="onFileSelected($event)" 
+              accept=".csv" 
+              class="form-control"
+              [disabled]="uploading()">
+            <div class="form-text">
+              <span *ngIf="selectedFile(); else noFile">
+                Archivo seleccionado: {{ selectedFile()?.name }}
+              </span>
+              <ng-template #noFile>
+                Ningún archivo seleccionado
+              </ng-template>
+            </div>
+          </div>
+          <button 
+            type="submit" 
+            class="btn btn-primary w-100"
+            [disabled]="!selectedFile() || uploading()">
+            @if (uploading()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Subiendo...
+            } @else {
+              <i class="bi bi-upload me-1"></i>
+              Importar CSV
+            }
+          </button>
+        </form>
+        
+        <!-- Mensajes -->
+        <div *ngIf="uploadMessage()" class="alert mt-3 mb-0" 
+             [ngClass]="uploadMessage().includes('Error') ? 'alert-danger' : 'alert-success'">
+          <i [class]="uploadMessage().includes('Error') ? 'bi bi-exclamation-triangle me-2' : 'bi bi-check-circle me-2'"></i>
+          {{ uploadMessage() }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

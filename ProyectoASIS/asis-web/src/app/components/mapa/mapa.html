@@ -1,15 +1,9 @@
 <div class="mapa-container">
   <h2>Mapa Interactivo</h2>
   
-  <!-- Indicador de carga para cuando no estamos en el navegador -->
-  <div *ngIf="!isBrowser" class="loading-indicator">
-    <p>El mapa se cargará en el navegador...</p>
-  </div>
-  
-  <!-- Indicador de carga para datos -->
-  <div *ngIf="isBrowser && cargandoDatos" class="loading-indicator">
-    <p>Cargando coordenadas desde la base de datos...</p>
-  </div>
+  <!-- Componente de carga de archivos encima del mapa -->
+  <app-carga-archivos></app-carga-archivos>
+
   
   <div id="map" class="map-display"></div>
 </div>

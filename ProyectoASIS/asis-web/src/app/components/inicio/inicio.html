@@ -1,12 +1,11 @@
-<div class="container mt-4">
-  <h2>Bienvenido {{ authService.currentUser()?.nombreUsuario ? ', ' + authService.currentUser()?.nombreUsuario: '' }}</h2>
-  <p *ngIf="perfil === 'ADMINISTRADOR'">Panel de administrador</p>
-  <p *ngIf="perfil === 'PERSONAL_SALUD'">Panel de personal de salud</p>
-  <p *ngIf="perfil === 'REFERENTE_ORG_SOCIAL'">Panel de referente de organización social</p>
-
-  <form #csvForm="ngForm" (ngSubmit)="onCsvUpload($event)" enctype="multipart/form-data">
-    <input type="file" (change)="onFileSelected($event)" accept=".csv">
-    <button type="submit" class="btn btn-primary mt-2">Importar CSV</button>
-  </form>
-  <div *ngIf="uploadMessage" class="alert alert-info mt-2">{{ uploadMessage }}</div>
+<div class="flex-fill p-4">
+  <!-- Header de Bienvenida -->
+  <div class="mb-4">
+    <h1 class="display-6 fw-bold text-dark mb-2">
+      Bienvenido{{ authService.currentUser()?.nombreUsuario ? ', ' + authService.currentUser()?.nombreUsuario : '' }}
+    </h1>
+    <p class="text-muted" *ngIf="perfil === 'ADMINISTRADOR'">Panel de administrador</p>
+    <p class="text-muted" *ngIf="perfil === 'PERSONAL_SALUD'">Panel de personal de salud</p>
+    <p class="text-muted" *ngIf="perfil === 'REFERENTE_ORG_SOCIAL'">Panel de referente de organización social</p>
+  </div>
 </div>

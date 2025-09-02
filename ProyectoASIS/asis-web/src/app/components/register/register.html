@@ -1,196 +1,242 @@
-<div class="container-fluid vh-100 bg-light d-flex align-items-center justify-content-center">
-  <div class="row w-100">
-    <div class="col-12 col-sm-11 col-md-10 col-lg-9 col-xl-8 mx-auto">
-      <div class="card shadow">
-        <div class="card-body p-4">
-          <div class="text-center mb-4">
-            <h2 class="card-title h3 fw-bold text-dark mb-2">Sistema ASIS</h2>
-            <p class="text-muted">Crear Cuenta</p>
+<div class="register-wrapper">
+  <!-- Header del registro -->
+  <div class="register-header py-4">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between">
+        <a (click)="goToHome()" class="d-flex align-items-center text-decoration-none cursor-pointer">
+          <img src="assets/logo/favicon-32x32.png" 
+               alt="ASIS Logo" 
+               class="me-3"
+               style="height: 40px; width: 40px;">
+          <div>
+            <h1 class="h5 mb-0 fw-bold text-dark">ASIS</h1>
+            <p class="small text-muted mb-0">Centro de Salud Universitario</p>
           </div>
-          
-          <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
-            <!-- Datos de Usuario -->
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label for="email" class="form-label fw-medium">Email <span class="text-danger">*</span>:</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  [(ngModel)]="userData.email"
-                  required
-                  email
-                  class="form-control"
-                  [disabled]="authService.loading()"
-                  placeholder="ejemplo@correo.com"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="nombreUsuario" class="form-label fw-medium">Usuario <span class="text-danger">*</span>:</label>
-                <input
-                  type="text"
-                  id="nombreUsuario"
-                  name="nombreUsuario"
-                  [(ngModel)]="userData.nombreUsuario"
-                  required
-                  minlength="3"
-                  class="form-control"
-                  [disabled]="authService.loading()"
-                  placeholder="Mínimo 3 caracteres"
-                />
-              </div>
-            </div>
+        </a>
+        <a href="/" class="btn btn-outline-primary btn-sm">
+          ← Volver al inicio
+        </a>
+      </div>
+    </div>
+  </div>
 
-            <!-- Datos Personales -->
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label for="nombre" class="form-label fw-medium">Nombre <span class="text-danger">*</span>:</label>
-                <input
-                  type="text"
-                  id="nombre"
-                  name="nombre"
-                  [(ngModel)]="userData.nombre"
-                  required
-                  class="form-control"
-                  [disabled]="authService.loading()"
-                  placeholder="Ingrese su nombre"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="apellido" class="form-label fw-medium">Apellido <span class="text-danger">*</span>:</label>
-                <input
-                  type="text"
-                  id="apellido"
-                  name="apellido"
-                  [(ngModel)]="userData.apellido"
-                  required
-                  class="form-control"
-                  [disabled]="authService.loading()"
-                  placeholder="Ingrese su apellido"
-                />
-              </div>
-            </div>
-
-            <div class="row mb-3">
-              <div class="col-md-4">
-                <label for="dni" class="form-label fw-medium">DNI <span class="text-danger">*</span>:</label>
-                <input
-                  type="text"
-                  id="dni"
-                  name="dni"
-                  [(ngModel)]="userData.dni"
-                  required
-                  pattern="[0-9]{7,8}"
-                  class="form-control"
-                  [disabled]="authService.loading()"
-                  placeholder="12345678"
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="edad" class="form-label fw-medium">Edad <span class="text-danger">*</span>:</label>
-                <input
-                  type="number"
-                  id="edad"
-                  name="edad"
-                  [(ngModel)]="userData.edad"
-                  required
-                  min="16"
-                  max="120"
-                  class="form-control"
-                  [disabled]="authService.loading()"
-                  placeholder="25"
-                />
-              </div>
-              <div class="col-md-4">
-                <label for="genero" class="form-label fw-medium">Género <span class="text-danger">*</span>:</label>
-                <select
-                  id="genero"
-                  name="genero"
-                  [(ngModel)]="userData.genero"
-                  required
-                  class="form-select"
-                  [disabled]="authService.loading()"
-                >
-                  @for (option of generoOptions; track option.value) {
-                    <option [value]="option.value">{{ option.label }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label for="contrasena" class="form-label fw-medium">Contraseña <span class="text-danger">*</span>:</label>
-                <input
-                  type="password"
-                  id="contrasena"
-                  name="contrasena"
-                  [(ngModel)]="userData.contrasena"
-                  required
-                  minlength="6"
-                  class="form-control"
-                  [disabled]="authService.loading()"
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="perfil" class="form-label fw-medium">Tipo de Perfil <span class="text-danger">*</span>:</label>
-                <select
-                  id="perfil"
-                  name="perfil"
-                  [(ngModel)]="userData.perfil"
-                  required
-                  class="form-select"
-                  [disabled]="authService.loading()"
-                >
-                  @for (option of perfilOptions; track option.value) {
-                    <option [value]="option.value">{{ option.label }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-
-            @if (errorMessage()) {
-              <div class="alert alert-danger" role="alert">
-                {{ errorMessage() }}
-              </div>
-            }
-
-            @if (successMessage()) {
-              <div class="alert alert-success" role="alert">
-                {{ successMessage() }}
-                <div class="mt-2">
-                  <small class="text-muted">Redirigiendo al login en 3 segundos...</small>
+  <!-- Contenido principal del registro -->
+  <div class="register-content">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-9">
+          <div class="card register-card border-0 shadow-lg overflow-hidden">
+            <div class="row g-0">
+              
+              <!-- Lado izquierdo - Información -->
+              <div class="col-lg-5 register-info-side">
+                <div class="p-5 text-white h-100 d-flex flex-column justify-content-center">
+                  <div class="mb-4">
+                    <h2 class="fw-bold mb-3">Únete a ASIS</h2>
+                    <p class="mb-4 opacity-90">
+                      Solo podrás acceder una vez tu cuenta haya sido aprobada por un administrador.
+                    </p>
+                  </div>
                 </div>
               </div>
-            }
 
-            <div class="d-grid mb-3">
-              <button
-                type="submit"
-                class="btn btn-success"
-                [disabled]="!registerForm.form.valid || authService.loading()"
-              >
-                @if (authService.loading()) {
-                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  <span>Registrando...</span>
-                } @else {
-                  <span>Registrarse</span>
-                }
-              </button>
-            </div>
+              <!-- Lado derecho - Formulario -->
+              <div class="col-lg-7 register-form-side">
+                <div class="p-5">
+                  <div class="text-center mb-4">
+                    <h3 class="fw-bold text-dark mb-2">Crear Cuenta</h3>
+                    <p class="text-muted">Completa tus datos para registrarte</p>
+                  </div>
 
-            <div class="text-center">
-              <button
-                type="button"
-                class="btn btn-link text-decoration-none"
-                (click)="goToLogin()"
-                [disabled]="authService.loading()"
-              >
-                ¿Ya tienes cuenta? Iniciar Sesión
-              </button>
+                  <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+                    <!-- Datos de Usuario -->
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label for="email" class="form-label fw-medium text-dark">Email <span class="text-danger">*</span></label>
+                        <input
+                          type="email"
+                          id="email"
+                          name="email"
+                          [(ngModel)]="userData.email"
+                          required
+                          email
+                          class="form-control register-input"
+                          [disabled]="authService.loading()"
+                          placeholder="ejemplo@correo.com"
+                        />
+                      </div>
+                      <div class="col-md-6">
+                        <label for="nombreUsuario" class="form-label fw-medium text-dark">Usuario <span class="text-danger">*</span></label>
+                        <input
+                          type="text"
+                          id="nombreUsuario"
+                          name="nombreUsuario"
+                          [(ngModel)]="userData.nombreUsuario"
+                          required
+                          minlength="3"
+                          class="form-control register-input"
+                          [disabled]="authService.loading()"
+                          placeholder="Mínimo 3 caracteres"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Datos Personales -->
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label for="nombre" class="form-label fw-medium text-dark">Nombre <span class="text-danger">*</span></label>
+                        <input
+                          type="text"
+                          id="nombre"
+                          name="nombre"
+                          [(ngModel)]="userData.nombre"
+                          required
+                          class="form-control register-input"
+                          [disabled]="authService.loading()"
+                          placeholder="Tu nombre"
+                        />
+                      </div>
+                      <div class="col-md-6">
+                        <label for="apellido" class="form-label fw-medium text-dark">Apellido <span class="text-danger">*</span></label>
+                        <input
+                          type="text"
+                          id="apellido"
+                          name="apellido"
+                          [(ngModel)]="userData.apellido"
+                          required
+                          class="form-control register-input"
+                          [disabled]="authService.loading()"
+                          placeholder="Tu apellido"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <div class="col-md-4">
+                        <label for="dni" class="form-label fw-medium text-dark">DNI <span class="text-danger">*</span></label>
+                        <input
+                          type="text"
+                          id="dni"
+                          name="dni"
+                          [(ngModel)]="userData.dni"
+                          required
+                          pattern="[0-9]{7,8}"
+                          class="form-control register-input"
+                          [disabled]="authService.loading()"
+                          placeholder="12345678"
+                        />
+                      </div>
+                      <div class="col-md-4">
+                        <label for="edad" class="form-label fw-medium text-dark">Edad <span class="text-danger">*</span></label>
+                        <input
+                          type="number"
+                          id="edad"
+                          name="edad"
+                          [(ngModel)]="userData.edad"
+                          required
+                          min="16"
+                          max="120"
+                          class="form-control register-input"
+                          [disabled]="authService.loading()"
+                          placeholder="25"
+                        />
+                      </div>
+                      <div class="col-md-4">
+                        <label for="genero" class="form-label fw-medium text-dark">Género <span class="text-danger">*</span></label>
+                        <select
+                          id="genero"
+                          name="genero"
+                          [(ngModel)]="userData.genero"
+                          required
+                          class="form-select register-input"
+                          [disabled]="authService.loading()"
+                        >
+                          @for (option of generoOptions; track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label for="contrasena" class="form-label fw-medium text-dark">Contraseña <span class="text-danger">*</span></label>
+                        <input
+                          type="password"
+                          id="contrasena"
+                          name="contrasena"
+                          [(ngModel)]="userData.contrasena"
+                          required
+                          minlength="6"
+                          class="form-control register-input"
+                          [disabled]="authService.loading()"
+                          placeholder="Mínimo 6 caracteres"
+                        />
+                      </div>
+                      <div class="col-md-6">
+                        <label for="perfil" class="form-label fw-medium text-dark">Tipo de Perfil <span class="text-danger">*</span></label>
+                        <select
+                          id="perfil"
+                          name="perfil"
+                          [(ngModel)]="userData.perfil"
+                          required
+                          class="form-select register-input"
+                          [disabled]="authService.loading()"
+                        >
+                          @for (option of perfilOptions; track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+
+                    @if (errorMessage()) {
+                      <div class="alert alert-danger register-alert" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {{ errorMessage() }}
+                      </div>
+                    }
+
+                    @if (successMessage()) {
+                      <div class="alert alert-success register-alert" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        {{ successMessage() }}
+                        <div class="mt-2">
+                          <small class="text-muted">Redirigiendo al login en 3 segundos...</small>
+                        </div>
+                      </div>
+                    }
+
+                    <div class="d-grid mb-3">
+                      <button
+                        type="submit"
+                        class="btn btn-primary btn-lg register-submit-btn"
+                        [disabled]="!registerForm.form.valid || authService.loading()"
+                      >
+                        @if (authService.loading()) {
+                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          <span>Registrando...</span>
+                        } @else {
+                          <span>Crear Cuenta</span>
+                        }
+                      </button>
+                    </div>
+
+                    <div class="text-center">
+                      <button
+                        type="button"
+                        class="btn btn-link text-decoration-none register-link"
+                        (click)="goToLogin()"
+                        [disabled]="authService.loading()"
+                      >
+                        ¿Ya tienes cuenta? <span class="fw-semibold">Iniciar Sesión</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>

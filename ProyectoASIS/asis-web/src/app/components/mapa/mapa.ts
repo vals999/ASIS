@@ -1,11 +1,12 @@
 import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MapaService, Coordenada } from '../../services/mapa.service';
+import { CargaArchivosComponent } from '../carga-archivos/carga-archivos';
 
 @Component({
   selector: 'app-mapa',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CargaArchivosComponent],
   templateUrl: './mapa.html',
   styleUrl: './mapa.css'
 })

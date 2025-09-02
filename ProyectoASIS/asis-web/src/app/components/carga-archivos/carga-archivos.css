@@ -1,0 +1,65 @@
+/* Card específica para importar CSV - sin efectos hover */
+.csv-import-card {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.csv-import-card:hover {
+  transform: none !important;
+  background-color: #fff !important;
+  box-shadow: none !important;
+}
+
+.card-header {
+  background-color: #fff !important;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  padding: 0.75rem;
+}
+
+.form-control:focus {
+  border-color: #1e5a5a;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-primary {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  background-color: #164242;
+  border-color: #164242;
+}
+
+.btn-primary:disabled {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.alert {
+  border-radius: 8px;
+  border: none;
+}
+
+.alert-success {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.spinner-border-sm {
+  width: 0.875rem;
+  height: 0.875rem;
+}
