@@ -2,6 +2,11 @@
 .csv-import-card {
   background-color: #fff;
   border: 1px solid #e5e7eb;
+  /* Asegurar que los dropdowns se muestren correctamente */
+  overflow: visible !important;
+  /* Z-index para el contenedor principal */
+  position: relative;
+  z-index: 1;
 }
 
 .csv-import-card:hover {
@@ -15,6 +20,11 @@
   border-bottom: 1px solid #e9ecef;
 }
 
+.card-body {
+  /* Permitir que los dropdowns se expandan fuera del contenedor */
+  overflow: visible !important;
+}
+
 .form-control {
   border-radius: 8px;
   border: 1px solid #e9ecef;
@@ -24,6 +34,74 @@
 .form-control:focus {
   border-color: #1e5a5a;
   box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Estilos específicos para los dropdowns */
+.form-select {
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  padding: 0.75rem;
+  background-color: #fff;
+  /* Forzar el renderizado correcto del dropdown */
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+/* Contenedor específico para los dropdowns */
+.dropdown-container {
+  position: relative !important;
+  z-index: 9998 !important;
+  /* Asegurar que el contenedor permita que los dropdowns se expandan */
+  overflow: visible !important;
+}
+
+/* Clase específica para solucionar el problema del primer clic */
+.dropdown-fixed {
+  /* Forzar el repintado del elemento */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  /* Asegurar que el dropdown se renderice correctamente */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Mejorar el rendimiento del rendering */
+  will-change: auto;
+  /* Forzar aceleración por hardware */
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+  /* Z-index muy alto para aparecer por encima del mapa */
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+/* Estilos adicionales para el dropdown cuando está abierto */
+.dropdown-fixed:focus,
+.dropdown-fixed:active {
+  z-index: 10000 !important;
+}
+
+/* Asegurar que el contenedor del dropdown también tenga z-index alto */
+.dropdown-fixed option {
+  z-index: 10001 !important;
+  position: relative;
+}
+
+.form-select:focus {
+  border-color: #1e5a5a;
+  box-shadow: 0 0 0 0.2rem rgba(30, 90, 90, 0.25);
+  outline: none;
+}
+
+/* Asegurar que las opciones del dropdown se muestren correctamente */
+.form-select option {
+  padding: 8px 12px;
+  background-color: #fff;
+  color: #212529;
+}
+
+.form-select optgroup {
+  font-weight: bold;
+  color: #6c757d;
+  background-color: #f8f9fa;
 }
 
 .btn-primary {

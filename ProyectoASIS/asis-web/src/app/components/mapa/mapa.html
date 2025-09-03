@@ -1,9 +1,33 @@
-<div class="mapa-container">
-  <h2>Mapa Interactivo</h2>
-  
-  <!-- Componente de carga de archivos encima del mapa -->
-  <app-carga-archivos></app-carga-archivos>
+<div class="container-fluid p-0" style="height: 100vh;">
+  <div class="row g-0 h-100">
+    
+    <!-- Columna izquierda - Mapa (50% de la pantalla) -->
+    <div class="col-6 d-flex flex-column">
+      <div class="p-3 bg-light border-bottom">
+        <h4 class="mb-0 d-flex align-items-center">
+          <i class="bi bi-geo-alt me-2" style="color: #1e5a5a;"></i>
+          Mapa Interactivo
+        </h4>
+      </div>
+      <div class="flex-fill">
+        <div id="map" class="map-display h-100 w-100"></div>
+      </div>
+    </div>
 
-  
-  <div id="map" class="map-display"></div>
+    <!-- Columna derecha - Controles de carga y preguntas (50% de la pantalla) -->
+    <div class="col-6 d-flex flex-column bg-white border-start">
+      <div class="p-3 bg-light border-bottom">
+        <h4 class="mb-0 d-flex align-items-center">
+          <i class="bi bi-gear me-2" style="color: #1e5a5a;"></i>
+          Panel de Control
+        </h4>
+      </div>
+      <div class="flex-fill overflow-auto">
+        <div class="p-3">
+          <app-carga-archivos></app-carga-archivos>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>

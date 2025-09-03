@@ -1,7 +1,9 @@
-import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MapaService, Coordenada } from '../../services/mapa.service';
 import { CargaArchivosComponent } from '../carga-archivos/carga-archivos';
+import { EventService } from '../../services/event.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-mapa',
@@ -10,22 +12,46 @@ import { CargaArchivosComponent } from '../carga-archivos/carga-archivos';
   templateUrl: './mapa.html',
   styleUrl: './mapa.css'
 })
-export class MapaComponent implements OnInit, AfterViewInit {
+export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   private map: any;
   public isBrowser: boolean;
   private coordenadas: Coordenada[] = [];
   public cargandoDatos = false;
+  private csvUploadSubscription?: Subscription;
+  private showMapSubscription?: Subscription;
+  private showFilteredMapSubscription?: Subscription;
+  private markersGroup: any;
+  public csvCargado = false;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
-    private mapaService: MapaService
+    private mapaService: MapaService,
+    private eventService: EventService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   ngOnInit(): void {
     if (this.isBrowser) {
-      this.cargarCoordenadas();
+      // No cargar coordenadas automáticamente al inicio
+      
+      // Suscribirse al evento de carga de CSV (solo para saber que se cargó)
+      this.csvUploadSubscription = this.eventService.csvUploaded$.subscribe(() => {
+        console.log('CSV cargado, esperando instrucción para mostrar mapa...');
+        this.csvCargado = true;
+      });
+
+      // Suscribirse al evento para mostrar el mapa
+      this.showMapSubscription = this.eventService.showMap$.subscribe(() => {
+        console.log('Solicitado mostrar coordenadas en el mapa...');
+        this.cargarYMostrarCoordenadas();
+      });
+
+      // Suscribirse al evento para mostrar coordenadas filtradas
+      this.showFilteredMapSubscription = this.eventService.showFilteredMap$.subscribe((filtro) => {
+        console.log(`Solicitado mostrar coordenadas filtradas - Pregunta: ${filtro.preguntaCodigo}, Respuesta: ${filtro.respuestaValor}`);
+        this.cargarYMostrarCoordenadasFiltradas(filtro.preguntaCodigo, filtro.respuestaValor);
+      });
     }
   }
 
@@ -35,7 +61,19 @@ export class MapaComponent implements OnInit, AfterViewInit {
     }
   }
 
-  private cargarCoordenadas(): void {
+  ngOnDestroy(): void {
+    if (this.csvUploadSubscription) {
+      this.csvUploadSubscription.unsubscribe();
+    }
+    if (this.showMapSubscription) {
+      this.showMapSubscription.unsubscribe();
+    }
+    if (this.showFilteredMapSubscription) {
+      this.showFilteredMapSubscription.unsubscribe();
+    }
+  }
+
+  private cargarYMostrarCoordenadas(): void {
     this.cargandoDatos = true;
     this.mapaService.obtenerCoordenadasMapa().subscribe({
       next: (coordenadasDTO) => {
@@ -53,6 +91,41 @@ export class MapaComponent implements OnInit, AfterViewInit {
         this.cargandoDatos = false;
       }
     });
+  }
+
+  private cargarYMostrarCoordenadasFiltradas(preguntaCodigo: string, respuestaValor: string): void {
+    this.cargandoDatos = true;
+    this.mapaService.obtenerCoordenadasFiltradas(preguntaCodigo, respuestaValor).subscribe({
+      next: (coordenadasDTO) => {
+        this.coordenadas = this.mapaService.procesarCoordenadas(coordenadasDTO);
+        console.log('Coordenadas filtradas procesadas:', this.coordenadas);
+        this.cargandoDatos = false;
+        
+        // Si el mapa ya está inicializado, agregar los marcadores filtrados
+        if (this.map) {
+          this.agregarMarcadoresFiltrados(respuestaValor);
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar coordenadas filtradas:', error);
+        this.cargandoDatos = false;
+      }
+    });
+  }
+
+  // Método legacy mantenido para compatibilidad (ahora solo usado internamente)
+  private cargarCoordenadas(): void {
+    this.cargarYMostrarCoordenadas();
+  }
+
+  private actualizarMapa(): void {
+    // Limpiar marcadores existentes
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+    }
+    
+    // Recargar coordenadas desde el servidor
+    this.cargarYMostrarCoordenadas();
   }
 
   private async loadLeafletAndInitMap(): Promise<void> {
@@ -100,8 +173,14 @@ export class MapaComponent implements OnInit, AfterViewInit {
 
     const L = await import('leaflet');
     
-    // Crear un grupo de marcadores para mejor gestión
-    const markersGroup = L.layerGroup().addTo(this.map);
+    // Limpiar marcadores existentes antes de agregar nuevos
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+    }
+    
+    // Crear un nuevo grupo de marcadores
+    this.markersGroup = L.layerGroup().addTo(this.map);
 
     this.coordenadas.forEach(coordenada => {
       // Validar que las coordenadas estén en un rango válido
@@ -115,7 +194,7 @@ export class MapaComponent implements OnInit, AfterViewInit {
             </div>
           `);
         
-        markersGroup.addLayer(marker);
+        this.markersGroup.addLayer(marker);
       }
     });
 
@@ -126,10 +205,56 @@ export class MapaComponent implements OnInit, AfterViewInit {
       );
       
       if (coordenadasValidas.length > 0) {
-        const group = new L.FeatureGroup(markersGroup.getLayers());
+        const group = new L.FeatureGroup(this.markersGroup.getLayers());
         this.map.fitBounds(group.getBounds().pad(0.1));
       }
     }
+  }
+
+  private async agregarMarcadoresFiltrados(respuestaValor: string): Promise<void> {
+    if (!this.map || this.coordenadas.length === 0) return;
+
+    const L = await import('leaflet');
+    
+    // Limpiar marcadores existentes antes de agregar nuevos
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+    }
+    
+    // Crear un nuevo grupo de marcadores
+    this.markersGroup = L.layerGroup().addTo(this.map);
+
+    this.coordenadas.forEach(coordenada => {
+      // Validar que las coordenadas estén en un rango válido
+      if (this.validarCoordenadas(coordenada.latitud, coordenada.longitud)) {
+        const marker = L.marker([coordenada.latitud, coordenada.longitud])
+          .bindPopup(`
+            <div>
+              <strong>Encuesta ID:</strong> ${coordenada.encuestaId}<br>
+              <strong>Respuesta:</strong> ${respuestaValor}<br>
+              <strong>Latitud:</strong> ${coordenada.latitud}<br>
+              <strong>Longitud:</strong> ${coordenada.longitud}
+            </div>
+          `);
+        
+        this.markersGroup.addLayer(marker);
+      }
+    });
+
+    // Ajustar la vista del mapa para mostrar todos los marcadores filtrados
+    if (this.coordenadas.length > 0) {
+      const coordenadasValidas = this.coordenadas.filter(c => 
+        this.validarCoordenadas(c.latitud, c.longitud)
+      );
+      
+      if (coordenadasValidas.length > 0) {
+        const group = new L.FeatureGroup(this.markersGroup.getLayers());
+        this.map.fitBounds(group.getBounds().pad(0.1));
+      }
+    }
+
+    console.log(`Marcadores filtrados agregados: ${this.coordenadas.length} para respuesta "${respuestaValor}"`);
   }
 
   private validarCoordenadas(lat: number, lng: number): boolean {

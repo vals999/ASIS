@@ -28,6 +28,26 @@ export class MapaService {
     return this.http.get<CoordenadaMapaDTO[]>(`${this.apiUrl}/respuestas-encuesta/coordenadas-mapa`);
   }
 
+  verificarSiExistenDatos(): Observable<{existenDatos: boolean, totalRespuestas: number}> {
+    return this.http.get<{existenDatos: boolean, totalRespuestas: number}>(`${this.apiUrl}/respuestas-encuesta/existe-datos`);
+  }
+
+  obtenerPreguntasHardcodeadas(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/preguntas-encuesta/preguntas-hardcodeadas`);
+  }
+
+  obtenerRespuestasUnicasPorPregunta(preguntaCodigo: string): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/respuestas-encuesta/respuestas-unicas/${preguntaCodigo}`);
+  }
+
+  obtenerCoordenadasFiltradas(preguntaCodigo: string, respuestaValor: string): Observable<CoordenadaMapaDTO[]> {
+    const params = new URLSearchParams();
+    params.set('preguntaCodigo', preguntaCodigo);
+    params.set('respuestaValor', respuestaValor);
+    
+    return this.http.get<CoordenadaMapaDTO[]>(`${this.apiUrl}/respuestas-encuesta/coordenadas-filtradas?${params.toString()}`);
+  }
+
   procesarCoordenadas(coordenadasDTO: CoordenadaMapaDTO[]): Coordenada[] {
     const coordenadas: Coordenada[] = [];
 

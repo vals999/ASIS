@@ -2,6 +2,7 @@
 package controller;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 
@@ -115,7 +116,7 @@ public class RespuestaEncuestaController {
                         );
                         coordenadasCompletas.add(coordenada);
                         
-                        System.out.println("Coordenada " + (i + 1) + " emparejada secuencialmente:");
+                        System.out.println("Coordenada " + (i + 1) + "emparejada secuencialmente:");
                         System.out.println("  Latitud: " + latitud + " (Respuesta ID: " + respuestaLatitud.getId() + ")");
                         System.out.println("  Longitud: " + longitud + " (Respuesta ID: " + respuestaLongitud.getId() + ")");
                     } else {
@@ -131,6 +132,89 @@ public class RespuestaEncuestaController {
             
         } catch (Exception e) {
             e.printStackTrace();
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/coordenadas-filtradas")
+    public Response obtenerCoordenadasFiltradas(@QueryParam("preguntaCodigo") String preguntaCodigo, 
+                                               @QueryParam("respuestaValor") String respuestaValor) {
+        try {
+            System.out.println("Filtrando coordenadas - Pregunta: " + preguntaCodigo + ", Respuesta: " + respuestaValor);
+            
+            // Obtener respuestas que coincidan con la pregunta y valor específicos
+            List<RespuestaEncuesta> respuestasFiltradas = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaYValor(preguntaCodigo, respuestaValor);
+            
+            System.out.println("Respuestas filtradas encontradas: " + respuestasFiltradas.size());
+            
+            // Obtener todas las respuestas de latitud y longitud
+            List<RespuestaEncuesta> todasLatitudes = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaCodigo("lat_1_Presione_actualiza");
+            List<RespuestaEncuesta> todasLongitudes = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaCodigo("long_1_Presione_actualiza");
+            
+            System.out.println("Total latitudes disponibles: " + todasLatitudes.size());
+            System.out.println("Total longitudes disponibles: " + todasLongitudes.size());
+            
+            List<CoordenadaMapaDTO> coordenadasFiltradas = new ArrayList<>();
+            
+            // Crear un índice simple basado en las respuestas filtradas
+            // Asumiendo que las respuestas están en el mismo orden que las coordenadas
+            for (int i = 0; i < respuestasFiltradas.size() && i < todasLatitudes.size() && i < todasLongitudes.size(); i++) {
+                try {
+                    RespuestaEncuesta latitud = todasLatitudes.get(i);
+                    RespuestaEncuesta longitud = todasLongitudes.get(i);
+                    
+                    Double lat = Double.parseDouble(latitud.getValor());
+                    Double lng = Double.parseDouble(longitud.getValor());
+                    
+                    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                        CoordenadaMapaDTO coordenada = new CoordenadaMapaDTO(
+                            (long)(i + 1), // ID secuencial
+                            latitud.getId(),
+                            lat + "," + lng,
+                            1L,
+                            "Filtro: " + respuestaValor
+                        );
+                        coordenadasFiltradas.add(coordenada);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Error al parsear coordenadas en índice " + i);
+                }
+            }
+            
+            System.out.println("Coordenadas válidas encontradas: " + coordenadasFiltradas.size());
+            return Response.ok(coordenadasFiltradas).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/existe-datos")
+    public Response verificarSiExistenDatos() {
+        try {
+            List<RespuestaEncuesta> respuestas = respuestaEncuestaDAO.obtenerNoBorrados();
+            boolean existenDatos = !respuestas.isEmpty();
+            
+            return Response.ok()
+                .entity("{\"existenDatos\": " + existenDatos + ", \"totalRespuestas\": " + respuestas.size() + "}")
+                .build();
+        } catch (Exception e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/respuestas-unicas/{preguntaCodigo}")
+    public Response obtenerRespuestasUnicasPorPregunta(@PathParam("preguntaCodigo") String preguntaCodigo) {
+        try {
+            List<String> respuestasUnicas = respuestaEncuestaDAO.obtenerRespuestasUnicasPorPreguntaCodigo(preguntaCodigo);
+            return Response.ok(respuestasUnicas).build();
+        } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
         }
