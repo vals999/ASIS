@@ -12,7 +12,7 @@ import { UsuariosPendientesComponent } from './components/usuarios-pendientes/us
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { Inicio } from './components/inicio/inicio';
-import { Estadisticas } from './components/estadisticas/estadisticas';
+import { EstadisticasComponent } from './components/estadisticas/estadisticas';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -25,7 +25,7 @@ export const routes: Routes = [
   { path: 'barrios', component: BarrioComponent, canActivate: [authGuard] },
   { path: 'zonas', component: ZonaComponent, canActivate: [authGuard] },
   { path: 'encuestadores', component: EncuestadorComponent, canActivate: [authGuard] },
-  { path: 'estadisticas', component: Estadisticas, canActivate: [authGuard] },
+  { path: 'estadisticas', component: EstadisticasComponent, canActivate: [authGuard] },
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: '**', redirectTo: '/login' }
 ];

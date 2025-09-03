@@ -1,1 +1,19 @@
-<p>estadisticas works!</p>
+<div>
+	<table class="table table-bordered mt-3">
+		<thead>
+			<tr>
+				<th>Pregunta</th>
+				<th>Respuesta</th>
+				<th>Categoría</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr *ngFor="let d of datos">
+				<td>{{ d.pregunta }}</td>
+				<td>{{ d.respuesta }}</td>
+				<td>{{ d.categoria }}</td>
+			</tr>
+		</tbody>
+	</table>
+	<div *ngIf="datos.length === 0">No hay datos para mostrar.</div>
+</div>
