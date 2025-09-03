@@ -3,11 +3,13 @@ package service;
 import com.opencsv.CSVReader;
 import dao_interfaces.I_PreguntaEncuestaDAO;
 import dao_interfaces.I_RespuestaEncuestaDAO;
+import dao_interfaces.I_EncuestaDAO;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import model.PreguntaEncuesta;
 import model.RespuestaEncuesta;
+import model.Encuesta;
 
 import java.io.FileReader;
 import java.util.HashMap;
@@ -21,6 +23,9 @@ public class ImportCsvService {
 
     @Inject
     private I_RespuestaEncuestaDAO respuestaDao;
+
+    @Inject
+    private I_EncuestaDAO encuestaDao;
 
     // Clase auxiliar para almacenar texto y categoría
     private static class PreguntaMapeada {
@@ -199,6 +204,14 @@ public class ImportCsvService {
             // Guardar solo respuestas de columnas mapeadas
             String[] fila;
             while ((fila = reader.readNext()) != null) {
+                // Crear una nueva encuesta para la fila
+                Encuesta encuesta = new Encuesta();
+                // Si necesitas setear campos adicionales en Encuesta, hazlo aquí
+                // Por ejemplo: encuesta.setFecha(...);
+                // Si usas un DAO para persistir la encuesta, hazlo aquí:
+                // encuestaDao.crear(encuesta);
+                encuestaDao.crear(encuesta);
+
                 for (int i = 0; i < fila.length; i++) {
                     if (!preguntasMap.containsKey(i)) continue; // ignorar columnas no mapeadas
                     String respuesta = fila[i];
@@ -207,6 +220,7 @@ public class ImportCsvService {
                         RespuestaEncuesta resp = new RespuestaEncuesta();
                         resp.setPregunta(pregunta);
                         resp.setValor(respuesta);
+                        resp.setEncuesta(encuesta); // Asignar el id de encuesta aquí
                         respuestaDao.crear(resp);
                     }
                 }
