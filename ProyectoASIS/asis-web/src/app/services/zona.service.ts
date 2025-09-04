@@ -64,7 +64,14 @@ export class ZonaService {
   crearZona(zona: Zona): Observable<Zona> {
     this._loading.set(true);
     
-    return this.http.post<Zona>(this.apiUrl, zona)
+    // Preparar la zona para envío - solo enviar el ID del barrio
+    const zonaParaEnvio = {
+      nombre: zona.nombre,
+      geolocalizacion: zona.geolocalizacion,
+      barrio: zona.barrio ? { id: zona.barrio.id } : null
+    };
+    
+    return this.http.post<Zona>(this.apiUrl, zonaParaEnvio)
       .pipe(
         tap(nuevaZona => {
           // Actualizar el signal agregando la nueva zona
@@ -83,7 +90,14 @@ export class ZonaService {
   actualizarZona(id: number, zona: Zona): Observable<Zona> {
     this._loading.set(true);
     
-    return this.http.put<Zona>(`${this.apiUrl}/${id}`, zona)
+    // Preparar la zona para envío - solo enviar el ID del barrio
+    const zonaParaEnvio = {
+      nombre: zona.nombre,
+      geolocalizacion: zona.geolocalizacion,
+      barrio: zona.barrio ? { id: zona.barrio.id } : null
+    };
+    
+    return this.http.put<Zona>(`${this.apiUrl}/${id}`, zonaParaEnvio)
       .pipe(
         tap(zonaActualizada => {
           // Actualizar el signal reemplazando la zona modificada

@@ -6,7 +6,12 @@ import { catchError, tap } from 'rxjs/operators';
 export interface Jornada {
   id?: number;
   fecha: string; // formato YYYY-MM-DD
-  campaña?: any;  // Opcional por ahora
+  campania?: {   // Estructura del CampañaSimpleDTO
+    id: number;
+    nombre: string;
+    fechaInicio: string;
+    fechaFin: string;
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -60,7 +65,13 @@ export class JornadaService {
   crearJornada(jornada: Jornada): Observable<Jornada> {
     this._loading.set(true);
     
-    return this.http.post<Jornada>(this.apiUrl, jornada)
+    // Preparar la jornada para envío - solo enviar el ID de la campaña
+    const jornadaParaEnvio = {
+      fecha: jornada.fecha,
+      campaña: jornada.campania ? { id: jornada.campania.id } : null
+    };
+    
+    return this.http.post<Jornada>(this.apiUrl, jornadaParaEnvio)
       .pipe(
         tap(nuevaJornada => {
           // Actualizar el signal agregando la nueva jornada
@@ -79,7 +90,13 @@ export class JornadaService {
   actualizarJornada(id: number, jornada: Jornada): Observable<Jornada> {
     this._loading.set(true);
     
-    return this.http.put<Jornada>(`${this.apiUrl}/${id}`, jornada)
+    // Preparar la jornada para envío - solo enviar el ID de la campaña
+    const jornadaParaEnvio = {
+      fecha: jornada.fecha,
+      campaña: jornada.campania ? { id: jornada.campania.id } : null
+    };
+    
+    return this.http.put<Jornada>(`${this.apiUrl}/${id}`, jornadaParaEnvio)
       .pipe(
         tap(jornadaActualizada => {
           // Actualizar el signal reemplazando la jornada modificada

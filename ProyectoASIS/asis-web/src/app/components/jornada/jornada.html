@@ -12,17 +12,29 @@
 
   <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearJornada()" class="mb-4 border rounded p-3 bg-light">
     <div class="row g-2 align-items-end">
-      <div class="col-md-6">
+      <div class="col-md-4">
         <label class="form-label">Fecha de la jornada</label>
         <input type="date" class="form-control" 
                [ngModel]="nuevaJornada().fecha" 
                (ngModelChange)="updateNuevaJornadaFecha($event)" 
                name="fecha" required>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-4">
+        <label class="form-label">Campaña</label>
+        <select class="form-select" 
+                [ngModel]="nuevaJornada().campania?.id || ''" 
+                (ngModelChange)="updateNuevaJornadaCampania($event)" 
+                name="campania">
+          <option value="" disabled>Seleccionar</option>
+          <option *ngFor="let campania of campaniaService.campanias()" [value]="campania.id">
+            {{ campania.nombre }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-2">
         <button type="submit" class="btn btn-success w-100">Guardar</button>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <button type="button" class="btn btn-secondary w-100" (click)="cancelarAlta()">Cancelar</button>
       </div>
     </div>
@@ -40,6 +52,7 @@
       <tr>
         <th>ID</th>
         <th>Fecha</th>
+        <th>Campaña</th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -50,6 +63,10 @@
           <td>#{{ jornada.id }}</td>
           <td>{{ jornada.fecha }}</td>
           <td>
+            <span *ngIf="jornada.campania" class="badge bg-secondary">{{ jornada.campania.nombre }}</span>
+            <span *ngIf="!jornada.campania" class="text-muted">Sin campaña</span>
+          </td>
+          <td>
             <a href="#" class="me-2" (click)="$event.preventDefault(); editarJornada(jornada)">Editar</a>
             <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarJornada(jornada.id)">Eliminar</a>
           </td>
@@ -57,18 +74,30 @@
         
         <!-- Fila del formulario de edición (solo se muestra si la jornada está siendo editada) -->
         <tr *ngIf="jornadaEditando() === jornada.id" class="bg-light">
-          <td colspan="3">
+          <td colspan="4">
             <div class="p-3 border rounded">
               <h6 class="mb-3">Editar Jornada #{{ jornada.id }}</h6>
               <div class="row g-2">
-                <div class="col-md-6">
+                <div class="col-md-4">
                   <label class="form-label">Fecha de la jornada</label>
                   <input type="date" class="form-control" 
                          [ngModel]="jornadaEditada().fecha" 
                          (ngModelChange)="updateJornadaEditadaFecha($event)" 
                          required>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                  <label class="form-label">Campaña</label>
+                  <select class="form-select" 
+                          [ngModel]="jornadaEditada().campania?.id || ''" 
+                          (ngModelChange)="updateJornadaEditadaCampania($event)" 
+                          name="campania">
+                    <option value="" disabled>Seleccionar</option>
+                    <option *ngFor="let campania of campaniaService.campanias()" [value]="campania.id">
+                      {{ campania.nombre }}
+                    </option>
+                  </select>
+                </div>
+                <div class="col-md-4">
                   <div class="d-flex flex-column gap-1 mt-4">
                     <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
                       <i class="fa fa-check"></i> Confirmar

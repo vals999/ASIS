@@ -53,7 +53,6 @@ public class Jornada implements EliminableLogico{
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "campaña_id")
-    @JsonbTransient
     private Campaña campaña;
 
     @OneToMany(mappedBy = "jornada", fetch = FetchType.LAZY)

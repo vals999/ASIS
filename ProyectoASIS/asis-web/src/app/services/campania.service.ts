@@ -8,7 +8,11 @@ export interface Campania {
   nombre: string;
   fechaInicio: string; // formato YYYY-MM-DD
   fechaFin: string;    // formato YYYY-MM-DD
-  barrio?: any;        // Opcional por ahora
+  barrio?: {           // Estructura del BarrioSimpleDTO
+    id: number;
+    nombre: string;
+    geolocalizacion?: string;
+  };
 }
 
 @Injectable({ providedIn: 'root' })
@@ -62,7 +66,15 @@ export class CampaniaService {
   crearCampania(campania: Campania): Observable<Campania> {
     this._loading.set(true);
     
-    return this.http.post<Campania>(this.apiUrl, campania)
+    // Preparar la campaña para envío - solo enviar el ID del barrio
+    const campaniaParaEnvio = {
+      nombre: campania.nombre,
+      fechaInicio: campania.fechaInicio,
+      fechaFin: campania.fechaFin,
+      barrio: campania.barrio ? { id: campania.barrio.id } : null
+    };
+    
+    return this.http.post<Campania>(this.apiUrl, campaniaParaEnvio)
       .pipe(
         tap(nuevaCampania => {
           // Actualizar el signal agregando la nueva campaña
@@ -81,7 +93,15 @@ export class CampaniaService {
   actualizarCampania(id: number, campania: Campania): Observable<Campania> {
     this._loading.set(true);
     
-    return this.http.put<Campania>(`${this.apiUrl}/${id}`, campania)
+    // Preparar la campaña para envío - solo enviar el ID del barrio
+    const campaniaParaEnvio = {
+      nombre: campania.nombre,
+      fechaInicio: campania.fechaInicio,
+      fechaFin: campania.fechaFin,
+      barrio: campania.barrio ? { id: campania.barrio.id } : null
+    };
+    
+    return this.http.put<Campania>(`${this.apiUrl}/${id}`, campaniaParaEnvio)
       .pipe(
         tap(campaniaActualizada => {
           // Actualizar el signal reemplazando la campaña modificada

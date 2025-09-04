@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CampaniaService, Campania } from '../../services/campania.service';
+import { BarrioService } from '../../services/barrio.service';
 
 @Component({
   selector: 'app-campania',
@@ -32,13 +33,15 @@ export class CampaniaComponent implements OnInit, OnDestroy {
   nuevaCampania = signal<Campania>({
     nombre: '',
     fechaInicio: '',
-    fechaFin: ''
+    fechaFin: '',
+    barrio: undefined
   });
 
   campaniaEditada = signal<Campania>({
     nombre: '',
     fechaInicio: '',
-    fechaFin: ''
+    fechaFin: '',
+    barrio: undefined
   });
 
   // Signal computado para filtrado
@@ -51,7 +54,8 @@ export class CampaniaComponent implements OnInit, OnDestroy {
     return campanias.filter(c =>
       c.nombre.toLowerCase().includes(searchTerm) ||
       c.fechaInicio.includes(searchTerm) ||
-      c.fechaFin.includes(searchTerm)
+      c.fechaFin.includes(searchTerm) ||
+      (c.barrio?.nombre && c.barrio.nombre.toLowerCase().includes(searchTerm))
     );
   });
 
@@ -59,6 +63,7 @@ export class CampaniaComponent implements OnInit, OnDestroy {
 
   constructor(
     public campaniaService: CampaniaService,
+    public barrioService: BarrioService,
     private router: Router
   ) {
     // Effect para auto-limpiar mensajes después de 3 segundos
@@ -79,6 +84,7 @@ export class CampaniaComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.obtenerCampanias();
+    this.obtenerBarrios();
 
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -95,6 +101,10 @@ export class CampaniaComponent implements OnInit, OnDestroy {
 
   obtenerCampanias() {
     this.campaniaService.getCampanias().subscribe();
+  }
+
+  obtenerBarrios() {
+    this.barrioService.getBarrios().subscribe();
   }
 
   // Métodos para actualizar signals - NUEVA CAMPAÑA
@@ -118,6 +128,17 @@ export class CampaniaComponent implements OnInit, OnDestroy {
     this.nuevaCampania.update(c => ({...c, fechaFin: value}));
   }
 
+  updateNuevaCampaniaBarrio(value: string) {
+    // Guardamos el ID del barrio seleccionado
+    const barrioId = value ? Number(value) : undefined;
+    const barrio = barrioId ? this.barrioService.barrios().find(b => b.id === barrioId) : undefined;
+    
+    this.nuevaCampania.update(c => ({
+      ...c, 
+      barrio: barrio ? { id: barrio.id!, nombre: barrio.nombre } : undefined
+    }));
+  }
+
   // Métodos para actualizar signals - CAMPAÑA EDITADA
   updateCampaniaEditadaNombre(value: string) {
     this.campaniaEditada.update(c => ({...c, nombre: value}));
@@ -129,6 +150,17 @@ export class CampaniaComponent implements OnInit, OnDestroy {
 
   updateCampaniaEditadaFechaFin(value: string) {
     this.campaniaEditada.update(c => ({...c, fechaFin: value}));
+  }
+
+  updateCampaniaEditadaBarrio(value: string) {
+    // Guardamos el ID del barrio seleccionado
+    const barrioId = value ? Number(value) : undefined;
+    const barrio = barrioId ? this.barrioService.barrios().find(b => b.id === barrioId) : undefined;
+    
+    this.campaniaEditada.update(c => ({
+      ...c, 
+      barrio: barrio ? { id: barrio.id!, nombre: barrio.nombre } : undefined
+    }));
   }
 
   eliminarCampania(id?: number) {
@@ -163,7 +195,8 @@ export class CampaniaComponent implements OnInit, OnDestroy {
         this.nuevaCampania.set({
           nombre: '',
           fechaInicio: '',
-          fechaFin: ''
+          fechaFin: '',
+          barrio: undefined
         });
         
         // Limpiar búsqueda
@@ -181,7 +214,8 @@ export class CampaniaComponent implements OnInit, OnDestroy {
     this.nuevaCampania.set({
       nombre: '',
       fechaInicio: '',
-      fechaFin: ''
+      fechaFin: '',
+      barrio: undefined
     });
   }
 
@@ -192,7 +226,8 @@ export class CampaniaComponent implements OnInit, OnDestroy {
       id: campania.id,
       nombre: campania.nombre,
       fechaInicio: campania.fechaInicio,
-      fechaFin: campania.fechaFin
+      fechaFin: campania.fechaFin,
+      barrio: campania.barrio
     });
   }
 
@@ -234,7 +269,8 @@ export class CampaniaComponent implements OnInit, OnDestroy {
     this.campaniaEditada.set({
       nombre: '',
       fechaInicio: '',
-      fechaFin: ''
+      fechaFin: '',
+      barrio: undefined
     });
   }
 }

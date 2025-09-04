@@ -5,11 +5,13 @@ import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ZonaService, Zona } from '../../services/zona.service';
+import { BarrioService } from '../../services/barrio.service';
+import { CoordenadasSelectorComponent } from './coordenadas-selector.component';
 
 @Component({
   selector: 'app-zona',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CoordenadasSelectorComponent],
   templateUrl: './zona.html',
   styleUrls: ['./zona.css']
 })
@@ -20,6 +22,8 @@ export class ZonaComponent implements OnInit, OnDestroy {
   private _mensajeExito = signal<string>('');
   private _mensajeEdicion = signal<string>('');
   private _zonaEditando = signal<number | null>(null);
+  private _mostrarSelectorCoordenadas = signal<boolean>(false);
+  private _coordenadasEditando = signal<'nueva' | 'editada' | null>(null);
   
   // Signals públicos de solo lectura
   readonly search = this._search.asReadonly();
@@ -27,16 +31,19 @@ export class ZonaComponent implements OnInit, OnDestroy {
   readonly mensajeExito = this._mensajeExito.asReadonly();
   readonly mensajeEdicion = this._mensajeEdicion.asReadonly();
   readonly zonaEditando = this._zonaEditando.asReadonly();
+  readonly mostrarSelectorCoordenadas = this._mostrarSelectorCoordenadas.asReadonly();
 
   // Signals para formularios
   nuevaZona = signal<Zona>({
     nombre: '',
-    geolocalizacion: ''
+    geolocalizacion: '',
+    barrio: undefined
   });
 
   zonaEditada = signal<Zona>({
     nombre: '',
-    geolocalizacion: ''
+    geolocalizacion: '',
+    barrio: undefined
   });
 
   // Signal computado para filtrado
@@ -57,6 +64,7 @@ export class ZonaComponent implements OnInit, OnDestroy {
 
   constructor(
     public zonaService: ZonaService,
+    public barrioService: BarrioService,
     private router: Router
   ) {
     // Effect para auto-limpiar mensajes después de 3 segundos
@@ -77,6 +85,7 @@ export class ZonaComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.obtenerZonas();
+    this.obtenerBarrios();
 
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -95,6 +104,10 @@ export class ZonaComponent implements OnInit, OnDestroy {
     this.zonaService.getZonas().subscribe();
   }
 
+  obtenerBarrios() {
+    this.barrioService.getBarrios().subscribe();
+  }
+
   // Métodos para actualizar signals - NUEVA ZONA
   updateSearch(value: string) {
     this._search.set(value);
@@ -110,6 +123,17 @@ export class ZonaComponent implements OnInit, OnDestroy {
 
   updateNuevaZonaGeolocalizacion(value: string) {
     this.nuevaZona.update(z => ({...z, geolocalizacion: value}));
+  }
+
+  updateNuevaZonaBarrio(value: string) {
+    // Por ahora guardamos el ID del barrio seleccionado
+    const barrioId = value ? Number(value) : undefined;
+    const barrio = barrioId ? this.barrioService.barrios().find(b => b.id === barrioId) : undefined;
+    
+    this.nuevaZona.update(z => ({
+      ...z, 
+      barrio: barrio ? { id: barrio.id!, nombre: barrio.nombre } : undefined
+    }));
   }
 
   // Métodos para actualizar signals - ZONA EDITADA
@@ -152,7 +176,8 @@ export class ZonaComponent implements OnInit, OnDestroy {
         // Limpiar formulario
         this.nuevaZona.set({
           nombre: '',
-          geolocalizacion: ''
+          geolocalizacion: '',
+          barrio: undefined
         });
         
         // Limpiar búsqueda
@@ -169,7 +194,8 @@ export class ZonaComponent implements OnInit, OnDestroy {
     this._mostrarFormularioAlta.set(false);
     this.nuevaZona.set({
       nombre: '',
-      geolocalizacion: ''
+      geolocalizacion: '',
+      barrio: undefined
     });
   }
 
@@ -221,7 +247,43 @@ export class ZonaComponent implements OnInit, OnDestroy {
     this._mensajeEdicion.set('');
     this.zonaEditada.set({
       nombre: '',
-      geolocalizacion: ''
+      geolocalizacion: '',
+      barrio: undefined
     });
+  }
+
+  // Métodos para el selector de coordenadas
+  abrirSelectorCoordenadas(tipo: 'nueva' | 'editada') {
+    this._coordenadasEditando.set(tipo);
+    this._mostrarSelectorCoordenadas.set(true);
+  }
+
+  cerrarSelectorCoordenadas() {
+    this._mostrarSelectorCoordenadas.set(false);
+    this._coordenadasEditando.set(null);
+  }
+
+  onCoordenadasSeleccionadas(coordenadas: string) {
+    const tipoEditando = this._coordenadasEditando();
+    
+    if (tipoEditando === 'nueva') {
+      this.updateNuevaZonaGeolocalizacion(coordenadas);
+    } else if (tipoEditando === 'editada') {
+      this.updateZonaEditadaGeolocalizacion(coordenadas);
+    }
+    
+    this.cerrarSelectorCoordenadas();
+  }
+
+  obtenerCoordenadasActuales(): string {
+    const tipoEditando = this._coordenadasEditando();
+    
+    if (tipoEditando === 'nueva') {
+      return this.nuevaZona().geolocalizacion || '';
+    } else if (tipoEditando === 'editada') {
+      return this.zonaEditada().geolocalizacion || '';
+    }
+    
+    return '';
   }
 }

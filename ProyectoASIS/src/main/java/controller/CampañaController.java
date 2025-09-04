@@ -3,6 +3,8 @@ package controller;
 import java.util.List;
 
 import dao_interfaces.I_CampañaDAO;
+import dto.CampañaDTO;
+import dto.DTOMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -44,7 +46,8 @@ public class CampañaController {
     public Response obtenerTodasLasCampañas() {
         try {
             List<Campaña> campañas = campañaDAO.obtenerTodos();
-            return Response.ok(campañas).build();
+            List<CampañaDTO> campañasDTO = DTOMapper.toCampañasDTOList(campañas);
+            return Response.ok(campañasDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -62,7 +65,8 @@ public class CampañaController {
     public Response obtenerCampañasActivas() {
         try {
             List<Campaña> campañas = campañaDAO.obtenerNoBorrados();
-            return Response.ok(campañas).build();
+            List<CampañaDTO> campañasDTO = DTOMapper.toCampañasDTOList(campañas);
+            return Response.ok(campañasDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -84,7 +88,8 @@ public class CampañaController {
             if (campaña == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            return Response.ok(campaña).build();
+            CampañaDTO campañaDTO = DTOMapper.toCampañaDTO(campaña);
+            return Response.ok(campañaDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();

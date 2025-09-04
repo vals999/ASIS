@@ -26,12 +26,24 @@
                (ngModelChange)="updateNuevaCampaniaFechaInicio($event)" 
                name="fechaInicio" required>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <label class="form-label">Fecha de fin</label>
         <input type="date" class="form-control" 
                [ngModel]="nuevaCampania().fechaFin" 
                (ngModelChange)="updateNuevaCampaniaFechaFin($event)" 
                name="fechaFin" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Barrio</label>
+        <select class="form-select" 
+                [ngModel]="nuevaCampania().barrio?.id || ''" 
+                (ngModelChange)="updateNuevaCampaniaBarrio($event)" 
+                name="barrio">
+          <option value="" disabled>Seleccionar</option>
+          <option *ngFor="let barrio of barrioService.barrios()" [value]="barrio.id">
+            {{ barrio.nombre }}
+          </option>
+        </select>
       </div>
       <div class="col-md-1">
         <button type="submit" class="btn btn-success w-100">Guardar</button>
@@ -56,6 +68,7 @@
         <th>Nombre</th>
         <th>Fecha Inicio</th>
         <th>Fecha Fin</th>
+        <th>Barrio</th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -68,6 +81,10 @@
           <td>{{ campania.fechaInicio }}</td>
           <td>{{ campania.fechaFin }}</td>
           <td>
+            <span *ngIf="campania.barrio" class="badge bg-secondary">{{ campania.barrio.nombre }}</span>
+            <span *ngIf="!campania.barrio" class="text-muted">Sin barrio</span>
+          </td>
+          <td>
             <a href="#" class="me-2" (click)="$event.preventDefault(); editarCampania(campania)">Editar</a>
             <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarCampania(campania.id)">Eliminar</a>
           </td>
@@ -75,11 +92,11 @@
         
         <!-- Fila del formulario de edición (solo se muestra si la campaña está siendo editada) -->
         <tr *ngIf="campaniaEditando() === campania.id" class="bg-light">
-          <td colspan="5">
+          <td colspan="6">
             <div class="p-3 border rounded">
               <h6 class="mb-3">Editar Campaña #{{ campania.id }}</h6>
               <div class="row g-2">
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <label class="form-label">Nombre de la campaña</label>
                   <input type="text" class="form-control" 
                          [ngModel]="campaniaEditada().nombre" 
@@ -93,12 +110,24 @@
                          (ngModelChange)="updateCampaniaEditadaFechaInicio($event)" 
                          required>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                   <label class="form-label">Fecha de fin</label>
                   <input type="date" class="form-control" 
                          [ngModel]="campaniaEditada().fechaFin" 
                          (ngModelChange)="updateCampaniaEditadaFechaFin($event)" 
                          required>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label">Barrio</label>
+                  <select class="form-select" 
+                          [ngModel]="campaniaEditada().barrio?.id || ''" 
+                          (ngModelChange)="updateCampaniaEditadaBarrio($event)" 
+                          name="barrio">
+                    <option value="" disabled>Seleccionar</option>
+                    <option *ngFor="let barrio of barrioService.barrios()" [value]="barrio.id">
+                      {{ barrio.nombre }}
+                    </option>
+                  </select>
                 </div>
                 <div class="col-md-2">
                   <div class="d-flex flex-column gap-1 mt-4">

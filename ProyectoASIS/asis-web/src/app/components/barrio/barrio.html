@@ -21,10 +21,19 @@
       </div>
       <div class="col-md-4">
         <label class="form-label">Geolocalización</label>
-        <input type="text" class="form-control" 
-               [ngModel]="nuevoBarrio().geolocalizacion" 
-               (ngModelChange)="updateNuevoBarrioGeolocalizacion($event)" 
-               name="geolocalizacion" placeholder="-34.6037, -58.3816" required>
+        <div class="input-group">
+          <input type="text" class="form-control" 
+                 [ngModel]="nuevoBarrio().geolocalizacion" 
+                 (ngModelChange)="updateNuevoBarrioGeolocalizacion($event)" 
+                 name="geolocalizacion" 
+                 placeholder="Haz clic en el mapa para seleccionar" 
+                 readonly>
+          <button type="button" class="btn btn-outline-primary" 
+                  (click)="abrirSelectorCoordenadas('nuevo')"
+                  title="Seleccionar en mapa">
+            <i class="bi bi-geo-alt"></i>
+          </button>
+        </div>
       </div>
       <div class="col-md-2">
         <button type="submit" class="btn btn-success w-100">Guardar</button>
@@ -79,10 +88,18 @@
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">Geolocalización</label>
-                  <input type="text" class="form-control" 
-                         [ngModel]="barrioEditado().geolocalizacion" 
-                         (ngModelChange)="updateBarrioEditadoGeolocalizacion($event)" 
-                         placeholder="-34.6037, -58.3816" required>
+                  <div class="input-group">
+                    <input type="text" class="form-control" 
+                           [ngModel]="barrioEditado().geolocalizacion" 
+                           (ngModelChange)="updateBarrioEditadoGeolocalizacion($event)" 
+                           placeholder="Haz clic en el mapa para seleccionar" 
+                           readonly>
+                    <button type="button" class="btn btn-outline-primary" 
+                            (click)="abrirSelectorCoordenadas('editado')"
+                            title="Seleccionar en mapa">
+                      <i class="bi bi-geo-alt"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="col-md-4">
                   <div class="d-flex flex-column gap-1 mt-4">
@@ -117,4 +134,13 @@
       <li class="page-item"><a class="page-link">Siguiente</a></li>
     </ul>
   </nav>
+
+  <!-- Modal selector de coordenadas -->
+  @if (mostrarSelectorCoordenadas()) {
+    <app-coordenadas-selector 
+      [coordenadasIniciales]="obtenerCoordenadasActuales()"
+      (coordenadasSelected)="onCoordenadasSeleccionadas($event)"
+      (modalClosed)="cerrarSelectorCoordenadas()">
+    </app-coordenadas-selector>
+  }
 </div>

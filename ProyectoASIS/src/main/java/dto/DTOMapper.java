@@ -281,6 +281,68 @@ public class DTOMapper {
         return dto;
     }
 
+    // Método para convertir Campaña a CampañaDTO
+    public static CampañaDTO toCampañaDTO(Campaña campaña) {
+        if (campaña == null) return null;
+        
+        CampañaDTO dto = new CampañaDTO(
+            campaña.getId(),
+            campaña.getNombre(),
+            campaña.getFechaInicio(),
+            campaña.getFechaFin(),
+            campaña.getFechaCreacion(),
+            campaña.getFechaEditado()
+        );
+        
+        // Mapear barrio usando DTO simple para evitar ciclos
+        dto.setBarrio(toBarrioSimpleDTO(campaña.getBarrio()));
+        
+        // Mapear relaciones usando DTOs simples para evitar ciclos
+        if (campaña.getJornada() != null) {
+            dto.setJornadas(campaña.getJornada().stream()
+                .map(DTOMapper::toJornadaSimpleDTO)
+                .collect(Collectors.toList()));
+        }
+        
+        if (campaña.getEncuestador() != null) {
+            dto.setEncuestadores(campaña.getEncuestador().stream()
+                .map(DTOMapper::toEncuestadorSimpleDTO)
+                .collect(Collectors.toList()));
+        }
+        
+        if (campaña.getUsuarios() != null) {
+            dto.setUsuarios(campaña.getUsuarios().stream()
+                .map(DTOMapper::toUsuarioSimpleDTO)
+                .collect(Collectors.toList()));
+        }
+        
+        return dto;
+    }
+
+    // Método para convertir Jornada a JornadaDTO
+    public static JornadaDTO toJornadaDTO(Jornada jornada) {
+        if (jornada == null) return null;
+        
+        JornadaDTO dto = new JornadaDTO(
+            jornada.getId(),
+            jornada.getFecha(),
+            jornada.getFechaCreacion(),
+            jornada.getFechaEditado()
+        );
+        
+        // Mapear campaña usando DTO simple para evitar ciclos
+        dto.setCampaña(toCampañaSimpleDTO(jornada.getCampaña()));
+        
+        // Mapear encuestas usando DTOs simples para evitar ciclos
+        if (jornada.getEncuesta() != null) {
+            dto.setEncuestas(jornada.getEncuesta().stream()
+                .map(DTOMapper::toEncuestaSimpleDTO)
+                .collect(Collectors.toList()));
+        }
+        
+        return dto;
+    }
+
     // Método para convertir listas
     public static List<BarrioDTO> toBarriosDTOList(List<Barrio> barrios) {
         if (barrios == null) return null;
@@ -300,6 +362,20 @@ public class DTOMapper {
         if (usuarios == null) return null;
         return usuarios.stream()
             .map(DTOMapper::toUsuarioDTO)
+            .collect(Collectors.toList());
+    }
+
+    public static List<CampañaDTO> toCampañasDTOList(List<Campaña> campañas) {
+        if (campañas == null) return null;
+        return campañas.stream()
+            .map(DTOMapper::toCampañaDTO)
+            .collect(Collectors.toList());
+    }
+
+    public static List<JornadaDTO> toJornadasDTOList(List<Jornada> jornadas) {
+        if (jornadas == null) return null;
+        return jornadas.stream()
+            .map(DTOMapper::toJornadaDTO)
             .collect(Collectors.toList());
     }
 }

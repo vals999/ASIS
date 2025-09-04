@@ -12,19 +12,40 @@
 
   <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearZona()" class="mb-4 border rounded p-3 bg-light">
     <div class="row g-2 align-items-end">
-      <div class="col-md-4">
+      <div class="col-md-3">
         <label class="form-label">Nombre de la zona</label>
         <input type="text" class="form-control" 
                [ngModel]="nuevaZona().nombre" 
                (ngModelChange)="updateNuevaZonaNombre($event)" 
                name="nombre" required>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-3">
         <label class="form-label">Geolocalización</label>
-        <input type="text" class="form-control" 
-               [ngModel]="nuevaZona().geolocalizacion" 
-               (ngModelChange)="updateNuevaZonaGeolocalizacion($event)" 
-               name="geolocalizacion" placeholder="-34.6037, -58.3816" required>
+        <div class="input-group">
+          <input type="text" class="form-control" 
+                 [ngModel]="nuevaZona().geolocalizacion" 
+                 (ngModelChange)="updateNuevaZonaGeolocalizacion($event)" 
+                 name="geolocalizacion" 
+                 placeholder="Haz clic en el mapa para seleccionar" 
+                 readonly>
+          <button type="button" class="btn btn-outline-primary" 
+                  (click)="abrirSelectorCoordenadas('nueva')"
+                  title="Seleccionar en mapa">
+            <i class="bi bi-geo-alt"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Barrio</label>
+        <select class="form-select" 
+                [ngModel]="nuevaZona().barrio?.id || ''" 
+                (ngModelChange)="updateNuevaZonaBarrio($event)" 
+                name="barrio">
+          <option value="" disabled>Seleccionar</option>
+          <option *ngFor="let barrio of barrioService.barrios()" [value]="barrio.id">
+            {{ barrio.nombre }}
+          </option>
+        </select>
       </div>
       <div class="col-md-2">
         <button type="submit" class="btn btn-success w-100">Guardar</button>
@@ -84,10 +105,18 @@
                 </div>
                 <div class="col-md-4">
                   <label class="form-label">Geolocalización</label>
-                  <input type="text" class="form-control" 
-                         [ngModel]="zonaEditada().geolocalizacion" 
-                         (ngModelChange)="updateZonaEditadaGeolocalizacion($event)" 
-                         placeholder="-34.6037, -58.3816" required>
+                  <div class="input-group">
+                    <input type="text" class="form-control" 
+                           [ngModel]="zonaEditada().geolocalizacion" 
+                           (ngModelChange)="updateZonaEditadaGeolocalizacion($event)" 
+                           placeholder="Haz clic en el mapa para seleccionar" 
+                           readonly>
+                    <button type="button" class="btn btn-outline-primary" 
+                            (click)="abrirSelectorCoordenadas('editada')"
+                            title="Seleccionar en mapa">
+                      <i class="bi bi-geo-alt"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="col-md-4">
                   <div class="d-flex flex-column gap-1 mt-4">
@@ -122,4 +151,13 @@
       <li class="page-item"><a class="page-link">Siguiente</a></li>
     </ul>
   </nav>
+
+  <!-- Modal selector de coordenadas -->
+  @if (mostrarSelectorCoordenadas()) {
+    <app-coordenadas-selector 
+      [coordenadasIniciales]="obtenerCoordenadasActuales()"
+      (coordenadasSelected)="onCoordenadasSeleccionadas($event)"
+      (modalClosed)="cerrarSelectorCoordenadas()">
+    </app-coordenadas-selector>
+  }
 </div>

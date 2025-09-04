@@ -4,6 +4,8 @@ package controller;
 import java.util.List;
 
 import dao_interfaces.I_JornadaDAO;
+import dto.JornadaDTO;
+import dto.DTOMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -45,7 +47,8 @@ public class JornadaController {
     public Response obtenerTodasLasJornadas() {
         try {
             List<Jornada> jornadas = jornadaDAO.obtenerTodos();
-            return Response.ok(jornadas).build();
+            List<JornadaDTO> jornadasDTO = DTOMapper.toJornadasDTOList(jornadas);
+            return Response.ok(jornadasDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -63,7 +66,8 @@ public class JornadaController {
     public Response obtenerJornadasActivas() {
         try {
             List<Jornada> jornadas = jornadaDAO.obtenerNoBorrados();
-            return Response.ok(jornadas).build();
+            List<JornadaDTO> jornadasDTO = DTOMapper.toJornadasDTOList(jornadas);
+            return Response.ok(jornadasDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -85,7 +89,8 @@ public class JornadaController {
             if (jornada == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            return Response.ok(jornada).build();
+            JornadaDTO jornadaDTO = DTOMapper.toJornadaDTO(jornada);
+            return Response.ok(jornadaDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();

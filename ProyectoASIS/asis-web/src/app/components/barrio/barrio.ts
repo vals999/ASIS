@@ -5,11 +5,12 @@ import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BarrioService, Barrio } from '../../services/barrio.service';
+import { CoordenadasSelectorComponent } from '../zona/coordenadas-selector.component';
 
 @Component({
   selector: 'app-barrio',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CoordenadasSelectorComponent],
   templateUrl: './barrio.html',
   styleUrls: ['./barrio.css']
 })
@@ -20,6 +21,8 @@ export class BarrioComponent implements OnInit, OnDestroy {
   private _mensajeExito = signal<string>('');
   private _mensajeEdicion = signal<string>('');
   private _barrioEditando = signal<number | null>(null);
+  private _mostrarSelectorCoordenadas = signal<boolean>(false);
+  private _coordenadasEditando = signal<'nuevo' | 'editado' | null>(null);
   
   // Signals públicos de solo lectura
   readonly search = this._search.asReadonly();
@@ -27,6 +30,7 @@ export class BarrioComponent implements OnInit, OnDestroy {
   readonly mensajeExito = this._mensajeExito.asReadonly();
   readonly mensajeEdicion = this._mensajeEdicion.asReadonly();
   readonly barrioEditando = this._barrioEditando.asReadonly();
+  readonly mostrarSelectorCoordenadas = this._mostrarSelectorCoordenadas.asReadonly();
 
   // Signals para formularios
   nuevoBarrio = signal<Barrio>({
@@ -220,5 +224,40 @@ export class BarrioComponent implements OnInit, OnDestroy {
       nombre: '',
       geolocalizacion: ''
     });
+  }
+
+  // Métodos para el selector de coordenadas
+  abrirSelectorCoordenadas(tipo: 'nuevo' | 'editado') {
+    this._coordenadasEditando.set(tipo);
+    this._mostrarSelectorCoordenadas.set(true);
+  }
+
+  cerrarSelectorCoordenadas() {
+    this._mostrarSelectorCoordenadas.set(false);
+    this._coordenadasEditando.set(null);
+  }
+
+  onCoordenadasSeleccionadas(coordenadas: string) {
+    const tipoEditando = this._coordenadasEditando();
+    
+    if (tipoEditando === 'nuevo') {
+      this.updateNuevoBarrioGeolocalizacion(coordenadas);
+    } else if (tipoEditando === 'editado') {
+      this.updateBarrioEditadoGeolocalizacion(coordenadas);
+    }
+    
+    this.cerrarSelectorCoordenadas();
+  }
+
+  obtenerCoordenadasActuales(): string {
+    const tipoEditando = this._coordenadasEditando();
+    
+    if (tipoEditando === 'nuevo') {
+      return this.nuevoBarrio().geolocalizacion || '';
+    } else if (tipoEditando === 'editado') {
+      return this.barrioEditado().geolocalizacion || '';
+    }
+    
+    return '';
   }
 }

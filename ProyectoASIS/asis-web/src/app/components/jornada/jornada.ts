@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { JornadaService, Jornada } from '../../services/jornada.service';
+import { CampaniaService } from '../../services/campania.service';
 
 @Component({
   selector: 'app-jornada',
@@ -30,11 +31,13 @@ export class JornadaComponent implements OnInit, OnDestroy {
 
   // Signals para formularios
   nuevaJornada = signal<Jornada>({
-    fecha: ''
+    fecha: '',
+    campania: undefined
   });
 
   jornadaEditada = signal<Jornada>({
-    fecha: ''
+    fecha: '',
+    campania: undefined
   });
 
   // Signal computado para filtrado
@@ -45,7 +48,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
     if (!searchTerm) return jornadas;
     
     return jornadas.filter(j =>
-      j.fecha.includes(searchTerm)
+      j.fecha.includes(searchTerm) ||
+      (j.campania?.nombre && j.campania.nombre.toLowerCase().includes(searchTerm))
     );
   });
 
@@ -53,6 +57,7 @@ export class JornadaComponent implements OnInit, OnDestroy {
 
   constructor(
     public jornadaService: JornadaService,
+    public campaniaService: CampaniaService,
     private router: Router
   ) {
     // Effect para auto-limpiar mensajes después de 3 segundos
@@ -73,6 +78,7 @@ export class JornadaComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.obtenerJornadas();
+    this.obtenerCampanias();
 
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -91,6 +97,10 @@ export class JornadaComponent implements OnInit, OnDestroy {
     this.jornadaService.getJornadas().subscribe();
   }
 
+  obtenerCampanias() {
+    this.campaniaService.getCampanias().subscribe();
+  }
+
   // Métodos para actualizar signals - NUEVA JORNADA
   updateSearch(value: string) {
     this._search.set(value);
@@ -104,9 +114,41 @@ export class JornadaComponent implements OnInit, OnDestroy {
     this.nuevaJornada.update(j => ({...j, fecha: value}));
   }
 
+  updateNuevaJornadaCampania(value: string) {
+    // Guardamos el ID de la campaña seleccionada
+    const campaniaId = value ? Number(value) : undefined;
+    const campania = campaniaId ? this.campaniaService.campanias().find(c => c.id === campaniaId) : undefined;
+    
+    this.nuevaJornada.update(j => ({
+      ...j, 
+      campania: campania ? { 
+        id: campania.id!, 
+        nombre: campania.nombre, 
+        fechaInicio: campania.fechaInicio, 
+        fechaFin: campania.fechaFin 
+      } : undefined
+    }));
+  }
+
   // Métodos para actualizar signals - JORNADA EDITADA
   updateJornadaEditadaFecha(value: string) {
     this.jornadaEditada.update(j => ({...j, fecha: value}));
+  }
+
+  updateJornadaEditadaCampania(value: string) {
+    // Guardamos el ID de la campaña seleccionada
+    const campaniaId = value ? Number(value) : undefined;
+    const campania = campaniaId ? this.campaniaService.campanias().find(c => c.id === campaniaId) : undefined;
+    
+    this.jornadaEditada.update(j => ({
+      ...j, 
+      campania: campania ? { 
+        id: campania.id!, 
+        nombre: campania.nombre, 
+        fechaInicio: campania.fechaInicio, 
+        fechaFin: campania.fechaFin 
+      } : undefined
+    }));
   }
 
   eliminarJornada(id?: number) {
@@ -139,7 +181,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
         
         // Limpiar formulario
         this.nuevaJornada.set({
-          fecha: ''
+          fecha: '',
+          campania: undefined
         });
         
         // Limpiar búsqueda
@@ -155,7 +198,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
   cancelarAlta() {
     this._mostrarFormularioAlta.set(false);
     this.nuevaJornada.set({
-      fecha: ''
+      fecha: '',
+      campania: undefined
     });
   }
 
@@ -164,7 +208,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
     
     this.jornadaEditada.set({
       id: jornada.id,
-      fecha: jornada.fecha
+      fecha: jornada.fecha,
+      campania: jornada.campania
     });
   }
 
@@ -184,7 +229,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
             // Actualizar el formulario con los datos actualizados
             this.jornadaEditada.set({
               id: jornadaActualizada.id,
-              fecha: jornadaActualizada.fecha
+              fecha: jornadaActualizada.fecha,
+              campania: jornadaActualizada.campania
             });
             
             this._mensajeEdicion.set('Jornada actualizada exitosamente');
@@ -202,7 +248,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
     this._jornadaEditando.set(null);
     this._mensajeEdicion.set('');
     this.jornadaEditada.set({
-      fecha: ''
+      fecha: '',
+      campania: undefined
     });
   }
 }
