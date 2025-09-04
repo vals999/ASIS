@@ -1,0 +1,65 @@
+
+		<h2>Preguntas y Respuestas</h2>
+		<div style="margin-bottom: 1em; display: flex; gap: 1em; align-items: center;">
+			<div>
+				<label for="categoriaDropdown" style="font-weight: bold;">Filtrar por categoría:</label>
+				<select id="categoriaDropdown" [(ngModel)]="filtros.categoria" style="margin-left: 0.5em; min-width: 250px;">
+					<option value="">Todas</option>
+					<option *ngFor="let categoria of categorias" [value]="categoria">{{ categoria }}</option>
+				</select>
+			</div>
+			<div>
+				<label for="preguntaDropdown" style="font-weight: bold;">Filtrar por pregunta:</label>
+				<select id="preguntaDropdown" [(ngModel)]="preguntaSeleccionada" style="margin-left: 0.5em; min-width: 250px;">
+					<option value="">Todas</option>
+					<option *ngFor="let pregunta of preguntas" [value]="pregunta">{{ pregunta }}</option>
+				</select>
+			</div>
+			<div>
+				<label style="font-weight: bold;">Filtrar por edad:</label>
+				<select [(ngModel)]="filtros.edadDesde" style="margin-left: 0.5em; min-width: 100px;">
+					<option value="">Desde</option>
+					<option *ngFor="let edad of edadRango" [value]="edad">{{ edad }}</option>
+				</select>
+				<span style="margin: 0 0.5em;">-</span>
+				<select [(ngModel)]="filtros.edadHasta" style="min-width: 100px;">
+					<option value="">Hasta</option>
+					<option *ngFor="let edad of edadRango" [value]="edad">{{ edad }}</option>
+				</select>
+			</div>
+			<button (click)="aplicarFiltros()" style="padding: 0.5em 1em; font-weight: bold;">Aplicar</button>
+		</div>
+		<div style="display: flex; gap: 2em; align-items: flex-start; width: 100%;">
+				<div style="flex: 0 0 50%; max-width: 50vw; max-height: 60vh; overflow-y: auto;">
+				<table border="1" style="width: 100%; text-align: left; margin-top: 1em;">
+					<thead>
+						<tr>
+							<th>Pregunta</th>
+							<th>Respuesta</th>
+							<th>Categoría</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr *ngFor="let pr of preguntasRespuestas">
+							<td>{{ pr.pregunta }}</td>
+							<td>{{ pr.respuesta }}</td>
+							<td>{{ pr.categoria || '-' }}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+					<div style="flex: 1; min-width: 400px; max-width: 600px;">
+						<h3 style="text-align: center;">Gráfico de respuestas</h3>
+						<ng-container *ngIf="barChartData && barChartData.datasets[0].data.length > 0; else sinDatos">
+							<canvas baseChart
+								  [data]="barChartData"
+								  [options]="barChartOptions"
+								  [type]="'bar'"
+								style="max-width: 100%; height: 350px; display: block; margin: auto;"
+							></canvas>
+						</ng-container>
+						<ng-template #sinDatos>
+							<div style="text-align: center; color: #888; margin-top: 2em;">No hay datos para mostrar en el gráfico.</div>
+						</ng-template>
+					</div>
+		</div>

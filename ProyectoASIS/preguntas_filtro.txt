@@ -1,0 +1,11 @@
+1- ¿Cómo está compuesto el barrio?
+Pirámide poblacional del barrio:
+- Grupos etarios: ejemplos personas entre 25 y 35, entre 35 y 45, etc
+- Género/identidad: cantidad de varones, mujeres, lgtb
+Indicadores socioeconómicos y demográficos
+- Tipo de empleo
+- Nivel educativo
+- Cobertura de salud 2- Prevalencia de enfermedades
+Cruzar “Posibles Enfermedades” [pregunta 20 del instructivo] con la edad, género, geolocalización y tipo de empleo
+Por ejemplo, cuáles son las enfermedades prevalentes en las mujeres o cuáles con las enfermedades prevalentes en determinada zona del barrio. 3- Acceso a los medicamentos
+Cruzar el “¿Pudiste acceder a esa medicación?” [pregunta 59 del instructivo] con edad, empleo, problemas de salud, cobertura (pregunta 60 del instructivo” ¿Cómo conseguís la medicación?”)

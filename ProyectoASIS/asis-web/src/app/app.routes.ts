@@ -1,3 +1,4 @@
+
 import { Routes } from '@angular/router';
 import { UsuarioComponent } from './components/usuario/usuario';
 import { CampaniaComponent } from './components/campania/campania';
@@ -14,6 +15,7 @@ import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { Inicio } from './components/inicio/inicio';
 import { LandingComponent } from './components/landing/landing';
+import { EstadisticasComponent } from './components/estadisticas/estadisticas';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
@@ -30,5 +32,6 @@ export const routes: Routes = [
   { path: 'encuestadores', component: EncuestadorComponent, canActivate: [authGuard] },
   { path: 'mapa', component: MapaComponent, canActivate: [authGuard] },
   { path: 'reportes', component: ReportesComponent, canActivate: [authGuard] },
-  { path: '**', redirectTo: '/' }
+  { path: '**', redirectTo: '/' },
+  { path: 'estadisticas', component: EstadisticasComponent, canActivate: [authGuard] },
 ];
