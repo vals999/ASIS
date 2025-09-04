@@ -1,47 +1,43 @@
+// ...existing code...
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
-export interface RespuestaEncuesta {
-  id: number;
-  preguntaId: number;
-  valor: string;
-}
-
-export interface PreguntaEncuesta {
-  id: number;
-  texto?: string;
-  preguntaCsv?: string;
-  categoria: string;
-  respuestaEncuesta: RespuestaEncuesta[];
-}
-
-export interface PreguntaRespuesta {
+export interface PreguntaRespuestaCategoria {
   pregunta: string;
   respuesta: string;
   categoria: string;
 }
 
+export interface Filtros {
+  categoria?: string;
+  zona?: string;
+  barrio?: string;
+  campania?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  sexo?: string;
+  edadDesde?: number;
+  edadHasta?: number;
+  organizacionSocial?: string;
+  tipoRespuesta?: string;
+  perfil?: string;
+  jornada?: string;
+  encuestador?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EstadisticasService {
+  getPreguntasPorCategoria(categoria: string): Observable<string[]> {
+    const url = `/api/respuestas-encuesta/preguntas-por-categoria?categoria=${encodeURIComponent(categoria)}`;
+    return this.http.get<string[]>(url);
+  }
+  private apiUrl = '/api/respuestas-encuesta/filtrar-preguntas-respuestas';
+
   constructor(private http: HttpClient) {}
 
-  getPreguntasRespuestas(): Observable<PreguntaRespuesta[]> {
-    return this.http.get<PreguntaEncuesta[]>('/api/preguntas-encuesta').pipe(
-      map((preguntas: PreguntaEncuesta[]) => {
-        const resultado: PreguntaRespuesta[] = [];
-        preguntas.forEach((pregunta) => {
-          (pregunta.respuestaEncuesta || []).forEach((respuesta) => {
-            resultado.push({
-              pregunta: pregunta.texto || pregunta.preguntaCsv || '',
-              respuesta: respuesta.valor,
-              categoria: pregunta.categoria
-            });
-          });
-        });
-        return resultado;
-      })
-    );
+  filtrarPreguntasRespuestas(filtros: Filtros): Observable<PreguntaRespuestaCategoria[]> {
+    return this.http.post<PreguntaRespuestaCategoria[]>(this.apiUrl, filtros);
   }
 }
