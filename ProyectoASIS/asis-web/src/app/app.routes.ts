@@ -32,6 +32,6 @@ export const routes: Routes = [
   { path: 'encuestadores', component: EncuestadorComponent, canActivate: [authGuard] },
   { path: 'mapa', component: MapaComponent, canActivate: [authGuard] },
   { path: 'reportes', component: ReportesComponent, canActivate: [authGuard] },
-  { path: '**', redirectTo: '/' },
   { path: 'estadisticas', component: EstadisticasComponent, canActivate: [authGuard] },
+  { path: '**', redirectTo: '/' }
 ];

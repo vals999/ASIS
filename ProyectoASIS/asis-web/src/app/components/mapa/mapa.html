@@ -3,11 +3,36 @@
     
     <!-- Columna izquierda - Mapa (50% de la pantalla) -->
     <div class="col-6 d-flex flex-column">
-      <div class="p-3 bg-light border-bottom">
+      <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
         <h4 class="mb-0 d-flex align-items-center">
           <i class="bi bi-geo-alt me-2" style="color: #1e5a5a;"></i>
           Mapa Interactivo
         </h4>
+        
+        <!-- Botón de control de visualización junto al mapa -->
+        @if (datosDisponibles()) {
+          <div class="btn-group" role="group" aria-label="Tipo de marcadores">
+            <input type="radio" class="btn-check" 
+                   id="btnPines" 
+                   name="tipoMarcador" 
+                   [checked]="tipoMarcador() === 'pines'"
+                   (change)="cambiarTipoMarcador('pines')">
+            <label class="btn btn-outline-primary btn-sm" for="btnPines">
+              <i class="bi bi-geo-alt me-1"></i>
+              Pines
+            </label>
+            
+            <input type="radio" class="btn-check" 
+                   id="btnClusters" 
+                   name="tipoMarcador" 
+                   [checked]="tipoMarcador() === 'clusters'"
+                   (change)="cambiarTipoMarcador('clusters')">
+            <label class="btn btn-outline-primary btn-sm" for="btnClusters">
+              <i class="bi bi-diagram-3 me-1"></i>
+              Clusters
+            </label>
+          </div>
+        }
       </div>
       <div class="flex-fill">
         <div id="map" class="map-display h-100 w-100"></div>
