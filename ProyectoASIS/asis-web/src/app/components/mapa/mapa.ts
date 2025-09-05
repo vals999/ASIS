@@ -302,7 +302,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       showCoverageOnHover: false,
       zoomToBoundsOnClick: true,
       disableClusteringAtZoom: 18, 
-      maxClusterRadius: 80,
+      maxClusterRadius: 50,
+      animate: true,
+      animateAddingMarkers: true,
       spiderfyDistanceMultiplier: 1,
       // Función personalizada para manejar clicks en clusters
       iconCreateFunction: function(cluster: any) {
