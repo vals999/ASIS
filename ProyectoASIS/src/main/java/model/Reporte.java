@@ -18,6 +18,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "REPORTES")
@@ -26,35 +28,39 @@ public class Reporte implements EliminableLogico{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@Column(name = "nombre_reporte")
+	
+	@Column(name = "nombre_reporte", length = 255)
 	private String nombre;
+	
+	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "fecha")
 	private Date fecha;
+	
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "usuario_creador")
 	private Usuario creador;
 	
 	// Campos para almacenar archivos como BLOB
 	@Lob
-	@Column(name = "contenido_archivo")
+	@Column(name = "contenido_archivo", columnDefinition = "LONGBLOB")
 	private byte[] contenidoArchivo;
 	
-	@Column(name = "tipo_mime")
+	@Column(name = "tipo_mime", length = 255)
 	private String tipoMime;
 	
 	@Column(name = "tamano_archivo")
 	private Long tamanoArchivo;
 	
-	@Column(name = "nombre_archivo_original")
+	@Column(name = "nombre_archivo_original", length = 255)
 	private String nombreArchivoOriginal;
 	
-	@Column(name = "fecha_creacion", nullable = false, updatable = false, columnDefinition = "TIMESTAMP(0)")
+	@Column(name = "fecha_creacion", nullable = false, updatable = false)
 	private LocalDateTime fechaCreacion;
 	
-	@Column(name = "fecha_editado", columnDefinition = "TIMESTAMP(0)")
+	@Column(name = "fecha_editado")
 	private LocalDateTime fechaEditado;
 	
-	@Column(name = "fecha_eliminacion", columnDefinition = "TIMESTAMP(0)")
+	@Column(name = "fecha_eliminacion")
 	private LocalDateTime fechaEliminacion;
 	
 	/* relación Reporte-Usuario */

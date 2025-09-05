@@ -145,6 +145,17 @@ export class ZonaComponent implements OnInit, OnDestroy {
     this.zonaEditada.update(z => ({...z, geolocalizacion: value}));
   }
 
+  updateZonaEditadaBarrio(value: string) {
+    // Guardamos el ID del barrio seleccionado
+    const barrioId = value ? Number(value) : undefined;
+    const barrio = barrioId ? this.barrioService.barrios().find(b => b.id === barrioId) : undefined;
+    
+    this.zonaEditada.update(z => ({
+      ...z, 
+      barrio: barrio ? { id: barrio.id!, nombre: barrio.nombre } : undefined
+    }));
+  }
+
   eliminarZona(id?: number) {
     if (id === undefined) return;
     

@@ -40,6 +40,8 @@ export interface LoginResponse {
     nombreUsuario: string;
     email: string;
     perfil: string;
+    nombre?: string;
+    apellido?: string;
   };
   message: string;
 }
@@ -49,6 +51,8 @@ export interface AuthUser {
   nombreUsuario: string;
   email: string;
   perfil: string;
+  nombre?: string;
+  apellido?: string;
 }
 
 @Injectable({

@@ -12,7 +12,7 @@
         <p class="small text-light opacity-75 mb-0">Centro de Salud Universitario</p>
         @if (authService.currentUser()) {
           <p class="small text-light opacity-75 mt-2">
-            Bienvenido, {{ authService.currentUser()?.nombreUsuario }}
+            Bienvenido, {{ authService.currentUser()?.nombre || authService.currentUser()?.nombreUsuario }}
           </p>
         }
       </div>

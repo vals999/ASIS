@@ -22,13 +22,14 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   private showFilteredMapSubscription?: Subscription;
   private markersGroup: any;
   private markerClusterGroup: any;
+  private heatmapLayer: any;
   public csvCargado = false;
   
   // Signal para controlar si hay datos disponibles (como en carga-archivos)
   public datosDisponibles = signal<boolean>(false);
   
-  // Signal para controlar el tipo de marcador (pines o clusters)
-  public tipoMarcador = signal<'pines' | 'clusters'>('pines');
+  // Signal para controlar el tipo de marcador (pines, clusters o heatmap)
+  public tipoMarcador = signal<'pines' | 'clusters' | 'heatmap'>('pines');
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -100,7 +101,7 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  cambiarTipoMarcador(tipo: 'pines' | 'clusters'): void {
+  cambiarTipoMarcador(tipo: 'pines' | 'clusters' | 'heatmap'): void {
     this.tipoMarcador.set(tipo);
     console.log(`Cambiando tipo de marcador a: ${tipo}`);
     
@@ -112,6 +113,8 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       // Mostrar el nuevo tipo
       if (tipo === 'clusters') {
         this.mostrarClusters();
+      } else if (tipo === 'heatmap') {
+        this.mostrarHeatmap();
       } else {
         this.mostrarPines();
       }
@@ -166,6 +169,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       // Cargar el plugin de markercluster dinámicamente
       await this.loadMarkerClusterPlugin();
       
+      // Cargar el plugin de heatmap dinámicamente
+      await this.loadHeatmapPlugin();
+      
       // Configurar iconos por defecto de Leaflet
       delete (L as any).Icon.Default.prototype._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -201,6 +207,17 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } catch (error) {
       console.error('Error loading MarkerCluster plugin:', error);
+    }
+  }
+
+  private async loadHeatmapPlugin(): Promise<void> {
+    try {
+      // Cargar JavaScript del plugin de heatmap
+      if (!(window as any).L || !(window as any).L.heatLayer) {
+        await this.loadScript('https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js');
+      }
+    } catch (error) {
+      console.error('Error loading Heatmap plugin:', error);
     }
   }
 
@@ -249,6 +266,8 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     // Mostrar según el tipo seleccionado
     if (this.tipoMarcador() === 'clusters') {
       await this.mostrarClusters();
+    } else if (this.tipoMarcador() === 'heatmap') {
+      await this.mostrarHeatmap();
     } else {
       await this.mostrarPines();
     }
@@ -363,6 +382,45 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ajustarVistaAMarcadores();
   }
 
+  private async mostrarHeatmap(): Promise<void> {
+    const L = await import('leaflet');
+    
+    // Asegurar que no hay pines ni clusters antes de crear heatmap
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+      this.markersGroup = null;
+    }
+    
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.map.removeLayer(this.markerClusterGroup);
+      this.markerClusterGroup = null;
+    }
+    
+    // Preparar datos para el heatmap: [lat, lng, intensity]
+    const heatmapData = this.coordenadas
+      .filter(coordenada => this.validarCoordenadas(coordenada.latitud, coordenada.longitud))
+      .map(coordenada => [coordenada.latitud, coordenada.longitud, 1.0]); // intensidad fija de 1.0
+    
+    if (heatmapData.length > 0) {
+      // Crear el heatmap layer con configuraciones optimizadas
+      this.heatmapLayer = (L as any).heatLayer(heatmapData, {
+        radius: 25,
+        blur: 15,
+        maxZoom: 17,
+        max: 1.0,
+        gradient: {
+          0.4: 'blue',
+          0.65: 'lime', 
+          1: 'red'
+        }
+      }).addTo(this.map);
+      
+      this.ajustarVistaAMarcadores();
+    }
+  }
+
   private limpiarMarcadores(): void {
     // Limpiar marcadores de pines
     if (this.markersGroup) {
@@ -376,6 +434,12 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       this.markerClusterGroup.clearLayers();
       this.map.removeLayer(this.markerClusterGroup);
       this.markerClusterGroup = null;
+    }
+    
+    // Limpiar heatmap
+    if (this.heatmapLayer) {
+      this.map.removeLayer(this.heatmapLayer);
+      this.heatmapLayer = null;
     }
   }
 
@@ -402,6 +466,8 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     // Mostrar según el tipo seleccionado para datos filtrados
     if (this.tipoMarcador() === 'clusters') {
       await this.mostrarClustersFiltrados(respuestaValor);
+    } else if (this.tipoMarcador() === 'heatmap') {
+      await this.mostrarHeatmapFiltrado(respuestaValor);
     } else {
       await this.mostrarPinesFiltrados(respuestaValor);
     }
@@ -516,6 +582,47 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ajustarVistaAMarcadores();
 
     console.log(`Marcadores filtrados agregados como clusters: ${this.coordenadas.length} para respuesta "${respuestaValor}"`);
+  }
+
+  private async mostrarHeatmapFiltrado(respuestaValor: string): Promise<void> {
+    const L = await import('leaflet');
+    
+    // Asegurar que no hay pines ni clusters antes de crear heatmap
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+      this.markersGroup = null;
+    }
+    
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.map.removeLayer(this.markerClusterGroup);
+      this.markerClusterGroup = null;
+    }
+    
+    // Preparar datos para el heatmap filtrado: [lat, lng, intensity]
+    const heatmapData = this.coordenadas
+      .filter(coordenada => this.validarCoordenadas(coordenada.latitud, coordenada.longitud))
+      .map(coordenada => [coordenada.latitud, coordenada.longitud, 1.0]); // intensidad fija de 1.0
+    
+    if (heatmapData.length > 0) {
+      // Crear el heatmap layer con configuraciones optimizadas para datos filtrados
+      this.heatmapLayer = (L as any).heatLayer(heatmapData, {
+        radius: 30, // Radio ligeramente mayor para datos filtrados
+        blur: 20,
+        maxZoom: 17,
+        max: 1.0,
+        gradient: {
+          0.4: 'blue',
+          0.65: 'lime', 
+          1: 'red'
+        }
+      }).addTo(this.map);
+      
+      this.ajustarVistaAMarcadores();
+      
+      console.log(`Heatmap filtrado creado: ${heatmapData.length} puntos para respuesta "${respuestaValor}"`);
+    }
   }
 
   private validarCoordenadas(lat: number, lng: number): boolean {

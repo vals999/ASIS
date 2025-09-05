@@ -1,133 +1,178 @@
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Jornadas</h2>
+<div class="container-fluid p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 fw-bold text-dark mb-1">Jornadas</h2>
+      <p class="text-muted mb-0">Gestión de jornadas de trabajo de campo</p>
+    </div>
     <div class="d-flex gap-2">
       <button class="btn btn-primary" (click)="toggleFormularioAlta()">
+        <i class="bi bi-plus-circle me-2"></i>
         Crear Jornada
       </button>
-      <input type="text" class="form-control" style="width: 250px;" placeholder="Buscar..." 
+      <input type="text" class="form-control" style="width: 250px;" placeholder="Buscar jornada..." 
              [ngModel]="search()" (ngModelChange)="updateSearch($event)">
     </div>
   </div>
 
-  <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearJornada()" class="mb-4 border rounded p-3 bg-light">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-4">
-        <label class="form-label">Fecha de la jornada</label>
-        <input type="date" class="form-control" 
-               [ngModel]="nuevaJornada().fecha" 
-               (ngModelChange)="updateNuevaJornadaFecha($event)" 
-               name="fecha" required>
-      </div>
-      <div class="col-md-4">
-        <label class="form-label">Campaña</label>
-        <select class="form-select" 
-                [ngModel]="nuevaJornada().campania?.id || ''" 
-                (ngModelChange)="updateNuevaJornadaCampania($event)" 
-                name="campania">
-          <option value="" disabled>Seleccionar</option>
-          <option *ngFor="let campania of campaniaService.campanias()" [value]="campania.id">
-            {{ campania.nombre }}
-          </option>
-        </select>
-      </div>
-      <div class="col-md-2">
-        <button type="submit" class="btn btn-success w-100">Guardar</button>
-      </div>
-      <div class="col-md-2">
-        <button type="button" class="btn btn-secondary w-100" (click)="cancelarAlta()">Cancelar</button>
-      </div>
+  <!-- Formulario de creación -->
+  <div *ngIf="mostrarFormularioAlta()" class="card mb-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">
+        <i class="bi bi-plus-circle me-2"></i>
+        Crear Nueva Jornada
+      </h5>
     </div>
-    
-    <!-- Mensaje de confirmación -->
-    <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
-         [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
-      <i [class]="mensajeExito().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
-      {{ mensajeExito() }}
-    </div>
-  </form>
-
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Fecha</th>
-        <th>Campaña</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let jornada of jornadasFiltradas()">
-        <!-- Fila normal de la jornada -->
-        <tr>
-          <td>#{{ jornada.id }}</td>
-          <td>{{ jornada.fecha }}</td>
-          <td>
-            <span *ngIf="jornada.campania" class="badge bg-secondary">{{ jornada.campania.nombre }}</span>
-            <span *ngIf="!jornada.campania" class="text-muted">Sin campaña</span>
-          </td>
-          <td>
-            <a href="#" class="me-2" (click)="$event.preventDefault(); editarJornada(jornada)">Editar</a>
-            <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarJornada(jornada.id)">Eliminar</a>
-          </td>
-        </tr>
+    <div class="card-body">
+      <form (ngSubmit)="crearJornada()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-medium">Fecha de la jornada</label>
+            <input type="date" class="form-control" 
+                   [ngModel]="nuevaJornada().fecha" 
+                   (ngModelChange)="updateNuevaJornadaFecha($event)" 
+                   name="fecha" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-medium">Campaña</label>
+            <select class="form-select" 
+                    [ngModel]="nuevaJornada().campania?.id || ''" 
+                    (ngModelChange)="updateNuevaJornadaCampania($event)" 
+                    name="campania">
+              <option value="" disabled>Seleccionar</option>
+              <option *ngFor="let campania of campaniaService.campanias()" [value]="campania.id">
+                {{ campania.nombre }}
+              </option>
+            </select>
+          </div>
+        </div>
         
-        <!-- Fila del formulario de edición (solo se muestra si la jornada está siendo editada) -->
-        <tr *ngIf="jornadaEditando() === jornada.id" class="bg-light">
-          <td colspan="4">
-            <div class="p-3 border rounded">
-              <h6 class="mb-3">Editar Jornada #{{ jornada.id }}</h6>
-              <div class="row g-2">
-                <div class="col-md-4">
-                  <label class="form-label">Fecha de la jornada</label>
-                  <input type="date" class="form-control" 
-                         [ngModel]="jornadaEditada().fecha" 
-                         (ngModelChange)="updateJornadaEditadaFecha($event)" 
-                         required>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">Campaña</label>
-                  <select class="form-select" 
-                          [ngModel]="jornadaEditada().campania?.id || ''" 
-                          (ngModelChange)="updateJornadaEditadaCampania($event)" 
-                          name="campania">
-                    <option value="" disabled>Seleccionar</option>
-                    <option *ngFor="let campania of campaniaService.campanias()" [value]="campania.id">
-                      {{ campania.nombre }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col-md-4">
-                  <div class="d-flex flex-column gap-1 mt-4">
-                    <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
-                      <i class="fa fa-check"></i> Confirmar
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-lg me-1"></i>
+            Guardar
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancelarAlta()">
+            <i class="bi bi-x-lg me-1"></i>
+            Cancelar
+          </button>
+        </div>
+        
+        <!-- Mensaje de confirmación -->
+        <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
+             [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
+          <i [class]="mensajeExito().includes('Error') ? 'bi bi-exclamation-triangle me-2' : 'bi bi-check-circle me-2'"></i>
+          {{ mensajeExito() }}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla de jornadas -->
+  <div *ngIf="jornadasFiltradas().length > 0" class="card">
+    <div class="card-header bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Jornadas Registradas ({{ jornadasFiltradas().length }})</h5>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Campaña</th>
+              <th scope="col" class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let jornada of jornadasFiltradas()">
+              <!-- Fila normal de la jornada -->
+              <tr>
+                <td class="fw-medium">#{{ jornada.id }}</td>
+                <td>{{ jornada.fecha | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <span *ngIf="jornada.campania" class="badge bg-secondary">{{ jornada.campania.nombre }}</span>
+                  <span *ngIf="!jornada.campania" class="text-muted">Sin campaña</span>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" 
+                            class="btn btn-outline-primary"
+                            (click)="editarJornada(jornada)"
+                            title="Editar jornada">
+                      <i class="bi bi-pencil"></i>
                     </button>
-                    <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
-                      <i class="fa fa-times"></i> Cancelar
+                    <button type="button" 
+                            class="btn btn-outline-danger"
+                            (click)="eliminarJornada(jornada.id)"
+                            title="Eliminar jornada">
+                      <i class="bi bi-trash"></i>
                     </button>
                   </div>
-                </div>
-              </div>
-              
-              <!-- Mensaje de validación dentro del formulario de edición -->
-              <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
-                   [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
-                <i [class]="mensajeEdicion().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
-                {{ mensajeEdicion() }}
-              </div>
-            </div>
-          </td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
-  
-  <!-- Paginación simple (opcional) -->
-  <nav *ngIf="jornadasFiltradas().length > 10">
-    <ul class="pagination justify-content-end">
-      <li class="page-item disabled"><a class="page-link">Anterior</a></li>
-      <li class="page-item active"><a class="page-link">1</a></li>
-      <li class="page-item"><a class="page-link">Siguiente</a></li>
-    </ul>
-  </nav>
+                </td>
+              </tr>
+              <!-- Fila del formulario de edición -->
+              <tr *ngIf="jornadaEditando() === jornada.id" class="table-secondary">
+                <td colspan="4">
+                  <div class="p-3">
+                    <h6 class="mb-3">
+                      <i class="bi bi-pencil me-2"></i>
+                      Editar Jornada #{{ jornada.id }}
+                    </h6>
+                    <div class="row g-3">
+                      <div class="col-md-4">
+                        <label class="form-label fw-medium">Fecha de la jornada</label>
+                        <input type="date" class="form-control" 
+                               [ngModel]="jornadaEditada().fecha" 
+                               (ngModelChange)="updateJornadaEditadaFecha($event)" 
+                               required>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label fw-medium">Campaña</label>
+                        <select class="form-select" 
+                                [ngModel]="jornadaEditada().campania?.id || ''" 
+                                (ngModelChange)="updateJornadaEditadaCampania($event)" 
+                                name="campania">
+                          <option value="" disabled>Seleccionar</option>
+                          <option *ngFor="let campania of campaniaService.campanias()" [value]="campania.id">
+                            {{ campania.nombre }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                      <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
+                        <i class="bi bi-check-lg me-1"></i>
+                        Confirmar
+                      </button>
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
+                        <i class="bi bi-x-lg me-1"></i>
+                        Cancelar
+                      </button>
+                    </div>
+                    
+                    <!-- Mensaje de validación dentro del formulario de edición -->
+                    <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
+                         [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
+                      <i [class]="mensajeEdicion().includes('Error') ? 'bi bi-exclamation-triangle me-2' : 'bi bi-check-circle me-2'"></i>
+                      {{ mensajeEdicion() }}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="jornadasFiltradas().length === 0" class="card">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-calendar-event display-1 text-muted mb-3"></i>
+      <h5 class="text-muted">No hay jornadas disponibles</h5>
+      <p class="text-muted">Haz clic en "Crear Jornada" para agregar la primera jornada</p>
+    </div>
+  </div>
 </div>

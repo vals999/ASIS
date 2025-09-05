@@ -1,131 +1,145 @@
 <div class="container-fluid p-4">
-  <div class="row">
-    <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary">Reportes</h2>
-        @if (puedeSubir()) {
-          <button 
-            type="button" 
-            class="btn btn-primary"
-            (click)="subirReporte()"
-            [disabled]="reporteService.loading()"
-          >
-            <i class="bi bi-upload me-2"></i>
-            <span *ngIf="!reporteService.loading()">Subir reporte</span>
-            <span *ngIf="reporteService.loading()">Subiendo...</span>
-          </button>
-        }
-      </div>
-      
-      <!-- Input de archivo oculto -->
-      <input 
-        #fileInput 
-        type="file" 
-        multiple 
-        style="display: none;" 
-        (change)="onFileSelected($event)"
-        accept="*/*"
-      >
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 fw-bold text-dark mb-1">Reportes</h2>
+      <p class="text-muted mb-0">Gestión de archivos y documentos del sistema</p>
+    </div>
+    <div class="d-flex gap-2">
+      @if (puedeSubir()) {
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          (click)="subirReporte()"
+          [disabled]="reporteService.loading()"
+        >
+          <i class="bi bi-upload me-2"></i>
+          <span *ngIf="!reporteService.loading()">Subir Reporte</span>
+          <span *ngIf="reporteService.loading()">Subiendo...</span>
+        </button>
+      }
+    </div>
+  </div>
+  
+  <!-- Input de archivo oculto -->
+  <input 
+    #fileInput 
+    type="file" 
+    multiple 
+    style="display: none;" 
+    (change)="onFileSelected($event)"
+    accept="*/*"
+  >
 
-      <!-- Indicador de carga -->
-      <div *ngIf="reporteService.loading()" class="text-center py-3">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
+  <!-- Indicador de carga -->
+  @if (reporteService.loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
       </div>
+      <p class="mt-2 text-muted">Cargando reportes...</p>
+    </div>
+  } @else if (mensajeError() || reporteService.error()) {
+    <!-- Mensaje de error global -->
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      {{ mensajeError() || reporteService.error() }}
+      <button type="button" class="btn-close" (click)="clearError()" aria-label="Close"></button>
+    </div>
+  } @else {
 
-      <!-- Mensaje de éxito -->
-      <div *ngIf="mensajeExito()" class="alert alert-success alert-dismissible fade show" role="alert">
+    <!-- Mensaje de éxito -->
+    @if (mensajeExito()) {
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle me-2"></i>
         {{ mensajeExito() }}
         <button type="button" class="btn-close" (click)="clearSuccess()" aria-label="Close"></button>
       </div>
-
-      <!-- Mensaje de error global -->
-      <div *ngIf="mensajeError() || reporteService.error()" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        {{ mensajeError() || reporteService.error() }}
-        <button type="button" class="btn-close" (click)="clearError()" aria-label="Close"></button>
-      </div>
-      
-      <!-- Tabla de archivos subidos -->
-      @if (reportesFiltrados().length > 0) {
-        <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0">Reportes Disponibles ({{ reportesFiltrados().length }})</h5>
-          </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead class="table-light">
+    }
+    
+    <!-- Tabla de archivos subidos -->
+    @if (reportesFiltrados().length > 0) {
+      <div class="card">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Reportes Disponibles ({{ reportesFiltrados().length }})</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col">Archivo</th>
+                  <th scope="col">Tamaño</th>
+                  <th scope="col">Subido por</th>
+                  <th scope="col">Fecha de Subida</th>
+                  <th scope="col" class="text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (reporte of reportesFiltrados(); track reporte.id) {
                   <tr>
-                    <th scope="col">Archivo</th>
-                    <th scope="col">Tamaño</th>
-                    <th scope="col">Subido por</th>
-                    <th scope="col">Fecha de Subida</th>
-                    <th scope="col" class="text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (reporte of reportesFiltrados(); track reporte.id) {
-                    <tr>
-                      <td>
+                    <td>
+                      <div class="d-flex align-items-center">
                         <i [class]="'me-2 text-muted ' + obtenerIconoArchivo(reporte.tipoMime)"></i>
-                        {{ reporte.nombreArchivoOriginal || reporte.nombre }}
-                      </td>
-                      <td>{{ formatearTamano(reporte.tamanoArchivo) }}</td>
-                      <td>
-                        @if (reporte.creador) {
-                          <div>
-                            <strong>{{ reporte.creador.nombreUsuario }}</strong>
-                            <br>
-                            <small class="text-muted">{{ reporte.creador.email }}</small>
-                          </div>
-                        } @else {
-                          <span class="text-muted">Desconocido</span>
-                        }
-                      </td>
-                      <td>{{ reporte.fechaCreacion | date:'dd/MM/yyyy' }}</td>
-                      <td class="text-center">
-                        <div class="btn-group btn-group-sm" role="group">
+                        <div>
+                          <div class="fw-medium">{{ reporte.nombreArchivoOriginal || reporte.nombre }}</div>
+                          <small class="text-muted">{{ obtenerTipoArchivo(reporte.tipoMime) }}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge bg-secondary">{{ formatearTamano(reporte.tamanoArchivo) }}</span>
+                    </td>
+                    <td>
+                      @if (reporte.creador) {
+                        <div>
+                          <div class="fw-medium">{{ reporte.creador.nombreUsuario }}</div>
+                          <small class="text-muted">{{ reporte.creador.email }}</small>
+                        </div>
+                      } @else {
+                        <span class="text-muted">Desconocido</span>
+                      }
+                    </td>
+                    <td>{{ reporte.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="text-center">
+                      <div class="btn-group btn-group-sm" role="group">
+                        <button 
+                          type="button" 
+                          class="btn btn-outline-primary"
+                          (click)="descargarReporte(reporte)"
+                          title="Descargar archivo"
+                          [disabled]="reporteService.loading()"
+                        >
+                          <i class="bi bi-download"></i>
+                        </button>
+                        @if (puedeEliminar(reporte)) {
                           <button 
                             type="button" 
-                            class="btn btn-outline-primary"
-                            (click)="descargarReporte(reporte)"
-                            title="Descargar archivo"
+                            class="btn btn-outline-danger"
+                            (click)="eliminarReporte(reporte)"
+                            title="Eliminar archivo"
                             [disabled]="reporteService.loading()"
                           >
-                            <i class="bi bi-download"></i>
+                            <i class="bi bi-trash"></i>
                           </button>
-                          @if (puedeEliminar(reporte)) {
-                            <button 
-                              type="button" 
-                              class="btn btn-outline-danger"
-                              (click)="eliminarReporte(reporte)"
-                              title="Eliminar archivo"
-                              [disabled]="reporteService.loading()"
-                            >
-                              <i class="bi bi-trash"></i>
-                            </button>
-                          }
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         </div>
-      } @else if (!reporteService.loading()) {
-        <div class="card">
-          <div class="card-body text-center py-5">
-            <i class="bi bi-cloud-upload display-1 text-muted mb-3"></i>
-            <h5 class="text-muted">No hay reportes disponibles</h5>
-            <p class="text-muted">Haz clic en "Subir reporte" para agregar archivos</p>
-          </div>
+      </div>
+    } @else {
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-cloud-upload display-1 text-muted mb-3"></i>
+          <h5 class="text-muted">No hay reportes disponibles</h5>
+          <p class="text-muted">Haz clic en "Subir Reporte" para agregar archivos al sistema</p>
         </div>
-      }
-    </div>
-  </div>
+      </div>
+    }
+
+  }
 </div>

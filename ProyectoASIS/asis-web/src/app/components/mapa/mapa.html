@@ -17,7 +17,7 @@
                    name="tipoMarcador" 
                    [checked]="tipoMarcador() === 'pines'"
                    (change)="cambiarTipoMarcador('pines')">
-            <label class="btn btn-outline-primary btn-sm" for="btnPines">
+            <label class="btn btn-outline-custom btn-sm" for="btnPines">
               <i class="bi bi-geo-alt me-1"></i>
               Pines
             </label>
@@ -27,9 +27,19 @@
                    name="tipoMarcador" 
                    [checked]="tipoMarcador() === 'clusters'"
                    (change)="cambiarTipoMarcador('clusters')">
-            <label class="btn btn-outline-primary btn-sm" for="btnClusters">
+            <label class="btn btn-outline-custom btn-sm" for="btnClusters">
               <i class="bi bi-diagram-3 me-1"></i>
-              Clusters
+              Clústers
+            </label>
+            
+            <input type="radio" class="btn-check" 
+                   id="btnHeatmap" 
+                   name="tipoMarcador" 
+                   [checked]="tipoMarcador() === 'heatmap'"
+                   (change)="cambiarTipoMarcador('heatmap')">
+            <label class="btn btn-outline-custom btn-sm" for="btnHeatmap">
+              <i class="bi bi-thermometer-half me-1"></i>
+              Mapa de calor
             </label>
           </div>
         }
