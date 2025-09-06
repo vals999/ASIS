@@ -26,7 +26,7 @@
             <property name="hibernate.connection.driver_class" value="com.mysql.cj.jdbc.Driver" />
             <property name="hibernate.connection.url" value="jdbc:mysql://127.0.0.1:3306/jyaa" />
             <property name="hibernate.connection.username" value="valentin" />
-			<property name="hibernate.connection.password" value="pinchapasion2015"/>
+			<property name="hibernate.connection.password" value="Pinchapasion2015"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.hbm2ddl.auto" value="update" />
