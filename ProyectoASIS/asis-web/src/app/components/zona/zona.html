@@ -93,6 +93,10 @@
       <div class="card-header bg-light">
         <div class="d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Zonas Registradas ({{ zonasFiltradas().length }})</h5>
+          <div class="text-muted small">
+            Página {{ paginaActual() }} de {{ totalPaginas() }} 
+            ({{ zonasPaginadas().length }} de {{ zonasFiltradas().length }} zonas)
+          </div>
         </div>
       </div>
       <div class="card-body p-0">
@@ -108,7 +112,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (zona of zonasFiltradas(); track zona.id) {
+              @for (zona of zonasPaginadas(); track zona.id) {
                 <!-- Fila normal de la zona -->
                 <tr>
                   <td class="fw-medium">#{{ zona.id }}</td>
@@ -218,6 +222,38 @@
             </tbody>
           </table>
         </div>
+      </div>
+      
+      <!-- Controles de paginación -->
+      <div class="card-footer bg-light" *ngIf="totalPaginas() > 1">
+        <nav aria-label="Navegación de páginas">
+          <ul class="pagination justify-content-center mb-0">
+            <!-- Botón anterior -->
+            <li class="page-item" [class.disabled]="paginaActual() === 1">
+              <button class="page-link" (click)="paginaAnterior()" [disabled]="paginaActual() === 1">
+                <i class="bi bi-chevron-left"></i>
+                Anterior
+              </button>
+            </li>
+            
+            <!-- Números de página -->
+            <li *ngFor="let pagina of paginasArray()" 
+                class="page-item" 
+                [class.active]="pagina === paginaActual()">
+              <button class="page-link" (click)="irAPagina(pagina)">
+                {{ pagina }}
+              </button>
+            </li>
+            
+            <!-- Botón siguiente -->
+            <li class="page-item" [class.disabled]="paginaActual() === totalPaginas()">
+              <button class="page-link" (click)="paginaSiguiente()" [disabled]="paginaActual() === totalPaginas()">
+                Siguiente
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
       </div>
     </div>
   } @else {

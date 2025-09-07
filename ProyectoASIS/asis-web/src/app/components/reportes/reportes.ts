@@ -16,14 +16,36 @@ export class ReportesComponent implements OnInit, OnDestroy {
   // Signals para mensajes
   private _mensajeExito = signal<string>('');
   private _mensajeError = signal<string>('');
+  private _paginaActual = signal<number>(1);
+  private _elementosPorPagina = signal<number>(10);
   
   // Signals públicos de solo lectura
   readonly mensajeExito = this._mensajeExito.asReadonly();
   readonly mensajeError = this._mensajeError.asReadonly();
+  readonly paginaActual = this._paginaActual.asReadonly();
+  readonly elementosPorPagina = this._elementosPorPagina.asReadonly();
 
   // Signal computado para filtrar reportes
   readonly reportesFiltrados = computed(() => {
     return this.reporteService.reportes();
+  });
+
+  // Signals computados para paginación
+  readonly totalPaginas = computed(() => {
+    const totalReportes = this.reportesFiltrados().length;
+    return Math.ceil(totalReportes / this._elementosPorPagina());
+  });
+
+  readonly reportesPaginados = computed(() => {
+    const reportes = this.reportesFiltrados();
+    const inicio = (this._paginaActual() - 1) * this._elementosPorPagina();
+    const fin = inicio + this._elementosPorPagina();
+    return reportes.slice(inicio, fin);
+  });
+
+  readonly paginasArray = computed(() => {
+    const total = this.totalPaginas();
+    return Array.from({ length: total }, (_, i) => i + 1);
   });
 
   private subscriptions = new Subscription();
@@ -217,5 +239,24 @@ export class ReportesComponent implements OnInit, OnDestroy {
     if (tipoMime.includes('text')) return 'bi-file-earmark-text';
     
     return 'bi-file-earmark';
+  }
+
+  // Métodos para paginación
+  irAPagina(pagina: number) {
+    if (pagina >= 1 && pagina <= this.totalPaginas()) {
+      this._paginaActual.set(pagina);
+    }
+  }
+
+  paginaAnterior() {
+    if (this._paginaActual() > 1) {
+      this._paginaActual.update(p => p - 1);
+    }
+  }
+
+  paginaSiguiente() {
+    if (this._paginaActual() < this.totalPaginas()) {
+      this._paginaActual.update(p => p + 1);
+    }
   }
 }

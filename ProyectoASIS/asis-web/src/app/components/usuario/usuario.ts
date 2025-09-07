@@ -24,6 +24,8 @@ export class UsuarioComponent implements OnInit, OnDestroy {
   private _mensajeExito = signal<string>('');
   private _mensajeEdicion = signal<string>('');
   private _usuarioEditando = signal<number | null>(null);
+  private _paginaActual = signal<number>(1);
+  private _elementosPorPagina = signal<number>(10);
   
   // Signals públicos de solo lectura. el template accede a los valores sin poder modificarlos
   readonly search = this._search.asReadonly();
@@ -31,6 +33,8 @@ export class UsuarioComponent implements OnInit, OnDestroy {
   readonly mensajeExito = this._mensajeExito.asReadonly();
   readonly mensajeEdicion = this._mensajeEdicion.asReadonly();
   readonly usuarioEditando = this._usuarioEditando.asReadonly();
+  readonly paginaActual = this._paginaActual.asReadonly();
+  readonly elementosPorPagina = this._elementosPorPagina.asReadonly();
 
   // Signals para formularios. Mantienen el estado de los formularios
   nuevoUsuario = signal<Usuario>({
@@ -65,6 +69,24 @@ export class UsuarioComponent implements OnInit, OnDestroy {
       u.email.toLowerCase().includes(searchTerm) ||
       u.perfil.toLowerCase().includes(searchTerm)
     );
+  });
+
+  // Signals computados para paginación
+  readonly totalPaginas = computed(() => {
+    const totalUsuarios = this.usuariosFiltrados().length;
+    return Math.ceil(totalUsuarios / this._elementosPorPagina());
+  });
+
+  readonly usuariosPaginados = computed(() => {
+    const usuarios = this.usuariosFiltrados();
+    const inicio = (this._paginaActual() - 1) * this._elementosPorPagina();
+    const fin = inicio + this._elementosPorPagina();
+    return usuarios.slice(inicio, fin);
+  });
+
+  readonly paginasArray = computed(() => {
+    const total = this.totalPaginas();
+    return Array.from({ length: total }, (_, i) => i + 1);
   });
 
   // Opciones del dropdown para perfil
@@ -121,6 +143,8 @@ export class UsuarioComponent implements OnInit, OnDestroy {
   // Métodos para actualizar signals - NUEVO USUARIO
   updateSearch(value: string) {
     this._search.set(value);
+    // Resetear a la primera página cuando se busca
+    this._paginaActual.set(1);
   }
 
   toggleFormularioAlta() {
@@ -276,5 +300,24 @@ export class UsuarioComponent implements OnInit, OnDestroy {
       perfil: '',
       habilitado: true
     });
+  }
+
+  // Métodos para paginación
+  irAPagina(pagina: number) {
+    if (pagina >= 1 && pagina <= this.totalPaginas()) {
+      this._paginaActual.set(pagina);
+    }
+  }
+
+  paginaAnterior() {
+    if (this._paginaActual() > 1) {
+      this._paginaActual.update(p => p - 1);
+    }
+  }
+
+  paginaSiguiente() {
+    if (this._paginaActual() < this.totalPaginas()) {
+      this._paginaActual.update(p => p + 1);
+    }
   }
 }

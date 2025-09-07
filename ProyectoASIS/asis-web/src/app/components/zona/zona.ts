@@ -24,6 +24,8 @@ export class ZonaComponent implements OnInit, OnDestroy {
   private _zonaEditando = signal<number | null>(null);
   private _mostrarSelectorCoordenadas = signal<boolean>(false);
   private _coordenadasEditando = signal<'nueva' | 'editada' | null>(null);
+  private _paginaActual = signal<number>(1);
+  private _elementosPorPagina = signal<number>(10);
   
   // Signals públicos de solo lectura
   readonly search = this._search.asReadonly();
@@ -32,6 +34,8 @@ export class ZonaComponent implements OnInit, OnDestroy {
   readonly mensajeEdicion = this._mensajeEdicion.asReadonly();
   readonly zonaEditando = this._zonaEditando.asReadonly();
   readonly mostrarSelectorCoordenadas = this._mostrarSelectorCoordenadas.asReadonly();
+  readonly paginaActual = this._paginaActual.asReadonly();
+  readonly elementosPorPagina = this._elementosPorPagina.asReadonly();
 
   // Signals para formularios
   nuevaZona = signal<Zona>({
@@ -58,6 +62,24 @@ export class ZonaComponent implements OnInit, OnDestroy {
       z.geolocalizacion.toLowerCase().includes(searchTerm) ||
       (z.barrio?.nombre && z.barrio.nombre.toLowerCase().includes(searchTerm))
     );
+  });
+
+  // Signals computados para paginación
+  readonly totalPaginas = computed(() => {
+    const totalZonas = this.zonasFiltradas().length;
+    return Math.ceil(totalZonas / this._elementosPorPagina());
+  });
+
+  readonly zonasPaginadas = computed(() => {
+    const zonas = this.zonasFiltradas();
+    const inicio = (this._paginaActual() - 1) * this._elementosPorPagina();
+    const fin = inicio + this._elementosPorPagina();
+    return zonas.slice(inicio, fin);
+  });
+
+  readonly paginasArray = computed(() => {
+    const total = this.totalPaginas();
+    return Array.from({ length: total }, (_, i) => i + 1);
   });
 
   private routerSubscription: Subscription = new Subscription();
@@ -111,6 +133,8 @@ export class ZonaComponent implements OnInit, OnDestroy {
   // Métodos para actualizar signals - NUEVA ZONA
   updateSearch(value: string) {
     this._search.set(value);
+    // Resetear a la primera página cuando se busca
+    this._paginaActual.set(1);
   }
 
   toggleFormularioAlta() {
@@ -296,5 +320,24 @@ export class ZonaComponent implements OnInit, OnDestroy {
     }
     
     return '';
+  }
+
+  // Métodos para paginación
+  irAPagina(pagina: number) {
+    if (pagina >= 1 && pagina <= this.totalPaginas()) {
+      this._paginaActual.set(pagina);
+    }
+  }
+
+  paginaAnterior() {
+    if (this._paginaActual() > 1) {
+      this._paginaActual.update(p => p - 1);
+    }
+  }
+
+  paginaSiguiente() {
+    if (this._paginaActual() < this.totalPaginas()) {
+      this._paginaActual.update(p => p + 1);
+    }
   }
 }

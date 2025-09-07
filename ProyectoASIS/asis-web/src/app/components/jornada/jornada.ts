@@ -21,6 +21,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
   private _mensajeExito = signal<string>('');
   private _mensajeEdicion = signal<string>('');
   private _jornadaEditando = signal<number | null>(null);
+  private _paginaActual = signal<number>(1);
+  private _elementosPorPagina = signal<number>(10);
   
   // Signals públicos de solo lectura
   readonly search = this._search.asReadonly();
@@ -28,16 +30,18 @@ export class JornadaComponent implements OnInit, OnDestroy {
   readonly mensajeExito = this._mensajeExito.asReadonly();
   readonly mensajeEdicion = this._mensajeEdicion.asReadonly();
   readonly jornadaEditando = this._jornadaEditando.asReadonly();
+  readonly paginaActual = this._paginaActual.asReadonly();
+  readonly elementosPorPagina = this._elementosPorPagina.asReadonly();
 
   // Signals para formularios
   nuevaJornada = signal<Jornada>({
     fecha: '',
-    campania: undefined
+    campaña: undefined
   });
 
   jornadaEditada = signal<Jornada>({
     fecha: '',
-    campania: undefined
+    campaña: undefined
   });
 
   // Signal computado para filtrado
@@ -49,8 +53,26 @@ export class JornadaComponent implements OnInit, OnDestroy {
     
     return jornadas.filter(j =>
       j.fecha.includes(searchTerm) ||
-      (j.campania?.nombre && j.campania.nombre.toLowerCase().includes(searchTerm))
+      (j.campaña?.nombre && j.campaña.nombre.toLowerCase().includes(searchTerm))
     );
+  });
+
+  // Signals computados para paginación
+  readonly totalPaginas = computed(() => {
+    const totalJornadas = this.jornadasFiltradas().length;
+    return Math.ceil(totalJornadas / this._elementosPorPagina());
+  });
+
+  readonly jornadasPaginadas = computed(() => {
+    const jornadas = this.jornadasFiltradas();
+    const inicio = (this._paginaActual() - 1) * this._elementosPorPagina();
+    const fin = inicio + this._elementosPorPagina();
+    return jornadas.slice(inicio, fin);
+  });
+
+  readonly paginasArray = computed(() => {
+    const total = this.totalPaginas();
+    return Array.from({ length: total }, (_, i) => i + 1);
   });
 
   private routerSubscription: Subscription = new Subscription();
@@ -104,6 +126,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
   // Métodos para actualizar signals - NUEVA JORNADA
   updateSearch(value: string) {
     this._search.set(value);
+    // Resetear a la primera página cuando se busca
+    this._paginaActual.set(1);
   }
 
   toggleFormularioAlta() {
@@ -121,7 +145,7 @@ export class JornadaComponent implements OnInit, OnDestroy {
     
     this.nuevaJornada.update(j => ({
       ...j, 
-      campania: campania ? { 
+      campaña: campania ? { 
         id: campania.id!, 
         nombre: campania.nombre, 
         fechaInicio: campania.fechaInicio, 
@@ -142,7 +166,7 @@ export class JornadaComponent implements OnInit, OnDestroy {
     
     this.jornadaEditada.update(j => ({
       ...j, 
-      campania: campania ? { 
+      campaña: campania ? { 
         id: campania.id!, 
         nombre: campania.nombre, 
         fechaInicio: campania.fechaInicio, 
@@ -176,17 +200,23 @@ export class JornadaComponent implements OnInit, OnDestroy {
     }
     
     this.jornadaService.crearJornada(jornada).subscribe({
-      next: () => {
+      next: (nuevaJornadaCreada) => {
         this._mensajeExito.set('Jornada creada exitosamente');
         
         // Limpiar formulario
         this.nuevaJornada.set({
           fecha: '',
-          campania: undefined
+          campaña: undefined
         });
         
         // Limpiar búsqueda
         this._search.set('');
+        
+        // Cerrar el formulario de alta
+        this._mostrarFormularioAlta.set(false);
+        
+        // Forzar actualización de la vista obteniendo las jornadas del servidor
+        this.obtenerJornadas();
       },
       error: (error) => {
         console.error('Error al crear jornada:', error);
@@ -199,7 +229,7 @@ export class JornadaComponent implements OnInit, OnDestroy {
     this._mostrarFormularioAlta.set(false);
     this.nuevaJornada.set({
       fecha: '',
-      campania: undefined
+      campaña: undefined
     });
   }
 
@@ -209,7 +239,7 @@ export class JornadaComponent implements OnInit, OnDestroy {
     this.jornadaEditada.set({
       id: jornada.id,
       fecha: jornada.fecha,
-      campania: jornada.campania
+      campaña: jornada.campaña
     });
   }
 
@@ -230,7 +260,7 @@ export class JornadaComponent implements OnInit, OnDestroy {
             this.jornadaEditada.set({
               id: jornadaActualizada.id,
               fecha: jornadaActualizada.fecha,
-              campania: jornadaActualizada.campania
+              campaña: jornadaActualizada.campaña
             });
             
             this._mensajeEdicion.set('Jornada actualizada exitosamente');
@@ -249,7 +279,26 @@ export class JornadaComponent implements OnInit, OnDestroy {
     this._mensajeEdicion.set('');
     this.jornadaEditada.set({
       fecha: '',
-      campania: undefined
+      campaña: undefined
     });
+  }
+
+  // Métodos para paginación
+  irAPagina(pagina: number) {
+    if (pagina >= 1 && pagina <= this.totalPaginas()) {
+      this._paginaActual.set(pagina);
+    }
+  }
+
+  paginaAnterior() {
+    if (this._paginaActual() > 1) {
+      this._paginaActual.update(p => p - 1);
+    }
+  }
+
+  paginaSiguiente() {
+    if (this._paginaActual() < this.totalPaginas()) {
+      this._paginaActual.update(p => p + 1);
+    }
   }
 }

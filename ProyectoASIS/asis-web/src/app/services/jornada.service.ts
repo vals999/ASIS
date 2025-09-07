@@ -6,7 +6,7 @@ import { catchError, tap } from 'rxjs/operators';
 export interface Jornada {
   id?: number;
   fecha: string; // formato YYYY-MM-DD
-  campania?: {   // Estructura del CampañaSimpleDTO
+  campaña?: {   // Estructura del CampañaSimpleDTO (con ñ para coincidir con el backend)
     id: number;
     nombre: string;
     fechaInicio: string;
@@ -68,7 +68,7 @@ export class JornadaService {
     // Preparar la jornada para envío - solo enviar el ID de la campaña
     const jornadaParaEnvio = {
       fecha: jornada.fecha,
-      campaña: jornada.campania ? { id: jornada.campania.id } : null
+      campaña: jornada.campaña ? { id: jornada.campaña.id } : null
     };
     
     return this.http.post<Jornada>(this.apiUrl, jornadaParaEnvio)
@@ -93,7 +93,7 @@ export class JornadaService {
     // Preparar la jornada para envío - solo enviar el ID de la campaña
     const jornadaParaEnvio = {
       fecha: jornada.fecha,
-      campaña: jornada.campania ? { id: jornada.campania.id } : null
+      campaña: jornada.campaña ? { id: jornada.campaña.id } : null
     };
     
     return this.http.put<Jornada>(`${this.apiUrl}/${id}`, jornadaParaEnvio)
