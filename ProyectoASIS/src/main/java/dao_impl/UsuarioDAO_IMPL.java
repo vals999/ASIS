@@ -50,7 +50,7 @@ public class UsuarioDAO_IMPL extends GenericDAO_IMPL<Usuario, Long> implements I
 	@Override
 	public List<Usuario> obtenerUsuariosPendientes() {
 		TypedQuery<Usuario> query = em.createQuery(
-			"SELECT u FROM Usuario u WHERE u.habilitado = false ORDER BY u.fechaCreacion DESC", Usuario.class);
+			"SELECT u FROM Usuario u WHERE u.habilitado = false AND u.fechaEliminacion IS NULL ORDER BY u.fechaCreacion DESC", Usuario.class);
 		return query.getResultList();
 	}
 	

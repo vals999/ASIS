@@ -52,6 +52,20 @@ export class UsuariosPendientesComponent implements OnInit {
     });
   }
 
+  rechazarUsuario(userId: number): void {
+    if (confirm('¿Está seguro que desea rechazar este usuario? Esta acción eliminará el usuario del sistema.')) {
+      this.usuariosService.eliminarUsuario(userId).subscribe({
+        next: () => {
+          console.log('Usuario rechazado exitosamente');
+          // El servicio ya actualiza automáticamente la lista de usuarios pendientes
+        },
+        error: (error) => {
+          console.error('Error al rechazar usuario:', error);
+        }
+      });
+    }
+  }
+
   recargar(): void {
     this.cargarUsuariosPendientes();
   }

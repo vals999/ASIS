@@ -33,6 +33,9 @@ public class Encuesta implements EliminableLogico{
 	@Temporal(TemporalType.DATE)
     private Date fecha;
     
+    @Column(name = "id_externo", length = 255)
+    private String idExterno; // Campo para almacenar el identificador del CSV
+    
     @Column(name = "fecha_creacion", nullable = false, updatable = false, columnDefinition = "TIMESTAMP(0)")
 	private LocalDateTime fechaCreacion;
 	
@@ -94,6 +97,14 @@ public class Encuesta implements EliminableLogico{
 
 	public void setFecha(Date fecha) {
 		this.fecha = fecha;
+	}
+
+	public String getIdExterno() {
+		return idExterno;
+	}
+
+	public void setIdExterno(String idExterno) {
+		this.idExterno = idExterno;
 	}
 
 	public Zona getZona() {

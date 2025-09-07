@@ -14,6 +14,9 @@ import { ChangeDetectorRef } from '@angular/core';
 })
 export class EstadisticasComponent implements OnInit, AfterViewInit {
 
+  // Exponer Math para usar en el template
+  Math = Math;
+
   zonas: string[] = [];
   barrios: string[] = [];
   campanias: string[] = [];
@@ -23,8 +26,23 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   preguntas: string[] = [];
   preguntaSeleccionada: string = '';
   preguntasRespuestas: PreguntaRespuestaCategoria[] = [];
-  filtros: Filtros = {};
+  filtros: Filtros = {
+    categoria: '' // Inicializar con string vacío para que muestre "Todas las categorías"
+  };
   categorias: string[] = [];
+
+  // Propiedades para tabla simplificada
+  busquedaTexto: string = '';
+  columnaOrdenamiento: string = '';
+  direccionOrdenamiento: 'asc' | 'desc' = 'asc';
+  paginaActual: number = 1;
+  elementosPorPagina: number = 10;
+  opcionesPaginacion: number[] = [5, 10, 20, 50];
+
+  // Datos procesados para la tabla
+  datosTabla: any[] = [];
+  datosFiltrados: any[] = [];
+  datosPaginados: any[] = [];
 
   // Estadísticas resumidas
   estadisticasResumen = {
@@ -39,7 +57,7 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   barChartData: { datasets: { data: number[]; label: string }[]; labels: string[] } = { datasets: [{ data: [], label: 'Cantidad' }], labels: [] };
   barChartOptions = {
     responsive: true,
-    indexAxis: 'x' as const, // barras verticales, etiquetas debajo de cada barra
+    indexAxis: 'y' as const, // barras verticales, etiquetas debajo de cada barra
     plugins: {
       legend: { display: false },
       title: { display: true, text: 'Respuestas por opción' }
@@ -97,6 +115,8 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.cargarTodasLasCategorias();
     this.cargarTodasLasPreguntas();
+    // Cargar datos iniciales para poblar los dropdowns y la tabla
+    this.cargarPreguntasRespuestas();
   }
 
   ngAfterViewInit() {
@@ -109,9 +129,11 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
 
   aplicarFiltros(): void {
     // Actualizar los filtros antes de cargar los datos
+    // No eliminar la propiedad categoria, solo asegurarse de que sea string vacío si no hay selección
     if (!this.filtros.categoria) {
-      delete this.filtros.categoria;
+      this.filtros.categoria = '';
     }
+    
     if (!this.preguntaSeleccionada) {
       delete (this.filtros as any).pregunta;
     } else {
@@ -132,14 +154,16 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     // Resetear la pregunta seleccionada cuando cambia la categoría
     this.preguntaSeleccionada = '';
     
-    if (!this.filtros.categoria) {
-      // Si selecciona 'Todas', eliminar el filtro y cargar todas las preguntas
-      delete this.filtros.categoria;
+    if (!this.filtros.categoria || this.filtros.categoria === '') {
+      // Si selecciona 'Todas', establecer como string vacío y cargar todas las preguntas
+      this.filtros.categoria = '';
       this.cargarTodasLasPreguntas();
     } else {
       // Si hay categoría, filtrar solo preguntas por esa categoría
       this.estadisticasService.filtrarPreguntasRespuestas({ categoria: this.filtros.categoria }).subscribe(data => {
         this.preguntas = Array.from(new Set(data.map(pr => pr.pregunta).filter(Boolean)));
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
       });
     }
   }
@@ -157,22 +181,47 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   cargarTodasLasPreguntas() {
     this.estadisticasService.filtrarPreguntasRespuestas({}).subscribe(data => {
       this.preguntas = Array.from(new Set(data.map(pr => pr.pregunta).filter(Boolean)));
+      
+      // Asegurar que el dropdown tenga el valor inicial correcto
+      if (!this.preguntaSeleccionada) {
+        this.preguntaSeleccionada = '';
+      }
+      
+      // Forzar detección de cambios después de cargar las preguntas
+      this.cdr.detectChanges();
     });
   }
 
   cargarTodasLasCategorias() {
     this.estadisticasService.filtrarPreguntasRespuestas({}).subscribe(data => {
       this.categorias = Array.from(new Set(data.map(pr => pr.categoria).filter(Boolean)));
+      
+      // Asegurar que el dropdown tenga el valor inicial correcto
+      if (!this.filtros.categoria) {
+        this.filtros.categoria = '';
+      }
+      
+      // Forzar detección de cambios después de cargar las categorías
+      this.cdr.detectChanges();
     });
   }
 
   cargarPreguntasRespuestas() {
+    // Crear una copia del filtro para enviar al backend
+    const filtrosParaBackend = { ...this.filtros };
+    
     // Si existe 'campaña', renombrar a 'campania' antes de enviar
-    if ((this.filtros as any)['campaña']) {
-      (this.filtros as any)['campania'] = (this.filtros as any)['campaña'];
-      delete (this.filtros as any)['campaña'];
+    if ((filtrosParaBackend as any)['campaña']) {
+      (filtrosParaBackend as any)['campania'] = (filtrosParaBackend as any)['campaña'];
+      delete (filtrosParaBackend as any)['campaña'];
     }
-    this.estadisticasService.filtrarPreguntasRespuestas(this.filtros).subscribe(data => {
+    
+    // Si categoria es string vacío, no enviarla al backend
+    if (filtrosParaBackend.categoria === '') {
+      delete filtrosParaBackend.categoria;
+    }
+    
+    this.estadisticasService.filtrarPreguntasRespuestas(filtrosParaBackend).subscribe(data => {
       this.preguntasRespuestas = data;
       // NO actualizar categorias aquí, solo en cargarTodasLasCategorias()
       this.zonas = Array.from(new Set(data.map((pr: any) => pr.zona).filter(Boolean)));
@@ -192,6 +241,7 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
       )).filter((e: any): e is number => typeof e === 'number' && !isNaN(e));
 
       this.actualizarDatosGrafico();
+      this.procesarDatosTabla();
       this.cdr.detectChanges();
     });
   }
@@ -310,5 +360,147 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
 
   onFiltroChange() {
     // Solo actualiza el filtro en memoria, no carga datos
+  }
+
+  procesarDatosTabla() {
+    this.generarDatosTabla();
+    this.aplicarFiltrosBusqueda();
+    this.aplicarOrdenamiento();
+    this.aplicarPaginacion();
+  }
+
+  generarDatosTabla() {
+    const resumenPorRespuesta: { [key: string]: any } = {};
+    
+    this.preguntasRespuestas.forEach(pr => {
+      const respuesta = pr.respuesta || '-';
+      if (!resumenPorRespuesta[respuesta]) {
+        resumenPorRespuesta[respuesta] = {
+          respuesta: respuesta,
+          cantidad: 0,
+          porcentaje: 0,
+          categorias: new Set(),
+          preguntas: new Set()
+        };
+      }
+      resumenPorRespuesta[respuesta].cantidad++;
+      resumenPorRespuesta[respuesta].categorias.add(pr.categoria || '-');
+      resumenPorRespuesta[respuesta].preguntas.add(pr.pregunta || '-');
+    });
+
+    const total = this.preguntasRespuestas.length;
+    this.datosTabla = Object.values(resumenPorRespuesta).map((item: any) => ({
+      respuesta: item.respuesta,
+      cantidad: item.cantidad,
+      porcentaje: total > 0 ? ((item.cantidad / total) * 100).toFixed(2) : '0',
+      categorias: Array.from(item.categorias).join(', '),
+      preguntas: Array.from(item.preguntas).length,
+      ranking: 0
+    })).sort((a, b) => b.cantidad - a.cantidad)
+      .map((item, index) => ({ ...item, ranking: index + 1 }));
+  }
+
+  aplicarFiltrosBusqueda() {
+    if (this.busquedaTexto.trim()) {
+      const termino = this.busquedaTexto.toLowerCase().trim();
+      this.datosFiltrados = this.datosTabla.filter(item => 
+        Object.values(item).some(valor => 
+          valor?.toString().toLowerCase().includes(termino)
+        )
+      );
+    } else {
+      this.datosFiltrados = [...this.datosTabla];
+    }
+  }
+
+  aplicarOrdenamiento() {
+    if (!this.columnaOrdenamiento) return;
+
+    this.datosFiltrados.sort((a, b) => {
+      const valorA = a[this.columnaOrdenamiento];
+      const valorB = b[this.columnaOrdenamiento];
+
+      let comparacion = 0;
+      if (typeof valorA === 'number' && typeof valorB === 'number') {
+        comparacion = valorA - valorB;
+      } else {
+        comparacion = valorA?.toString().localeCompare(valorB?.toString()) || 0;
+      }
+
+      return this.direccionOrdenamiento === 'asc' ? comparacion : -comparacion;
+    });
+  }
+
+  aplicarPaginacion() {
+    // Asegurar que elementosPorPagina sea un número
+    const elementosNumero = Number(this.elementosPorPagina);
+    const paginaNumero = Number(this.paginaActual);
+    
+    const inicio = (paginaNumero - 1) * elementosNumero;
+    const fin = inicio + elementosNumero;
+    this.datosPaginados = this.datosFiltrados.slice(inicio, fin);
+  }
+
+  ordenarPorColumna(columna: string) {
+    if (this.columnaOrdenamiento === columna) {
+      this.direccionOrdenamiento = this.direccionOrdenamiento === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.columnaOrdenamiento = columna;
+      this.direccionOrdenamiento = 'asc';
+    }
+    this.aplicarOrdenamiento();
+    this.aplicarPaginacion();
+  }
+
+  cambiarPagina(pagina: number) {
+    this.paginaActual = pagina;
+    this.aplicarPaginacion();
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+  }
+
+  cambiarElementosPorPagina(cantidad: number) {
+    // Asegurar que cantidad sea un número
+    const cantidadNumero = Number(cantidad);
+    this.elementosPorPagina = cantidadNumero;
+    this.paginaActual = 1;
+    this.aplicarPaginacion();
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+  }
+
+  onBusquedaCambio() {
+    this.paginaActual = 1;
+    this.aplicarFiltrosBusqueda();
+    this.aplicarOrdenamiento();
+    this.aplicarPaginacion();
+  }
+
+  get totalPaginas(): number {
+    const elementosNumero = Number(this.elementosPorPagina);
+    return Math.ceil(this.datosFiltrados.length / elementosNumero);
+  }
+
+  get paginasDisponibles(): number[] {
+    const total = this.totalPaginas;
+    const actual = this.paginaActual;
+    const rango = 2;
+    
+    let inicio = Math.max(1, actual - rango);
+    let fin = Math.min(total, actual + rango);
+    
+    if (fin - inicio < 4) {
+      if (inicio === 1) {
+        fin = Math.min(total, inicio + 4);
+      } else {
+        inicio = Math.max(1, fin - 4);
+      }
+    }
+    
+    const paginas = [];
+    for (let i = inicio; i <= fin; i++) {
+      paginas.push(i);
+    }
+    return paginas;
   }
 }

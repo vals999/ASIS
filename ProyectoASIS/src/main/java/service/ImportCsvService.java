@@ -204,13 +204,23 @@ public class ImportCsvService {
             // Guardar solo respuestas de columnas mapeadas
             String[] fila;
             while ((fila = reader.readNext()) != null) {
-                // Crear una nueva encuesta para la fila
-                Encuesta encuesta = new Encuesta();
-                // Si necesitas setear campos adicionales en Encuesta, hazlo aquí
-                // Por ejemplo: encuesta.setFecha(...);
-                // Si usas un DAO para persistir la encuesta, hazlo aquí:
-                // encuestaDao.crear(encuesta);
-                encuestaDao.crear(encuesta);
+                // Obtener el identificador externo de la primera columna
+                String idExterno = (fila.length > 0 && fila[0] != null) ? fila[0].trim() : null;
+                
+                if (idExterno == null || idExterno.isEmpty()) {
+                    // Si no hay identificador externo, saltar esta fila
+                    continue;
+                }
+                
+                // Buscar si ya existe una encuesta con este idExterno
+                Encuesta encuesta = encuestaDao.findByIdExterno(idExterno);
+                
+                if (encuesta == null) {
+                    // Si no existe, crear una nueva encuesta
+                    encuesta = new Encuesta();
+                    encuesta.setIdExterno(idExterno);
+                    encuestaDao.crear(encuesta);
+                }
 
                 for (int i = 0; i < fila.length; i++) {
                     if (!preguntasMap.containsKey(i)) continue; // ignorar columnas no mapeadas
