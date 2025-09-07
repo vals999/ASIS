@@ -15,14 +15,18 @@ public class ReporteSimpleDTO {
     
     @Schema(description = "Fecha del reporte")
     private Date fecha;
+    
+    @Schema(description = "Visibilidad del reporte", example = "PUBLICO", allowableValues = {"PRIVADO", "PUBLICO"})
+    private String visibilidad;
 
     // Constructores
     public ReporteSimpleDTO() {}
 
-    public ReporteSimpleDTO(Long id, String nombre, Date fecha) {
+    public ReporteSimpleDTO(Long id, String nombre, Date fecha, String visibilidad) {
         this.id = id;
         this.nombre = nombre;
         this.fecha = fecha;
+        this.visibilidad = visibilidad;
     }
 
     // Getters y Setters
@@ -48,5 +52,13 @@ public class ReporteSimpleDTO {
 
     public void setFecha(Date fecha) {
         this.fecha = fecha;
+    }
+
+    public String getVisibilidad() {
+        return visibilidad;
+    }
+
+    public void setVisibilidad(String visibilidad) {
+        this.visibilidad = visibilidad;
     }
 }

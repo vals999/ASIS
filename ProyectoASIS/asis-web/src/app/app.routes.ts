@@ -1,4 +1,3 @@
-
 import { Routes } from '@angular/router';
 import { UsuarioComponent } from './components/usuario/usuario';
 import { CampaniaComponent } from './components/campania/campania';
@@ -11,6 +10,7 @@ import { RegisterComponent } from './components/register/register';
 import { UsuariosPendientesComponent } from './components/usuarios-pendientes/usuarios-pendientes';
 import { MapaComponent } from './components/mapa/mapa';
 import { ReportesComponent } from './components/reportes/reportes';
+import { PerfilComponent } from './components/perfil/perfil';
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { Inicio } from './components/inicio/inicio';
@@ -23,6 +23,7 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'inicio', component: Inicio, canActivate: [authGuard] },
+  { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
   { path: 'usuarios', component: UsuarioComponent, canActivate: [authGuard] },
   { path: 'usuarios-pendientes', component: UsuariosPendientesComponent, canActivate: [authGuard, adminGuard] },
   { path: 'campanias', component: CampaniaComponent, canActivate: [authGuard] },

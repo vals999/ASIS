@@ -184,4 +184,24 @@ export class AuthService {
     this._isAuthenticated.set(this.hasValidToken());
     this._currentUser.set(this.getUserFromStorage());
   }
+
+  // Método para actualizar los datos del usuario actual sin hacer logout
+  updateCurrentUser(nombre?: string, apellido?: string): void {
+    if (!this.isBrowser) return;
+    
+    const currentUser = this._currentUser();
+    if (currentUser) {
+      const updatedUser = {
+        ...currentUser,
+        ...(nombre && { nombre }),
+        ...(apellido && { apellido })
+      };
+      
+      // Actualizar en sessionStorage
+      sessionStorage.setItem(this.userKey, JSON.stringify(updatedUser));
+      
+      // Actualizar el signal
+      this._currentUser.set(updatedUser);
+    }
+  }
 }

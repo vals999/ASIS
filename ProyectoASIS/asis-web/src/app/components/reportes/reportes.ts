@@ -18,16 +18,26 @@ export class ReportesComponent implements OnInit, OnDestroy {
   private _mensajeError = signal<string>('');
   private _paginaActual = signal<number>(1);
   private _elementosPorPagina = signal<number>(10);
+  private _filtroVisibilidad = signal<string>('todos'); // 'todos', 'publicos', 'privados'
   
   // Signals públicos de solo lectura
   readonly mensajeExito = this._mensajeExito.asReadonly();
   readonly mensajeError = this._mensajeError.asReadonly();
   readonly paginaActual = this._paginaActual.asReadonly();
   readonly elementosPorPagina = this._elementosPorPagina.asReadonly();
+  readonly filtroVisibilidad = this._filtroVisibilidad.asReadonly();
 
   // Signal computado para filtrar reportes
   readonly reportesFiltrados = computed(() => {
-    return this.reporteService.reportes();
+    const reportes = this.reporteService.reportes();
+    const filtro = this._filtroVisibilidad();
+    
+    if (filtro === 'publicos') {
+      return reportes.filter(r => r.visibilidad === 'PUBLICO');
+    } else if (filtro === 'privados') {
+      return reportes.filter(r => r.visibilidad === 'PRIVADO');
+    }
+    return reportes;
   });
 
   // Signals computados para paginación
@@ -74,6 +84,74 @@ export class ReportesComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions.add(sub);
+  }
+
+  cambiarFiltroVisibilidad(filtro: string): void {
+    this._filtroVisibilidad.set(filtro);
+    this._paginaActual.set(1); // Resetear a la primera página
+  }
+
+  cambiarVisibilidadReporte(reporte: ReporteDTO, nuevaVisibilidad: string): void {
+    if (!reporte.id) return;
+    
+    const currentUser = this.authService.currentUser();
+    if (!currentUser?.id) {
+      this._mensajeError.set('Usuario no autenticado');
+      return;
+    }
+
+    // Verificar permisos
+    if (!this.puedeModificarVisibilidad(reporte)) {
+      this._mensajeError.set('No tienes permisos para cambiar la visibilidad de este reporte');
+      return;
+    }
+
+    this._mensajeError.set('');
+    this._mensajeExito.set('');
+    
+    const sub = this.reporteService.cambiarVisibilidad(reporte.id, nuevaVisibilidad, currentUser.id).subscribe({
+      next: (reporteActualizado) => {
+        this._mensajeExito.set(`Visibilidad del reporte "${reporte.nombre}" cambiada a ${nuevaVisibilidad.toLowerCase()}`);
+        setTimeout(() => this._mensajeExito.set(''), 3000);
+      },
+      error: (error) => {
+        console.error('Error al cambiar visibilidad:', error);
+        let mensajeError = 'Error desconocido';
+        
+        if (error.status === 403) {
+          mensajeError = 'No tienes permisos para cambiar la visibilidad';
+        } else if (error.error?.error) {
+          mensajeError = error.error.error;
+        }
+        
+        this._mensajeError.set(`Error al cambiar visibilidad: ${mensajeError}`);
+        setTimeout(() => this._mensajeError.set(''), 5000);
+      }
+    });
+    this.subscriptions.add(sub);
+  }
+
+  puedeModificarVisibilidad(reporte: ReporteDTO): boolean {
+    const currentUser = this.authService.currentUser();
+    if (!currentUser) return false;
+
+    // Solo el creador o un administrador pueden cambiar la visibilidad
+    const esCreador = reporte.creador?.id === currentUser.id;
+    const esAdmin = currentUser.perfil === 'ADMINISTRADOR';
+    
+    return esCreador || esAdmin;
+  }
+
+  obtenerClaseVisibilidad(visibilidad: string | undefined): string {
+    return visibilidad === 'PUBLICO' ? 'badge bg-success' : 'badge bg-secondary';
+  }
+
+  obtenerIconoVisibilidad(visibilidad: string | undefined): string {
+    return visibilidad === 'PUBLICO' ? 'bi-globe' : 'bi-lock';
+  }
+
+  obtenerTextoVisibilidad(visibilidad: string | undefined): string {
+    return visibilidad === 'PUBLICO' ? 'Público' : 'Privado';
   }
 
   subirReporte(): void {
@@ -258,5 +336,14 @@ export class ReportesComponent implements OnInit, OnDestroy {
     if (this._paginaActual() < this.totalPaginas()) {
       this._paginaActual.update(p => p + 1);
     }
+  }
+
+  // Métodos para contar reportes por visibilidad
+  contarReportesPublicos(): number {
+    return this.reporteService.reportes().filter(r => r.visibilidad === 'PUBLICO').length;
+  }
+
+  contarReportesPrivados(): number {
+    return this.reporteService.reportes().filter(r => r.visibilidad === 'PRIVADO').length;
   }
 }

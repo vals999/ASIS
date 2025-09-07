@@ -1,0 +1,233 @@
+<div class="perfil-wrapper">
+  <!-- Contenido principal del perfil -->
+  <div class="perfil-container">
+    <div class="container-fluid py-4" style="background-color: #f8f9fa; min-height: 100vh;">
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="card shadow">
+            <div class="card-header" style="background: linear-gradient(135deg, #1e5a5a 0%, #174a4a 100%); border-bottom: none;">
+              <h4 class="mb-0 text-white">
+                <i class="bi bi-person-circle me-2"></i>
+                Mi Perfil
+              </h4>
+            </div>
+            
+            <div class="card-body p-4">
+              <!-- Mensaje de estado -->
+              @if (mensaje()) {
+                <div class="alert mb-4" 
+                     [ngClass]="tipoMensaje() === 'success' ? 'alert-info' : 'alert-danger'"
+                     role="alert">
+                  <i [class]="tipoMensaje() === 'success' ? 'bi bi-check-circle me-2' : 'bi bi-exclamation-triangle me-2'"></i>
+                  {{ mensaje() }}
+                  <button type="button" class="btn-close float-end" 
+                          (click)="limpiarMensaje()" aria-label="Close"></button>
+                </div>
+              }
+
+              <!-- Indicador de carga -->
+              @if (datosPersonalesService.loading()) {
+                <div class="text-center my-5">
+                  <div class="spinner-border" style="color: #1e5a5a;" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                  </div>
+                  <p class="mt-3 text-muted">Cargando datos personales...</p>
+                </div>
+              } @else {
+                <!-- Formulario de datos personales -->
+                <form (ngSubmit)="guardarCambios()">
+                  <div class="row g-3 mb-4">
+                    <!-- Nombre -->
+                    <div class="col-md-6">
+                      <label for="nombre" class="form-label fw-medium" style="color: #495057;">
+                        <i class="bi bi-person me-1" style="color: #1e5a5a;"></i>
+                        Nombre *
+                      </label>
+                      @if (isEditing()) {
+                        <input type="text" 
+                               id="nombre"
+                               class="form-control" 
+                               [value]="datosPersonales().nombre"
+                               (input)="updateNombre($any($event.target).value)"
+                               placeholder="Ingrese su nombre"
+                               style="border-color: #ced4da; border-radius: 0.5rem;"
+                               required>
+                      } @else {
+                        <div class="form-control" style="background-color: #f8f9fa; color: #495057; border-radius: 0.5rem;">
+                          {{ datosPersonales().nombre || 'No especificado' }}
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Apellido -->
+                    <div class="col-md-6">
+                      <label for="apellido" class="form-label fw-medium" style="color: #495057;">
+                        <i class="bi bi-person me-1" style="color: #1e5a5a;"></i>
+                        Apellido *
+                      </label>
+                      @if (isEditing()) {
+                        <input type="text" 
+                               id="apellido"
+                               class="form-control" 
+                               [value]="datosPersonales().apellido"
+                               (input)="updateApellido($any($event.target).value)"
+                               placeholder="Ingrese su apellido"
+                               style="border-color: #ced4da; border-radius: 0.5rem;"
+                               required>
+                      } @else {
+                        <div class="form-control" style="background-color: #f8f9fa; color: #495057; border-radius: 0.5rem;">
+                          {{ datosPersonales().apellido || 'No especificado' }}
+                        </div>
+                      }
+                    </div>
+
+                    <!-- DNI -->
+                    <div class="col-md-6">
+                      <label for="dni" class="form-label fw-medium" style="color: #495057;">
+                        <i class="bi bi-card-text me-1" style="color: #1e5a5a;"></i>
+                        DNI *
+                      </label>
+                      @if (isEditing()) {
+                        <input type="text" 
+                               id="dni"
+                               class="form-control" 
+                               [value]="datosPersonales().dni"
+                               (input)="updateDni($any($event.target).value)"
+                               placeholder="Ingrese su DNI"
+                               pattern="[0-9]{7,8}"
+                               maxlength="8"
+                               style="border-color: #ced4da; border-radius: 0.5rem;"
+                               required>
+                      } @else {
+                        <div class="form-control" style="background-color: #f8f9fa; color: #495057; border-radius: 0.5rem;">
+                          {{ datosPersonales().dni || 'No especificado' }}
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Edad -->
+                    <div class="col-md-6">
+                      <label for="edad" class="form-label fw-medium" style="color: #495057;">
+                        <i class="bi bi-calendar me-1" style="color: #1e5a5a;"></i>
+                        Edad *
+                      </label>
+                      @if (isEditing()) {
+                        <input type="number" 
+                               id="edad"
+                               class="form-control" 
+                               [value]="datosPersonales().edad"
+                               (input)="updateEdad($any($event.target).value)"
+                               placeholder="Ingrese su edad"
+                               min="1"
+                               max="120"
+                               style="border-color: #ced4da; border-radius: 0.5rem;"
+                               required>
+                      } @else {
+                        <div class="form-control" style="background-color: #f8f9fa; color: #495057; border-radius: 0.5rem;">
+                          {{ datosPersonales().edad || 'No especificado' }} años
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Género -->
+                    <div class="col-12">
+                      <label for="genero" class="form-label fw-medium" style="color: #495057;">
+                        <i class="bi bi-gender-ambiguous me-1" style="color: #1e5a5a;"></i>
+                        Género
+                      </label>
+                      @if (isEditing()) {
+                        <select id="genero"
+                                class="form-select" 
+                                [value]="datosPersonales().genero"
+                                (change)="updateGenero($any($event.target).value)"
+                                style="border-color: #ced4da; border-radius: 0.5rem;">
+                          <option value="">Seleccionar género</option>
+                          <option *ngFor="let opcion of opcionesGenero" [value]="opcion.value">
+                            {{ opcion.label }}
+                          </option>
+                        </select>
+                      } @else {
+                        <div class="form-control" style="background-color: #f8f9fa; color: #495057; border-radius: 0.5rem;">
+                          {{ datosPersonales().genero || 'No especificado' }}
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Información del usuario (solo lectura) -->
+                  <hr class="my-4" style="border-color: #dee2e6;">
+                  <h6 class="mb-3" style="color: #495057; font-weight: 600;">
+                    <i class="bi bi-info-circle me-1" style="color: #1e5a5a;"></i>
+                    Información de la cuenta
+                  </h6>
+                  
+                  <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                      <label class="form-label fw-medium text-muted">Usuario</label>
+                      <div class="form-control" style="background-color: #e9ecef; color: #6c757d; border-radius: 0.5rem;">
+                        {{ authService.currentUser()?.nombreUsuario || 'N/A' }}
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-medium text-muted">Email</label>
+                      <div class="form-control" style="background-color: #e9ecef; color: #6c757d; border-radius: 0.5rem;">
+                        {{ authService.currentUser()?.email || 'N/A' }}
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-medium text-muted">Perfil</label>
+                      <div class="form-control" style="background-color: #e9ecef; color: #6c757d; border-radius: 0.5rem;">
+                        <span class="badge" style="background-color: #1e5a5a; color: white;">
+                          {{ authService.currentUser()?.perfil || 'N/A' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Botones de acción -->
+                  <div class="d-flex gap-2 justify-content-end">
+                    @if (isEditing()) {
+                      <button type="submit" 
+                              class="btn btn-success"
+                              style="border-radius: 0.5rem;"
+                              [disabled]="datosPersonalesService.loading()">
+                        @if (datosPersonalesService.loading()) {
+                          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        }
+                        <i class="bi bi-check-lg me-1"></i>
+                        Guardar Cambios
+                      </button>
+                      <button type="button" 
+                              class="btn btn-secondary"
+                              style="border-radius: 0.5rem;"
+                              (click)="toggleEdicion()"
+                              [disabled]="datosPersonalesService.loading()">
+                        <i class="bi bi-x-lg me-1"></i>
+                        Cancelar
+                      </button>
+                    } @else {
+                      <button type="button" 
+                              class="btn"
+                              style="background-color: #1e5a5a; border-color: #1e5a5a; color: white; border-radius: 0.5rem;"
+                              (click)="toggleEdicion()">
+                        <i class="bi bi-pencil me-1"></i>
+                        Editar Perfil
+                      </button>
+                      <button type="button" 
+                              class="btn btn-outline-secondary"
+                              style="border-radius: 0.5rem; color: #1e5a5a; border-color: #1e5a5a;"
+                              (click)="goBack()">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Volver
+                      </button>
+                    }
+                  </div>
+                </form>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

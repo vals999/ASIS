@@ -18,6 +18,9 @@ public class ReporteDTO {
     @Schema(description = "Fecha del reporte")
     private Date fecha;
     
+    @Schema(description = "Visibilidad del reporte", example = "PUBLICO", allowableValues = {"PRIVADO", "PUBLICO"})
+    private String visibilidad;
+    
     @Schema(description = "Tipo MIME del archivo")
     private String tipoMime;
     
@@ -42,11 +45,12 @@ public class ReporteDTO {
     // Constructores
     public ReporteDTO() {}
 
-    public ReporteDTO(Long id, String nombre, Date fecha, 
+    public ReporteDTO(Long id, String nombre, Date fecha, String visibilidad,
                      LocalDateTime fechaCreacion, LocalDateTime fechaEditado) {
         this.id = id;
         this.nombre = nombre;
         this.fecha = fecha;
+        this.visibilidad = visibilidad;
         this.fechaCreacion = fechaCreacion;
         this.fechaEditado = fechaEditado;
     }
@@ -74,6 +78,14 @@ public class ReporteDTO {
 
     public void setFecha(Date fecha) {
         this.fecha = fecha;
+    }
+
+    public String getVisibilidad() {
+        return visibilidad;
+    }
+
+    public void setVisibilidad(String visibilidad) {
+        this.visibilidad = visibilidad;
     }
 
     public String getTipoMime() {

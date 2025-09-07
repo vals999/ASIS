@@ -30,6 +30,35 @@
     accept="*/*"
   >
 
+  <!-- Filtros de visibilidad -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h6 class="card-title mb-3">Filtrar por visibilidad</h6>
+      <div class="btn-group" role="group" aria-label="Filtros de visibilidad">
+        <input type="radio" class="btn-check" name="filtroVisibilidad" id="todos" 
+               [checked]="filtroVisibilidad() === 'todos'" 
+               (change)="cambiarFiltroVisibilidad('todos')">
+        <label class="btn btn-outline-primary" for="todos">
+          <i class="bi bi-list me-1"></i>Todos ({{ reporteService.reportes().length }})
+        </label>
+
+        <input type="radio" class="btn-check" name="filtroVisibilidad" id="publicos" 
+               [checked]="filtroVisibilidad() === 'publicos'" 
+               (change)="cambiarFiltroVisibilidad('publicos')">
+        <label class="btn btn-outline-success" for="publicos">
+          <i class="bi bi-globe me-1"></i>Públicos ({{ contarReportesPublicos() }})
+        </label>
+
+        <input type="radio" class="btn-check" name="filtroVisibilidad" id="privados" 
+               [checked]="filtroVisibilidad() === 'privados'" 
+               (change)="cambiarFiltroVisibilidad('privados')">
+        <label class="btn btn-outline-secondary" for="privados">
+          <i class="bi bi-lock me-1"></i>Privados ({{ contarReportesPrivados() }})
+        </label>
+      </div>
+    </div>
+  </div>
+
   <!-- Indicador de carga -->
   @if (reporteService.loading()) {
     <div class="text-center py-5">
@@ -61,7 +90,17 @@
       <div class="card">
         <div class="card-header bg-light">
           <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Reportes Disponibles ({{ reportesFiltrados().length }})</h5>
+            <h5 class="mb-0">
+              Reportes 
+              @if (filtroVisibilidad() === 'publicos') {
+                Públicos
+              } @else if (filtroVisibilidad() === 'privados') {
+                Privados
+              } @else {
+                Disponibles
+              }
+              ({{ reportesFiltrados().length }})
+            </h5>
             <div class="text-muted small">
               Página {{ paginaActual() }} de {{ totalPaginas() }} 
               ({{ reportesPaginados().length }} de {{ reportesFiltrados().length }} reportes)
@@ -74,6 +113,7 @@
               <thead class="table-light">
                 <tr>
                   <th scope="col">Archivo</th>
+                  <th scope="col">Visibilidad</th>
                   <th scope="col">Tamaño</th>
                   <th scope="col">Subido por</th>
                   <th scope="col">Fecha de Subida</th>
@@ -88,8 +128,41 @@
                         <i [class]="'me-2 text-muted ' + obtenerIconoArchivo(reporte.tipoMime)"></i>
                         <div>
                           <div class="fw-medium">{{ reporte.nombreArchivoOriginal || reporte.nombre }}</div>
-                          <small class="text-muted">{{ obtenerTipoArchivo(reporte.tipoMime) }}</small>
+                          <!--<small class="text-muted">{{ obtenerTipoArchivo(reporte.tipoMime) }}</small>-->
                         </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <span [class]="obtenerClaseVisibilidad(reporte.visibilidad)">
+                          <i [class]="obtenerIconoVisibilidad(reporte.visibilidad) + ' me-1'"></i>
+                          {{ obtenerTextoVisibilidad(reporte.visibilidad) }}
+                        </span>
+                        @if (puedeModificarVisibilidad(reporte)) {
+                          <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                    [id]="'dropdownVisibilidad' + reporte.id" data-bs-toggle="dropdown" 
+                                    aria-expanded="false" title="Cambiar visibilidad">
+                              <i class="bi bi-gear"></i>
+                            </button>
+                            <ul class="dropdown-menu" [attr.aria-labelledby]="'dropdownVisibilidad' + reporte.id">
+                              <li>
+                                <button class="dropdown-item" type="button" 
+                                        (click)="cambiarVisibilidadReporte(reporte, 'PUBLICO')"
+                                        [disabled]="reporte.visibilidad === 'PUBLICO'">
+                                  <i class="bi bi-globe me-2"></i>Hacer Público
+                                </button>
+                              </li>
+                              <li>
+                                <button class="dropdown-item" type="button" 
+                                        (click)="cambiarVisibilidadReporte(reporte, 'PRIVADO')"
+                                        [disabled]="reporte.visibilidad === 'PRIVADO'">
+                                  <i class="bi bi-lock me-2"></i>Hacer Privado
+                                </button>
+                              </li>
+                            </ul>
+                          </div>
+                        }
                       </div>
                     </td>
                     <td>
@@ -101,8 +174,6 @@
                           <div class="fw-medium">{{ reporte.creador.nombreUsuario }}</div>
                           <small class="text-muted">{{ reporte.creador.email }}</small>
                         </div>
-                      } @else {
-                        <span class="text-muted">Desconocido</span>
                       }
                     </td>
                     <td>{{ reporte.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -173,8 +244,22 @@
       <div class="card">
         <div class="card-body text-center py-5">
           <i class="bi bi-cloud-upload display-1 text-muted mb-3"></i>
-          <h5 class="text-muted">No hay reportes disponibles</h5>
-          <p class="text-muted">Haz clic en "Subir Reporte" para agregar archivos al sistema</p>
+          <h5 class="text-muted">
+            @if (filtroVisibilidad() === 'publicos') {
+              No hay reportes públicos disponibles
+            } @else if (filtroVisibilidad() === 'privados') {
+              No hay reportes privados disponibles
+            } @else {
+              No hay reportes disponibles
+            }
+          </h5>
+          <p class="text-muted">
+            @if (puedeSubir()) {
+              Haz clic en "Subir Reporte" para agregar archivos al sistema
+            } @else {
+              No tienes permisos para subir reportes
+            }
+          </p>
         </div>
       </div>
     }

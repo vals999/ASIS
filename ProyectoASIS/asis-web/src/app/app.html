@@ -113,8 +113,14 @@
         </a>
       </nav>
 
-      <!-- Botón de Cerrar Sesión -->
+      <!-- Botón de Perfil y Cerrar Sesión -->
       <div class="position-absolute bottom-0 start-0 end-0 p-4">
+        <a routerLink="/perfil" 
+           routerLinkActive="sidebar-main-btn-active"
+           class="w-100 d-flex align-items-center justify-content-center p-3 btn btn-outline-light mb-2 text-decoration-none">
+          <i class="bi bi-person me-2"></i>
+          <span>Perfil</span>
+        </a>
         <button (click)="logout()" 
                 class="w-100 d-flex align-items-center justify-content-center p-3 btn btn-outline-light">
           <i class="bi bi-box-arrow-right me-2"></i>
