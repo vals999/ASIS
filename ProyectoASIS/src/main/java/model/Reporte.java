@@ -7,6 +7,8 @@ import java.util.List;
 import dao_interfaces.EliminableLogico;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,6 +20,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+
+import model.TipoVisibilidad;
 
 @Entity
 @Table(name = "REPORTES")
@@ -26,35 +32,44 @@ public class Reporte implements EliminableLogico{
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@Column(name = "nombre_reporte")
+	
+	@Column(name = "nombre_reporte", length = 255)
 	private String nombre;
+	
+	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "fecha")
 	private Date fecha;
+	
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "usuario_creador")
 	private Usuario creador;
 	
+	// Campo de visibilidad
+	@Enumerated(EnumType.STRING)
+	@Column(name = "visibilidad", nullable = false)
+	private TipoVisibilidad visibilidad = TipoVisibilidad.PRIVADO; // Por defecto privado
+	
 	// Campos para almacenar archivos como BLOB
 	@Lob
-	@Column(name = "contenido_archivo")
+	@Column(name = "contenido_archivo", columnDefinition = "LONGBLOB")
 	private byte[] contenidoArchivo;
 	
-	@Column(name = "tipo_mime")
+	@Column(name = "tipo_mime", length = 255)
 	private String tipoMime;
 	
 	@Column(name = "tamano_archivo")
 	private Long tamanoArchivo;
 	
-	@Column(name = "nombre_archivo_original")
+	@Column(name = "nombre_archivo_original", length = 255)
 	private String nombreArchivoOriginal;
 	
-	@Column(name = "fecha_creacion", nullable = false, updatable = false, columnDefinition = "TIMESTAMP(0)")
+	@Column(name = "fecha_creacion", nullable = false, updatable = false)
 	private LocalDateTime fechaCreacion;
 	
-	@Column(name = "fecha_editado", columnDefinition = "TIMESTAMP(0)")
+	@Column(name = "fecha_editado")
 	private LocalDateTime fechaEditado;
 	
-	@Column(name = "fecha_eliminacion", columnDefinition = "TIMESTAMP(0)")
+	@Column(name = "fecha_eliminacion")
 	private LocalDateTime fechaEliminacion;
 	
 	/* relación Reporte-Usuario */
@@ -71,6 +86,17 @@ public class Reporte implements EliminableLogico{
 		this.nombre = nombre;
 		this.fecha = fecha;
 		this.creador = creador;
+		this.usuarios = usuariosCompartidos;
+	}
+
+	// Constructor con visibilidad
+	public Reporte(Long id, String nombre, Date fecha, Usuario creador, TipoVisibilidad visibilidad, List<Usuario> usuariosCompartidos) {
+		super();
+		this.id = id;
+		this.nombre = nombre;
+		this.fecha = fecha;
+		this.creador = creador;
+		this.visibilidad = visibilidad;
 		this.usuarios = usuariosCompartidos;
 	}
 
@@ -181,6 +207,22 @@ public class Reporte implements EliminableLogico{
         this.usuarios = usuario;
     }
 	
+	public TipoVisibilidad getVisibilidad() {
+		return visibilidad;
+	}
+
+	public void setVisibilidad(TipoVisibilidad visibilidad) {
+		this.visibilidad = visibilidad;
+	}
+	
+	// Métodos de conveniencia
+	public boolean esPublico() {
+		return TipoVisibilidad.PUBLICO.equals(this.visibilidad);
+	}
+	
+	public boolean esPrivado() {
+		return TipoVisibilidad.PRIVADO.equals(this.visibilidad);
+	}
 	
 	public void agregarUsuario(Usuario usuario) {
         if (usuario != null && !this.usuarios.contains(usuario)) {
@@ -205,7 +247,7 @@ public class Reporte implements EliminableLogico{
 	@Override
 	public String toString() {
 		return "Reporte [id=" + id + ", nombre=" + nombre + ", fecha=" + fecha + ", creador=" + creador
-				+ ", usuariosCompartidos=" + usuarios + "]";
+				+ ", visibilidad=" + visibilidad + ", usuariosCompartidos=" + usuarios + "]";
 	}
 	 
 }

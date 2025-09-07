@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UsuariosService, Usuario } from '../../services/usuario.service';
 
@@ -12,7 +12,30 @@ import { UsuariosService, Usuario } from '../../services/usuario.service';
 export class UsuariosPendientesComponent implements OnInit {
   
   confirmationUserId = signal<number | null>(null);
+  private _paginaActual = signal<number>(1);
+  private _elementosPorPagina = signal<number>(10);
   
+  readonly paginaActual = this._paginaActual.asReadonly();
+  readonly elementosPorPagina = this._elementosPorPagina.asReadonly();
+
+  // Signals computados para paginación
+  readonly totalPaginas = computed(() => {
+    const totalUsuarios = this.usuariosService.usuariosPendientes().length;
+    return Math.ceil(totalUsuarios / this._elementosPorPagina());
+  });
+
+  readonly usuariosPaginados = computed(() => {
+    const usuarios = this.usuariosService.usuariosPendientes();
+    const inicio = (this._paginaActual() - 1) * this._elementosPorPagina();
+    const fin = inicio + this._elementosPorPagina();
+    return usuarios.slice(inicio, fin);
+  });
+
+  readonly paginasArray = computed(() => {
+    const total = this.totalPaginas();
+    return Array.from({ length: total }, (_, i) => i + 1);
+  });
+
   constructor(public usuariosService: UsuariosService) {}
 
   ngOnInit(): void {
@@ -54,5 +77,24 @@ export class UsuariosPendientesComponent implements OnInit {
 
   recargar(): void {
     this.cargarUsuariosPendientes();
+  }
+
+  // Métodos para paginación
+  irAPagina(pagina: number) {
+    if (pagina >= 1 && pagina <= this.totalPaginas()) {
+      this._paginaActual.set(pagina);
+    }
+  }
+
+  paginaAnterior() {
+    if (this._paginaActual() > 1) {
+      this._paginaActual.update(p => p - 1);
+    }
+  }
+
+  paginaSiguiente() {
+    if (this._paginaActual() < this.totalPaginas()) {
+      this._paginaActual.update(p => p + 1);
+    }
   }
 }

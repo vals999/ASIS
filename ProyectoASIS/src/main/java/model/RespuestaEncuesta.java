@@ -1,7 +1,7 @@
 package model;
 
 import java.time.LocalDateTime;
-
+import jakarta.json.bind.annotation.JsonbTransient;
 import dao_interfaces.EliminableLogico;
 import jakarta.persistence.*;
 
@@ -64,6 +64,7 @@ public class RespuestaEncuesta implements EliminableLogico{
 		this.id = id;
 	}
 
+	@JsonbTransient
 	public PreguntaEncuesta getPregunta() {
 		return preguntaEncuesta;
 	}
@@ -86,6 +87,10 @@ public class RespuestaEncuesta implements EliminableLogico{
 
 	public void setValor(String valor) {
 		this.valor = valor;
+	}
+
+	public Long getPreguntaId() {
+		return preguntaEncuesta != null ? preguntaEncuesta.getId() : null;
 	}
     
 	public LocalDateTime getFechaCreacion() {

@@ -6,6 +6,7 @@ export interface ReporteDTO {
   id?: number;
   nombre: string;
   fecha: Date;
+  visibilidad?: string; // 'PUBLICO' o 'PRIVADO'
   tipoMime?: string;
   tamanoArchivo?: number;
   nombreArchivoOriginal?: string;
@@ -58,15 +59,56 @@ export class ReporteService {
   }
 
   /**
-   * Sube un archivo como reporte
+   * Obtiene solo los reportes públicos (para la landing page)
    */
-  subirArchivo(archivo: File, creadorId: number): Observable<ReporteDTO> {
+  getReportesPublicos(): Observable<ReporteDTO[]> {
+    this._loading.set(true);
+    this._error.set('');
+
+    return this.http.get<ReporteDTO[]>(`${this.baseUrl}/publicos`).pipe(
+      tap(reportes => {
+        this._loading.set(false);
+      }),
+      catchError(error => {
+        this._loading.set(false);
+        this._error.set('Error al obtener reportes públicos');
+        console.error('Error al obtener reportes públicos:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Obtiene solo los reportes privados
+   */
+  getReportesPrivados(): Observable<ReporteDTO[]> {
+    this._loading.set(true);
+    this._error.set('');
+
+    return this.http.get<ReporteDTO[]>(`${this.baseUrl}/privados`).pipe(
+      tap(reportes => {
+        this._loading.set(false);
+      }),
+      catchError(error => {
+        this._loading.set(false);
+        this._error.set('Error al obtener reportes privados');
+        console.error('Error al obtener reportes privados:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Sube un archivo como reporte con visibilidad especificada
+   */
+  subirArchivo(archivo: File, creadorId: number, visibilidad: string = 'PRIVADO'): Observable<ReporteDTO> {
     this._loading.set(true);
     this._error.set('');
 
     const formData = new FormData();
     formData.append('file', archivo);
     formData.append('creadorId', creadorId.toString());
+    formData.append('visibilidad', visibilidad);
 
     return this.http.post<ReporteDTO>(`${this.baseUrl}/upload`, formData).pipe(
       tap(reporte => {
@@ -78,6 +120,34 @@ export class ReporteService {
         this._loading.set(false);
         this._error.set('Error al subir archivo');
         console.error('Error al subir archivo:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Cambia la visibilidad de un reporte
+   */
+  cambiarVisibilidad(reporteId: number, nuevaVisibilidad: string, usuarioId: number): Observable<ReporteDTO> {
+    this._loading.set(true);
+    this._error.set('');
+
+    const params = new URLSearchParams();
+    params.set('visibilidad', nuevaVisibilidad);
+    params.set('usuarioId', usuarioId.toString());
+
+    return this.http.put<ReporteDTO>(`${this.baseUrl}/${reporteId}/visibilidad?${params.toString()}`, {}).pipe(
+      tap(reporteActualizado => {
+        // Actualizar el reporte en la lista
+        this._reportes.update(reportes => 
+          reportes.map(r => r.id === reporteId ? reporteActualizado : r)
+        );
+        this._loading.set(false);
+      }),
+      catchError(error => {
+        this._loading.set(false);
+        this._error.set('Error al cambiar visibilidad');
+        console.error('Error al cambiar visibilidad:', error);
         return throwError(() => error);
       })
     );

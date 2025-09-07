@@ -1,0 +1,441 @@
+/* Estilos específicos para el componente de estadísticas */
+
+/* Colores personalizados para mantener consistencia con la aplicación */
+.btn-primary {
+  background-color: #1e5a5a !important;
+  border-color: #1e5a5a !important;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #174a4a !important;
+  border-color: #174a4a !important;
+  transform: translateY(-1px);
+}
+
+.text-primary {
+  color: #1e5a5a !important;
+}
+
+/* Estilos para cards y tablas */
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  background-color: #f8f9fa !important;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 600;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+}
+
+.table td {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+
+/* Hover effects para las filas de la tabla */
+.table-hover tbody tr:hover {
+  background-color: rgba(30, 90, 90, 0.05) !important;
+}
+
+/* Form controls */
+.form-control, .form-select {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #1e5a5a;
+  box-shadow: 0 0 0 0.2rem rgba(30, 90, 90, 0.25);
+  outline: none;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+/* Badges */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.375rem 0.5rem;
+}
+
+.badge.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+/* Alertas personalizadas */
+.alert {
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+}
+
+.alert-success {
+  background-color: rgba(30, 90, 90, 0.1);
+  color: #1e5a5a;
+}
+
+.alert-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+/* Estado vacío */
+.display-1, .display-6 {
+  opacity: 0.3;
+}
+
+/* Sticky header para la tabla */
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Mejoras para el canvas del gráfico */
+canvas {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Estilos específicos para los contenedores de gráficos */
+.grafico-barras-container,
+.grafico-torta-container {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grafico-torta-container {
+  min-height: 350px;
+}
+
+/* Separador entre gráficos */
+hr.my-3 {
+  border-color: #dee2e6;
+  opacity: 0.5;
+}
+
+/* Títulos de gráficos */
+.grafico-titulo {
+  color: #495057;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container-fluid {
+    padding: 1rem !important;
+  }
+  
+  .row.g-4 {
+    --bs-gutter-x: 1rem;
+  }
+  
+  .col-lg-6 {
+    margin-bottom: 1rem;
+  }
+  
+  .d-flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+  
+  .col-md-1 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .table td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .grafico-barras-container {
+    min-height: 250px;
+  }
+  
+  .grafico-torta-container {
+    min-height: 300px;
+  }
+  
+  .card-body .mb-4 {
+    margin-bottom: 1.5rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .h3 {
+    font-size: 1.5rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .grafico-barras-container,
+  .grafico-torta-container {
+    min-height: 200px;
+  }
+  
+  .grafico-titulo {
+    font-size: 0.9rem;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Focus states para accesibilidad */
+.btn:focus {
+  outline: 2px solid #1e5a5a;
+  outline-offset: 2px;
+}
+
+/* Mejoras de tipografía */
+.fw-medium {
+  font-weight: 500;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+/* Estilos específicos para tarjetas de estadísticas */
+.stats-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  min-height: 120px;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.stats-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* Colores personalizados para las tarjetas de estadísticas */
+.bg-primary {
+  background-color: #1e5a5a !important;
+}
+
+.bg-success {
+  background-color: #2d7a7a !important;
+}
+
+.bg-info {
+  background-color: #4a9a9a !important;
+}
+
+.bg-warning {
+  background-color: #6bbbbb !important;
+}
+
+/* Clases auxiliares para texto */
+.text-white-50 {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.text-dark-50 {
+  color: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Responsive design para las tarjetas de estadísticas */
+@media (max-width: 768px) {
+  .stats-card {
+    min-height: 100px;
+  }
+  
+  .stats-icon {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .stats-icon i {
+    font-size: 1.5rem !important;
+  }
+  
+  .stats-card h3 {
+    font-size: 1.5rem;
+  }
+  
+  .stats-card h5 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .stats-card {
+    min-height: 90px;
+    padding: 0.75rem !important;
+  }
+  
+  .stats-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 0.75rem !important;
+  }
+  
+  .stats-icon i {
+    font-size: 1.25rem !important;
+  }
+  
+  .stats-card h6 {
+    font-size: 0.8rem;
+  }
+  
+  .stats-card h3 {
+    font-size: 1.25rem;
+  }
+  
+  .stats-card h5 {
+    font-size: 1rem;
+  }
+}
+
+/* Estilos específicos para tabla dinámica */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.sortable:hover {
+  background-color: rgba(30, 90, 90, 0.1) !important;
+}
+
+.sortable i {
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+}
+
+/* Botones de vista de tabla */
+.btn-group .btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+/* Progress bars en tabla resumen */
+.progress {
+  background-color: rgba(30, 90, 90, 0.1);
+}
+
+.progress-bar {
+  background-color: #1e5a5a !important;
+}
+
+/* Badges en tabla comparativa */
+.badge.bg-success {
+  background-color: #198754 !important;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+/* Input de búsqueda */
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #e5e7eb;
+}
+
+/* Paginación personalizada */
+.pagination .page-link {
+  color: #1e5a5a;
+  border-color: #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #1e5a5a;
+  border-color: #1e5a5a;
+}
+
+.pagination .page-link:hover {
+  color: #174a4a;
+  background-color: rgba(30, 90, 90, 0.1);
+  border-color: #1e5a5a;
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #6c757d;
+  background-color: #fff;
+  border-color: #dee2e6;
+}
+
+/* Responsive para tabla dinámica */
+@media (max-width: 768px) {
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-group .btn {
+    border-radius: 0.375rem !important;
+    margin-bottom: 0.25rem;
+  }
+  
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  .progress {
+    min-width: 60px;
+  }
+  
+  .col-md-4,
+  .col-md-2,
+  .col-md-3,
+  .col-md-6 {
+    margin-bottom: 0.75rem;
+  }
+}

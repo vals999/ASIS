@@ -12,7 +12,7 @@
         <p class="small text-light opacity-75 mb-0">Centro de Salud Universitario</p>
         @if (authService.currentUser()) {
           <p class="small text-light opacity-75 mt-2">
-            Bienvenido, {{ authService.currentUser()?.nombreUsuario }}
+            Bienvenido, {{ authService.currentUser()?.nombre || authService.currentUser()?.nombreUsuario }}
           </p>
         }
       </div>
@@ -86,17 +86,18 @@
                 <i class="bi bi-map me-2"></i>
                 Zonas
               </a>
-              <a routerLink="/encuestadores" 
-                 routerLinkActive="sidebar-sub-btn-active"
-                 class="w-100 text-start p-2 btn btn-link text-light sidebar-sub-btn d-block text-decoration-none">
-                <i class="bi bi-person-badge me-2"></i>
-                Encuestadores
-              </a>
             </div>
           </div>
         }
 
         <!-- Otros elementos del menú -->
+        <a routerLink="/estadisticas" 
+           routerLinkActive="sidebar-main-btn-active"
+           class="w-100 d-flex align-items-center p-3 btn btn-link text-light sidebar-main-btn mb-2 text-decoration-none">
+          <i class="bi bi-bar-chart me-2"></i>
+          <span>Estadísticas</span>
+        </a>
+
         <a routerLink="/reportes" 
            routerLinkActive="sidebar-main-btn-active"
            class="w-100 d-flex align-items-center p-3 btn btn-link text-light sidebar-main-btn mb-2 text-decoration-none">
@@ -112,8 +113,14 @@
         </a>
       </nav>
 
-      <!-- Botón de Cerrar Sesión -->
+      <!-- Botón de Perfil y Cerrar Sesión -->
       <div class="position-absolute bottom-0 start-0 end-0 p-4">
+        <a routerLink="/perfil" 
+           routerLinkActive="sidebar-main-btn-active"
+           class="w-100 d-flex align-items-center justify-content-center p-3 btn btn-outline-light mb-2 text-decoration-none">
+          <i class="bi bi-person me-2"></i>
+          <span>Perfil</span>
+        </a>
         <button (click)="logout()" 
                 class="w-100 d-flex align-items-center justify-content-center p-3 btn btn-outline-light">
           <i class="bi bi-box-arrow-right me-2"></i>

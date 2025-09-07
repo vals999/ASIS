@@ -125,7 +125,9 @@ public class JornadaController {
     public Response crearJornada(Jornada jornada) {
         try {
             jornadaDAO.crear(jornada);
-            return Response.status(Status.CREATED).entity(jornada).build();
+            // Convertir la jornada creada a DTO para incluir la información completa de la campaña
+            JornadaDTO jornadaDTO = DTOMapper.toJornadaDTO(jornada);
+            return Response.status(Status.CREATED).entity(jornadaDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -145,7 +147,9 @@ public class JornadaController {
         try {
             jornada.setId(id);
             jornadaDAO.actualizar(jornada);
-            return Response.ok(jornada).build();
+            // Convertir la jornada actualizada a DTO para incluir la información completa de la campaña
+            JornadaDTO jornadaDTO = DTOMapper.toJornadaDTO(jornada);
+            return Response.ok(jornadaDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();

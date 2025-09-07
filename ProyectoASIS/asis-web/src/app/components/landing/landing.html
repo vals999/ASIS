@@ -53,6 +53,98 @@
   </div>
 </section>
 
+<!-- Reportes Públicos Section -->
+<section id="reportes" class="py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2 class="h1 mb-4">Reportes y Documentos Públicos</h2>
+        <p class="lead text-muted">Accede a nuestros informes y documentos de interés público</p>
+      </div>
+    </div>
+    
+    @if (cargandoReportes()) {
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando reportes...</span>
+        </div>
+        <p class="mt-2 text-muted">Cargando reportes públicos...</p>
+      </div>
+    } @else if (errorReportes()) {
+      <div class="alert alert-warning text-center" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ errorReportes() }}
+      </div>
+    } @else if (reportesPublicos().length > 0) {
+      <div class="row">
+        @for (reporte of reportesPublicos(); track reporte.id) {
+          <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex align-items-start mb-3">
+                  <div class="me-3">
+                    <i [class]="'text-primary ' + obtenerIconoArchivo(reporte.tipoMime)" style="font-size: 2.5rem;"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h5 class="card-title mb-2">{{ reporte.nombreArchivoOriginal || reporte.nombre }}</h5>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                      <!--<span class="badge bg-secondary">{{ obtenerTipoArchivo(reporte.tipoMime) }}</span>-->
+                      <span class="badge bg-info">{{ formatearTamano(reporte.tamanoArchivo) }}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                @if (reporte.creador) {
+                  <div class="mb-3">
+                    <small class="text-muted">
+                      <i class="bi bi-person me-1"></i>
+                      Publicado por {{ reporte.creador.nombreUsuario }}
+                    </small>
+                  </div>
+                }
+                
+                <div class="mb-3">
+                  <small class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>
+                    {{ reporte.fechaCreacion | date:'dd/MM/yyyy' }}
+                  </small>
+                </div>
+                
+                <div class="text-center">
+                  <button 
+                    type="button" 
+                    class="btn btn-primary"
+                    (click)="descargarReporte(reporte)"
+                    [disabled]="cargandoReportes()"
+                  >
+                    <i class="bi bi-download me-2"></i>
+                    Descargar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+      
+      @if (reportesPublicos().length > 6) {
+        <div class="text-center mt-4">
+          <p class="text-muted">
+            <i class="bi bi-info-circle me-1"></i>
+            Mostrando los primeros {{ reportesPublicos().length }} reportes públicos disponibles
+          </p>
+        </div>
+      }
+    } @else {
+      <div class="text-center py-5">
+        <i class="bi bi-file-earmark-text display-1 text-muted mb-3"></i>
+        <h5 class="text-muted">No hay reportes públicos disponibles</h5>
+        <p class="text-muted">Actualmente no hay documentos públicos para mostrar</p>
+      </div>
+    }
+  </div>
+</section>
+
 <!-- Contact Section -->
 <app-contact></app-contact>
 

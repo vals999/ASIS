@@ -1,165 +1,248 @@
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Campañas</h2>
+<div class="container-fluid p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 fw-bold text-dark mb-1">Campañas</h2>
+      <p class="text-muted mb-0">Gestión de campañas de encuestas</p>
+    </div>
     <div class="d-flex gap-2">
       <button class="btn btn-primary" (click)="toggleFormularioAlta()">
+        <i class="bi bi-plus-circle me-2"></i>
         Crear Campaña
       </button>
-      <input type="text" class="form-control" style="width: 250px;" placeholder="Buscar..." 
+      <input type="text" class="form-control" style="width: 250px;" placeholder="Buscar campaña..." 
              [ngModel]="search()" (ngModelChange)="updateSearch($event)">
     </div>
   </div>
 
-  <form *ngIf="mostrarFormularioAlta()" (ngSubmit)="crearCampania()" class="mb-4 border rounded p-3 bg-light">
-    <div class="row g-2 align-items-end">
-      <div class="col-md-4">
-        <label class="form-label">Nombre de la campaña</label>
-        <input type="text" class="form-control" 
-               [ngModel]="nuevaCampania().nombre" 
-               (ngModelChange)="updateNuevaCampaniaNombre($event)" 
-               name="nombre" required>
+  <!-- Formulario de creación -->
+  <div *ngIf="mostrarFormularioAlta()" class="card mb-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">
+        <i class="bi bi-plus-circle me-2"></i>
+        Crear Nueva Campaña
+      </h5>
+    </div>
+    <div class="card-body">
+      <form (ngSubmit)="crearCampania()">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-medium">Nombre de la campaña</label>
+            <input type="text" class="form-control" 
+                   [ngModel]="nuevaCampania().nombre" 
+                   (ngModelChange)="updateNuevaCampaniaNombre($event)" 
+                   name="nombre" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium">Fecha de inicio</label>
+            <input type="date" class="form-control" 
+                   [ngModel]="nuevaCampania().fechaInicio" 
+                   (ngModelChange)="updateNuevaCampaniaFechaInicio($event)" 
+                   name="fechaInicio" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-medium">Fecha de fin</label>
+            <input type="date" class="form-control" 
+                   [ngModel]="nuevaCampania().fechaFin" 
+                   (ngModelChange)="updateNuevaCampaniaFechaFin($event)" 
+                   name="fechaFin" required>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label fw-medium">Barrio</label>
+            <select class="form-select" 
+                    [ngModel]="nuevaCampania().barrio?.id || ''" 
+                    (ngModelChange)="updateNuevaCampaniaBarrio($event)" 
+                    name="barrio">
+              <option value="" disabled>Seleccionar</option>
+              <option *ngFor="let barrio of barrioService.barrios()" [value]="barrio.id">
+                {{ barrio.nombre }}
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-lg me-1"></i>
+            Guardar
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancelarAlta()">
+            <i class="bi bi-x-lg me-1"></i>
+            Cancelar
+          </button>
+        </div>
+        
+        <!-- Mensaje de confirmación -->
+        <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
+             [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
+          <i [class]="mensajeExito().includes('Error') ? 'bi bi-exclamation-triangle me-2' : 'bi bi-check-circle me-2'"></i>
+          {{ mensajeExito() }}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla de campañas -->
+  <div *ngIf="campaniasFiltradas().length > 0" class="card">
+    <div class="card-header bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Campañas Registradas ({{ campaniasFiltradas().length }})</h5>
+        <div class="text-muted small">
+          Página {{ paginaActual() }} de {{ totalPaginas() }} 
+          ({{ campaniasPaginadas().length }} de {{ campaniasFiltradas().length }} campañas)
+        </div>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Fecha de inicio</label>
-        <input type="date" class="form-control" 
-               [ngModel]="nuevaCampania().fechaInicio" 
-               (ngModelChange)="updateNuevaCampaniaFechaInicio($event)" 
-               name="fechaInicio" required>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Fecha de fin</label>
-        <input type="date" class="form-control" 
-               [ngModel]="nuevaCampania().fechaFin" 
-               (ngModelChange)="updateNuevaCampaniaFechaFin($event)" 
-               name="fechaFin" required>
-      </div>
-      <div class="col-md-2">
-        <label class="form-label">Barrio</label>
-        <select class="form-select" 
-                [ngModel]="nuevaCampania().barrio?.id || ''" 
-                (ngModelChange)="updateNuevaCampaniaBarrio($event)" 
-                name="barrio">
-          <option value="" disabled>Seleccionar</option>
-          <option *ngFor="let barrio of barrioService.barrios()" [value]="barrio.id">
-            {{ barrio.nombre }}
-          </option>
-        </select>
-      </div>
-      <div class="col-md-1">
-        <button type="submit" class="btn btn-success w-100">Guardar</button>
-      </div>
-      <div class="col-md-1">
-        <button type="button" class="btn btn-secondary w-100" (click)="cancelarAlta()">Cancelar</button>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Fecha Inicio</th>
+              <th scope="col">Fecha Fin</th>
+              <th scope="col">Barrio</th>
+              <th scope="col" class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let campania of campaniasPaginadas()">
+              <!-- Fila normal de la campaña -->
+              <tr>
+                <td class="fw-medium">#{{ campania.id }}</td>
+                <td>
+                  <div class="fw-medium">{{ campania.nombre }}</div>
+                </td>
+                <td>{{ campania.fechaInicio | date:'dd/MM/yyyy' }}</td>
+                <td>{{ campania.fechaFin | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <span *ngIf="campania.barrio" class="badge bg-secondary">{{ campania.barrio.nombre }}</span>
+                  <span *ngIf="!campania.barrio" class="text-muted">Sin barrio</span>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" 
+                            class="btn btn-outline-primary"
+                            (click)="editarCampania(campania)"
+                            title="Editar campaña">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" 
+                            class="btn btn-outline-danger"
+                            (click)="eliminarCampania(campania.id)"
+                            title="Eliminar campaña">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <!-- Fila del formulario de edición -->
+              <tr *ngIf="campaniaEditando() === campania.id" class="table-secondary">
+                <td colspan="6">
+                  <div class="p-3">
+                    <h6 class="mb-3">
+                      <i class="bi bi-pencil me-2"></i>
+                      Editar Campaña #{{ campania.id }}
+                    </h6>
+                    <div class="row g-3">
+                      <div class="col-md-3">
+                        <label class="form-label fw-medium">Nombre de la campaña</label>
+                        <input type="text" class="form-control" 
+                               [ngModel]="campaniaEditada().nombre" 
+                               (ngModelChange)="updateCampaniaEditadaNombre($event)" 
+                               required>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label fw-medium">Fecha de inicio</label>
+                        <input type="date" class="form-control" 
+                               [ngModel]="campaniaEditada().fechaInicio" 
+                               (ngModelChange)="updateCampaniaEditadaFechaInicio($event)" 
+                               required>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label fw-medium">Fecha de fin</label>
+                        <input type="date" class="form-control" 
+                               [ngModel]="campaniaEditada().fechaFin" 
+                               (ngModelChange)="updateCampaniaEditadaFechaFin($event)" 
+                               required>
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label fw-medium">Barrio</label>
+                        <select class="form-select" 
+                                [ngModel]="campaniaEditada().barrio?.id || ''" 
+                                (ngModelChange)="updateCampaniaEditadaBarrio($event)" 
+                                name="barrio">
+                          <option value="" disabled>Seleccionar</option>
+                          <option *ngFor="let barrio of barrioService.barrios()" [value]="barrio.id">
+                            {{ barrio.nombre }}
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                      <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
+                        <i class="bi bi-check-lg me-1"></i>
+                        Confirmar
+                      </button>
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
+                        <i class="bi bi-x-lg me-1"></i>
+                        Cancelar
+                      </button>
+                    </div>
+                    
+                    <!-- Mensaje de validación dentro del formulario de edición -->
+                    <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
+                         [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
+                      <i [class]="mensajeEdicion().includes('Error') ? 'bi bi-exclamation-triangle me-2' : 'bi bi-check-circle me-2'"></i>
+                      {{ mensajeEdicion() }}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
       </div>
     </div>
     
-    <!-- Mensaje de confirmación -->
-    <div *ngIf="mensajeExito()" class="alert mt-3 mb-0" 
-         [ngClass]="mensajeExito().includes('Error') ? 'alert-danger' : 'alert-success'">
-      <i [class]="mensajeExito().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
-      {{ mensajeExito() }}
+    <!-- Controles de paginación -->
+    <div class="card-footer bg-light" *ngIf="totalPaginas() > 1">
+      <nav aria-label="Navegación de páginas">
+        <ul class="pagination justify-content-center mb-0">
+          <!-- Botón anterior -->
+          <li class="page-item" [class.disabled]="paginaActual() === 1">
+            <button class="page-link" (click)="paginaAnterior()" [disabled]="paginaActual() === 1">
+              <i class="bi bi-chevron-left"></i>
+              Anterior
+            </button>
+          </li>
+          
+          <!-- Números de página -->
+          <li *ngFor="let pagina of paginasArray()" 
+              class="page-item" 
+              [class.active]="pagina === paginaActual()">
+            <button class="page-link" (click)="irAPagina(pagina)">
+              {{ pagina }}
+            </button>
+          </li>
+          
+          <!-- Botón siguiente -->
+          <li class="page-item" [class.disabled]="paginaActual() === totalPaginas()">
+            <button class="page-link" (click)="paginaSiguiente()" [disabled]="paginaActual() === totalPaginas()">
+              Siguiente
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </li>
+        </ul>
+      </nav>
     </div>
-  </form>
-
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Fecha Inicio</th>
-        <th>Fecha Fin</th>
-        <th>Barrio</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <ng-container *ngFor="let campania of campaniasFiltradas()">
-        <!-- Fila normal de la campaña -->
-        <tr>
-          <td>#{{ campania.id }}</td>
-          <td>{{ campania.nombre }}</td>
-          <td>{{ campania.fechaInicio }}</td>
-          <td>{{ campania.fechaFin }}</td>
-          <td>
-            <span *ngIf="campania.barrio" class="badge bg-secondary">{{ campania.barrio.nombre }}</span>
-            <span *ngIf="!campania.barrio" class="text-muted">Sin barrio</span>
-          </td>
-          <td>
-            <a href="#" class="me-2" (click)="$event.preventDefault(); editarCampania(campania)">Editar</a>
-            <a href="#" class="text-danger" (click)="$event.preventDefault(); eliminarCampania(campania.id)">Eliminar</a>
-          </td>
-        </tr>
-        
-        <!-- Fila del formulario de edición (solo se muestra si la campaña está siendo editada) -->
-        <tr *ngIf="campaniaEditando() === campania.id" class="bg-light">
-          <td colspan="6">
-            <div class="p-3 border rounded">
-              <h6 class="mb-3">Editar Campaña #{{ campania.id }}</h6>
-              <div class="row g-2">
-                <div class="col-md-3">
-                  <label class="form-label">Nombre de la campaña</label>
-                  <input type="text" class="form-control" 
-                         [ngModel]="campaniaEditada().nombre" 
-                         (ngModelChange)="updateCampaniaEditadaNombre($event)" 
-                         required>
-                </div>
-                <div class="col-md-3">
-                  <label class="form-label">Fecha de inicio</label>
-                  <input type="date" class="form-control" 
-                         [ngModel]="campaniaEditada().fechaInicio" 
-                         (ngModelChange)="updateCampaniaEditadaFechaInicio($event)" 
-                         required>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Fecha de fin</label>
-                  <input type="date" class="form-control" 
-                         [ngModel]="campaniaEditada().fechaFin" 
-                         (ngModelChange)="updateCampaniaEditadaFechaFin($event)" 
-                         required>
-                </div>
-                <div class="col-md-2">
-                  <label class="form-label">Barrio</label>
-                  <select class="form-select" 
-                          [ngModel]="campaniaEditada().barrio?.id || ''" 
-                          (ngModelChange)="updateCampaniaEditadaBarrio($event)" 
-                          name="barrio">
-                    <option value="" disabled>Seleccionar</option>
-                    <option *ngFor="let barrio of barrioService.barrios()" [value]="barrio.id">
-                      {{ barrio.nombre }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col-md-2">
-                  <div class="d-flex flex-column gap-1 mt-4">
-                    <button type="button" class="btn btn-success btn-sm" (click)="confirmarEdicion()">
-                      <i class="fa fa-check"></i> Confirmar
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarEdicion()">
-                      <i class="fa fa-times"></i> Cancelar
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Mensaje de validación dentro del formulario de edición -->
-              <div *ngIf="mensajeEdicion()" class="alert mt-3 mb-0" 
-                   [ngClass]="mensajeEdicion().includes('Error') ? 'alert-danger' : 'alert-success'">
-                <i [class]="mensajeEdicion().includes('Error') ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'"></i>
-                {{ mensajeEdicion() }}
-              </div>
-            </div>
-          </td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </table>
-  
-  <!-- Paginación simple (opcional) -->
-  <nav *ngIf="campaniasFiltradas().length > 10">
-    <ul class="pagination justify-content-end">
-      <li class="page-item disabled"><a class="page-link">Anterior</a></li>
-      <li class="page-item active"><a class="page-link">1</a></li>
-      <li class="page-item"><a class="page-link">Siguiente</a></li>
-    </ul>
-  </nav>
+  </div>
+  <div *ngIf="campaniasFiltradas().length === 0" class="card">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-clipboard-data display-1 text-muted mb-3"></i>
+      <h5 class="text-muted">No hay campañas disponibles</h5>
+      <p class="text-muted">Haz clic en "Crear Campaña" para agregar la primera campaña</p>
+    </div>
+  </div>
 </div>

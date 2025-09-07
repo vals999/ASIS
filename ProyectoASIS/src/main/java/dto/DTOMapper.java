@@ -155,9 +155,7 @@ public class DTOMapper {
             datos.getApellido(),
             datos.getDni(),
             datos.getEdad(),
-            datos.getGenero(),
-            datos.getFechaCreacion(),
-            datos.getFechaEditado()
+            datos.getGenero()
         );
     }
 
@@ -376,6 +374,63 @@ public class DTOMapper {
         if (jornadas == null) return null;
         return jornadas.stream()
             .map(DTOMapper::toJornadaDTO)
+            .collect(Collectors.toList());
+    }
+
+    public static List<DatosPersonalesDTO> toDatosPersonalesDTOList(List<DatosPersonales> datosPersonalesList) {
+        if (datosPersonalesList == null) return null;
+        return datosPersonalesList.stream()
+            .map(DTOMapper::toDatosPersonalesDTO)
+            .collect(Collectors.toList());
+    }
+
+    // Método para convertir Reporte a ReporteDTO
+    public static ReporteDTO toReporteDTO(Reporte reporte) {
+        if (reporte == null) return null;
+        
+        ReporteDTO dto = new ReporteDTO(
+            reporte.getId(),
+            reporte.getNombre(),
+            reporte.getFecha(),
+            reporte.getVisibilidad().toString(),
+            reporte.getFechaCreacion(),
+            reporte.getFechaEditado()
+        );
+        
+        // Mapear creador usando DTO simple para evitar ciclos
+        dto.setCreador(toUsuarioSimpleDTO(reporte.getCreador()));
+        
+        // Mapear usuarios con acceso usando DTOs simples para evitar ciclos
+        if (reporte.getUsuarios() != null) {
+            dto.setUsuarios(reporte.getUsuarios().stream()
+                .map(DTOMapper::toUsuarioSimpleDTO)
+                .collect(Collectors.toList()));
+        }
+        
+        // Mapear información del archivo
+        dto.setTipoMime(reporte.getTipoMime());
+        dto.setTamanoArchivo(reporte.getTamanoArchivo());
+        dto.setNombreArchivoOriginal(reporte.getNombreArchivoOriginal());
+        
+        return dto;
+    }
+
+    // Método para convertir ReporteSimpleDTO
+    public static ReporteSimpleDTO toReporteSimpleDTO(Reporte reporte) {
+        if (reporte == null) return null;
+        return new ReporteSimpleDTO(
+            reporte.getId(),
+            reporte.getNombre(),
+            reporte.getFecha(),
+            reporte.getVisibilidad().toString()
+        );
+    }
+
+    // Método para convertir listas de Reportes
+    public static List<ReporteDTO> toReportesDTOList(List<Reporte> reportes) {
+        if (reportes == null) return null;
+        return reportes.stream()
+            .map(DTOMapper::toReporteDTO)
             .collect(Collectors.toList());
     }
 }

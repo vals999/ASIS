@@ -19,14 +19,6 @@
             accept=".csv" 
             class="form-control"
             [disabled]="uploading()">
-          <div class="form-text">
-            <span *ngIf="selectedFile(); else noFile">
-              Archivo seleccionado: {{ selectedFile()?.name }}
-            </span>
-            <ng-template #noFile>
-              Ningún archivo seleccionado
-            </ng-template>
-          </div>
         </div>
         <button 
           type="submit" 

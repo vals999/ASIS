@@ -2,7 +2,7 @@
   <!-- Header de Bienvenida -->
   <div class="mb-4">
     <h1 class="display-6 fw-bold text-dark mb-2">
-      Bienvenido{{ authService.currentUser()?.nombreUsuario ? ', ' + authService.currentUser()?.nombreUsuario : '' }}
+      Bienvenido{{ authService.currentUser()?.nombre ? ', ' + authService.currentUser()?.nombre : (authService.currentUser()?.nombreUsuario ? ', ' + authService.currentUser()?.nombreUsuario : '') }}
     </h1>
     <p class="text-muted" *ngIf="perfil === 'ADMINISTRADOR'">Panel de administrador</p>
     <p class="text-muted" *ngIf="perfil === 'PERSONAL_SALUD'">Panel de personal de salud</p>

@@ -4,6 +4,8 @@ package controller;
 import java.util.List;
 
 import dao_interfaces.I_PersonaDAO;
+import dto.DTOMapper;
+import dto.DatosPersonalesDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -45,7 +47,8 @@ public class DatosPersonalesController {
     public Response obtenerTodasLasPersonas() {
         try {
             List<DatosPersonales> personas = personaDAO.obtenerTodos();
-            return Response.ok(personas).build();
+            List<DatosPersonalesDTO> personasDTO = DTOMapper.toDatosPersonalesDTOList(personas);
+            return Response.ok(personasDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -63,7 +66,8 @@ public class DatosPersonalesController {
     public Response obtenerPersonasActivas() {
         try {
             List<DatosPersonales> personas = personaDAO.obtenerNoBorrados();
-            return Response.ok(personas).build();
+            List<DatosPersonalesDTO> personasDTO = DTOMapper.toDatosPersonalesDTOList(personas);
+            return Response.ok(personasDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -85,7 +89,8 @@ public class DatosPersonalesController {
             if (persona == null) {
                 return Response.status(Status.NOT_FOUND).build();
             }
-            return Response.ok(persona).build();
+            DatosPersonalesDTO personaDTO = DTOMapper.toDatosPersonalesDTO(persona);
+            return Response.ok(personaDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -120,7 +125,8 @@ public class DatosPersonalesController {
     public Response crearPersona(DatosPersonales persona) {
         try {
             personaDAO.crear(persona);
-            return Response.status(Status.CREATED).entity(persona).build();
+            DatosPersonalesDTO personaDTO = DTOMapper.toDatosPersonalesDTO(persona);
+            return Response.status(Status.CREATED).entity(personaDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -140,7 +146,8 @@ public class DatosPersonalesController {
         try {
             persona.setId(id);
             personaDAO.actualizar(persona);
-            return Response.ok(persona).build();
+            DatosPersonalesDTO personaDTO = DTOMapper.toDatosPersonalesDTO(persona);
+            return Response.ok(personaDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
@@ -179,6 +186,63 @@ public class DatosPersonalesController {
         try {
             personaDAO.recuperar(id);
             return Response.ok().entity("Persona recuperada correctamente").build();
+        } catch (Exception e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error: " + e.getMessage()).build();
+        }
+    }
+
+    @GET
+    @Path("/usuario/{usuarioId}")
+    @Operation(summary = "Obtener datos personales por ID de usuario", 
+    description = "Retorna los datos personales asociados a un usuario específico",
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Datos personales encontrados exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Datos personales no encontrados para este usuario"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public Response obtenerPersonaPorUsuarioId(@PathParam("usuarioId") Long usuarioId) {
+        try {
+            DatosPersonales persona = personaDAO.obtenerPorUsuarioId(usuarioId);
+            if (persona == null) {
+                return Response.status(Status.NOT_FOUND)
+                    .entity("No se encontraron datos personales para este usuario").build();
+            }
+            DatosPersonalesDTO personaDTO = DTOMapper.toDatosPersonalesDTO(persona);
+            return Response.ok(personaDTO).build();
+        } catch (Exception e) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR)
+                    .entity("Error: " + e.getMessage()).build();
+        }
+    }
+
+    @PUT
+    @Path("/usuario/{usuarioId}")
+    @Operation(summary = "Actualizar datos personales por ID de usuario", 
+    description = "Actualiza los datos personales asociados a un usuario específico",
+    responses = {
+        @ApiResponse(responseCode = "200", description = "Datos personales actualizados exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Datos personales no encontrados para este usuario"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public Response actualizarPersonaPorUsuarioId(@PathParam("usuarioId") Long usuarioId, DatosPersonales datosActualizados) {
+        try {
+            DatosPersonales personaExistente = personaDAO.obtenerPorUsuarioId(usuarioId);
+            if (personaExistente == null) {
+                return Response.status(Status.NOT_FOUND)
+                    .entity("No se encontraron datos personales para este usuario").build();
+            }
+            
+            // Actualizar los campos
+            personaExistente.setNombre(datosActualizados.getNombre());
+            personaExistente.setApellido(datosActualizados.getApellido());
+            personaExistente.setEdad(datosActualizados.getEdad());
+            personaExistente.setDni(datosActualizados.getDni());
+            personaExistente.setGenero(datosActualizados.getGenero());
+            
+            personaDAO.actualizar(personaExistente);
+            DatosPersonalesDTO personaDTO = DTOMapper.toDatosPersonalesDTO(personaExistente);
+            return Response.ok(personaDTO).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();

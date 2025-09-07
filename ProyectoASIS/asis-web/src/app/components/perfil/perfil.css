@@ -1,0 +1,329 @@
+/* Estilos personalizados para el componente perfil */
+
+/* Variables de colores consistentes con la aplicación */
+:root {
+  --perfil-primary: #1e5a5a;
+  --perfil-primary-dark: #174a4a;
+  --perfil-primary-light: #2a6b6b;
+  --perfil-secondary: #495057;
+  --perfil-accent: #6c757d;
+  --perfil-light: #e9ecef;
+  --perfil-bg: #f8f9fa;
+  --perfil-dark: #212529;
+}
+
+/* Contenedor principal */
+.perfil-container {
+  min-height: 100vh;
+  background-color: var(--perfil-bg);
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Tarjeta principal del perfil */
+.perfil-card {
+  border: none;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  animation: slideInUp 0.5s ease-out;
+}
+
+/* Header de la tarjeta */
+.perfil-header {
+  background: linear-gradient(135deg, var(--perfil-primary) 0%, var(--perfil-primary-dark) 100%);
+  border-bottom: none;
+  padding: 1.5rem 2rem;
+  position: relative;
+}
+
+.perfil-header h4 {
+  color: white;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Labels del formulario */
+.perfil-label {
+  color: var(--perfil-secondary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.perfil-label i {
+  color: var(--perfil-primary);
+}
+
+/* Inputs del formulario */
+.perfil-input {
+  border: 1px solid #ced4da;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.15s ease-in-out;
+  background-color: white;
+}
+
+.perfil-input:focus {
+  border-color: var(--perfil-primary);
+  box-shadow: 0 0 0 0.2rem rgba(30, 90, 90, 0.25);
+  outline: none;
+}
+
+.perfil-input::placeholder {
+  color: #6c757d;
+}
+
+/* Campos de solo lectura */
+.perfil-display-field {
+  border: 1px solid #e9ecef;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  color: #495057;
+  font-size: 0.9rem;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+.perfil-display-field.readonly {
+  background-color: #e9ecef;
+  color: #6c757d;
+  border-color: #dee2e6;
+}
+
+/* Badge personalizado */
+.perfil-badge {
+  background-color: var(--perfil-primary);
+  color: white;
+  font-weight: 500;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+}
+
+/* Título de sección */
+.perfil-section-title {
+  color: var(--perfil-secondary);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.perfil-section-title i {
+  color: var(--perfil-primary);
+}
+
+/* Divisor personalizado */
+.perfil-divider {
+  border: none;
+  height: 1px;
+  background-color: #dee2e6;
+  margin: 1.5rem 0;
+}
+
+/* Botones personalizados */
+.perfil-btn-edit {
+  background-color: var(--perfil-primary);
+  border-color: var(--perfil-primary);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  color: white;
+}
+
+.perfil-btn-edit:hover {
+  background-color: var(--perfil-primary-dark);
+  border-color: var(--perfil-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(30, 90, 90, 0.2);
+}
+
+.perfil-btn-save {
+  background-color: #198754;
+  border-color: #198754;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  color: white;
+}
+
+.perfil-btn-save:hover:not(:disabled) {
+  background-color: #157347;
+  border-color: #146c43;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(25, 135, 84, 0.2);
+}
+
+.perfil-btn-cancel {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  color: white;
+}
+
+.perfil-btn-cancel:hover:not(:disabled) {
+  background-color: #5c636a;
+  border-color: #565e64;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.2);
+}
+
+.perfil-btn-back {
+  color: var(--perfil-primary);
+  border-color: var(--perfil-primary);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  background-color: transparent;
+}
+
+.perfil-btn-back:hover {
+  background-color: var(--perfil-primary);
+  border-color: var(--perfil-primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(30, 90, 90, 0.2);
+}
+
+/* Spinner personalizado */
+.perfil-spinner {
+  color: var(--perfil-primary);
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+/* Alertas personalizadas */
+.perfil-alert {
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-weight: 500;
+  border-left: 4px solid;
+}
+
+.perfil-alert.alert-success {
+  background-color: #d1edff;
+  color: #0c5460;
+  border-left-color: #0dcaf0;
+}
+
+.perfil-alert.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left-color: #dc3545;
+}
+
+/* Animaciones */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estados de validación */
+.perfil-input:invalid:not(:placeholder-shown) {
+  border-color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.perfil-input:valid:not(:placeholder-shown) {
+  border-color: #198754;
+  background-color: rgba(25, 135, 84, 0.05);
+}
+
+/* Select personalizado */
+.form-select.perfil-input {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23495057' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-size: 16px 12px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .perfil-container {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .perfil-card {
+    margin: 0 1rem;
+  }
+  
+  .perfil-header {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .card-body {
+    padding: 1.5rem !important;
+  }
+  
+  .d-flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+  
+  .d-flex.gap-2 .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .perfil-header h4 {
+    font-size: 1.25rem;
+  }
+  
+  .perfil-input {
+    font-size: 0.875rem;
+    padding: 0.625rem 0.875rem;
+  }
+  
+  .perfil-display-field {
+    font-size: 0.875rem;
+    padding: 0.625rem 0.875rem;
+  }
+}
+
+/* Mejoras de accesibilidad */
+.perfil-input:focus-visible {
+  outline: 2px solid var(--perfil-primary);
+  outline-offset: 2px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--perfil-primary);
+  outline-offset: 2px;
+}
+
+/* Efectos sutiles */
+.perfil-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+/* Iconos */
+.bi-person-circle {
+  font-size: 1.25rem;
+}
+
+.perfil-label .bi {
+  font-size: 0.875rem;
+}
+
+.perfil-section-title .bi {
+  font-size: 1rem;
+}

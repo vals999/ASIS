@@ -95,15 +95,22 @@ public class AuthController {
             // Generar token JWT
             String token = generateJWT(usuario);
 
-            // Preparar respuesta
+            // Preparar respuesta con datos personales
+            Map<String, Object> usuarioInfo = new HashMap<>();
+            usuarioInfo.put("id", usuario.getId());
+            usuarioInfo.put("nombreUsuario", usuario.getNombreUsuario());
+            usuarioInfo.put("email", usuario.getEmail());
+            usuarioInfo.put("perfil", usuario.getPerfil().name());
+            
+            // Incluir datos personales si existen
+            if (usuario.getDatosPersonales() != null) {
+                usuarioInfo.put("nombre", usuario.getDatosPersonales().getNombre());
+                usuarioInfo.put("apellido", usuario.getDatosPersonales().getApellido());
+            }
+
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
-            response.put("usuario", Map.of(
-                "id", usuario.getId(),
-                "nombreUsuario", usuario.getNombreUsuario(),
-                "email", usuario.getEmail(),
-                "perfil", usuario.getPerfil().name()
-            ));
+            response.put("usuario", usuarioInfo);
             response.put("message", "Login exitoso");
 
             return Response.ok(response).build();

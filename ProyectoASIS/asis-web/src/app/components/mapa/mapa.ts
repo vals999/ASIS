@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID, OnDestroy, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MapaService, Coordenada } from '../../services/mapa.service';
 import { CargaArchivosComponent } from '../carga-archivos/carga-archivos';
@@ -21,7 +21,15 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   private showMapSubscription?: Subscription;
   private showFilteredMapSubscription?: Subscription;
   private markersGroup: any;
+  private markerClusterGroup: any;
+  private heatmapLayer: any;
   public csvCargado = false;
+  
+  // Signal para controlar si hay datos disponibles (como en carga-archivos)
+  public datosDisponibles = signal<boolean>(false);
+  
+  // Signal para controlar el tipo de marcador (pines, clusters o heatmap)
+  public tipoMarcador = signal<'pines' | 'clusters' | 'heatmap'>('pines');
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -33,12 +41,14 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     if (this.isBrowser) {
-      // No cargar coordenadas automáticamente al inicio
+      // Verificar si ya existen datos al cargar el componente
+      this.verificarDatosExistentes();
       
       // Suscribirse al evento de carga de CSV (solo para saber que se cargó)
       this.csvUploadSubscription = this.eventService.csvUploaded$.subscribe(() => {
         console.log('CSV cargado, esperando instrucción para mostrar mapa...');
         this.csvCargado = true;
+        this.datosDisponibles.set(true);
       });
 
       // Suscribirse al evento para mostrar el mapa
@@ -70,6 +80,44 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.showFilteredMapSubscription) {
       this.showFilteredMapSubscription.unsubscribe();
+    }
+  }
+
+  private verificarDatosExistentes(): void {
+    this.mapaService.verificarSiExistenDatos().subscribe({
+      next: (response) => {
+        if (response.existenDatos) {
+          console.log(`Se encontraron ${response.totalRespuestas} respuestas en la base de datos`);
+          this.datosDisponibles.set(true);
+        } else {
+          console.log('No se encontraron datos en la base de datos');
+          this.datosDisponibles.set(false);
+        }
+      },
+      error: (error) => {
+        console.error('Error al verificar datos existentes:', error);
+        this.datosDisponibles.set(false);
+      }
+    });
+  }
+
+  cambiarTipoMarcador(tipo: 'pines' | 'clusters' | 'heatmap'): void {
+    this.tipoMarcador.set(tipo);
+    console.log(`Cambiando tipo de marcador a: ${tipo}`);
+    
+    // Si hay coordenadas cargadas, actualizar la visualización
+    if (this.coordenadas.length > 0 && this.map) {
+      // Limpiar todo antes de mostrar el nuevo tipo
+      this.limpiarMarcadores();
+      
+      // Mostrar el nuevo tipo
+      if (tipo === 'clusters') {
+        this.mostrarClusters();
+      } else if (tipo === 'heatmap') {
+        this.mostrarHeatmap();
+      } else {
+        this.mostrarPines();
+      }
     }
   }
 
@@ -113,25 +161,16 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  // Método legacy mantenido para compatibilidad (ahora solo usado internamente)
-  private cargarCoordenadas(): void {
-    this.cargarYMostrarCoordenadas();
-  }
-
-  private actualizarMapa(): void {
-    // Limpiar marcadores existentes
-    if (this.markersGroup) {
-      this.markersGroup.clearLayers();
-    }
-    
-    // Recargar coordenadas desde el servidor
-    this.cargarYMostrarCoordenadas();
-  }
-
   private async loadLeafletAndInitMap(): Promise<void> {
     try {
-      // Importación dinámica de Leaflet solo en el navegador
+      // Importación dinámica de Leaflet y plugin de clustering
       const L = await import('leaflet');
+      
+      // Cargar el plugin de markercluster dinámicamente
+      await this.loadMarkerClusterPlugin();
+      
+      // Cargar el plugin de heatmap dinámicamente
+      await this.loadHeatmapPlugin();
       
       // Configurar iconos por defecto de Leaflet
       delete (L as any).Icon.Default.prototype._getIconUrl;
@@ -145,6 +184,56 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (error) {
       console.error('Error loading Leaflet:', error);
     }
+  }
+
+  private async loadMarkerClusterPlugin(): Promise<void> {
+    try {
+      // Cargar CSS del plugin de clustering
+      if (!document.querySelector('link[href*="markercluster"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css';
+        document.head.appendChild(link);
+
+        const linkDefault = document.createElement('link');
+        linkDefault.rel = 'stylesheet';
+        linkDefault.href = 'https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css';
+        document.head.appendChild(linkDefault);
+      }
+
+      // Cargar JavaScript del plugin
+      if (!(window as any).L || !(window as any).L.markerClusterGroup) {
+        await this.loadScript('https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js');
+      }
+    } catch (error) {
+      console.error('Error loading MarkerCluster plugin:', error);
+    }
+  }
+
+  private async loadHeatmapPlugin(): Promise<void> {
+    try {
+      // Cargar JavaScript del plugin de heatmap
+      if (!(window as any).L || !(window as any).L.heatLayer) {
+        await this.loadScript('https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js');
+      }
+    } catch (error) {
+      console.error('Error loading Heatmap plugin:', error);
+    }
+  }
+
+  private loadScript(src: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) {
+        resolve();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+      document.head.appendChild(script);
+    });
   }
 
   private initMap(L: any): void {
@@ -171,19 +260,33 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   private async agregarMarcadores(): Promise<void> {
     if (!this.map || this.coordenadas.length === 0) return;
 
+    // Limpiar marcadores existentes ANTES de agregar nuevos
+    this.limpiarMarcadores();
+    
+    // Mostrar según el tipo seleccionado
+    if (this.tipoMarcador() === 'clusters') {
+      await this.mostrarClusters();
+    } else if (this.tipoMarcador() === 'heatmap') {
+      await this.mostrarHeatmap();
+    } else {
+      await this.mostrarPines();
+    }
+  }
+
+  private async mostrarPines(): Promise<void> {
     const L = await import('leaflet');
     
-    // Limpiar marcadores existentes antes de agregar nuevos
-    if (this.markersGroup) {
-      this.markersGroup.clearLayers();
-      this.map.removeLayer(this.markersGroup);
+    // Asegurar que no hay clusters antes de crear pines
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.map.removeLayer(this.markerClusterGroup);
+      this.markerClusterGroup = null;
     }
     
-    // Crear un nuevo grupo de marcadores
+    // Crear un nuevo grupo de marcadores normal
     this.markersGroup = L.layerGroup().addTo(this.map);
 
     this.coordenadas.forEach(coordenada => {
-      // Validar que las coordenadas estén en un rango válido
       if (this.validarCoordenadas(coordenada.latitud, coordenada.longitud)) {
         const marker = L.marker([coordenada.latitud, coordenada.longitud])
           .bindPopup(`
@@ -198,15 +301,158 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    // Ajustar la vista del mapa para mostrar todos los marcadores
+    this.ajustarVistaAMarcadores();
+  }
+
+  private async mostrarClusters(): Promise<void> {
+    const L = await import('leaflet');
+    
+    // Asegurar que no hay pines antes de crear clusters
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+      this.markersGroup = null;
+    }
+    
+    // Crear grupo de clustering con configuración mejorada
+    this.markerClusterGroup = (L as any).markerClusterGroup({
+      // Desactivar spiderfy y en su lugar hacer zoom
+      spiderfyOnMaxZoom: false,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      disableClusteringAtZoom: 18, 
+      maxClusterRadius: 50,
+      animate: true,
+      animateAddingMarkers: true,
+      spiderfyDistanceMultiplier: 1,
+      // Función personalizada para manejar clicks en clusters
+      iconCreateFunction: function(cluster: any) {
+        const count = cluster.getChildCount();
+        return new L.DivIcon({
+          html: `<div><span>${count}</span></div>`,
+          className: 'marker-cluster marker-cluster-medium',
+          iconSize: new L.Point(40, 40)
+        });
+      }
+    });
+
+    // Agregar evento personalizado para el click en clusters
+    this.markerClusterGroup.on('clusterclick', (e: any) => {
+      const cluster = e.layer;
+      const children = cluster.getAllChildMarkers();
+      
+      // Si hay pocos marcadores, mostrar popup con información
+      if (children.length <= 5) {
+        let popupContent = `<div><strong>Ubicaciones agrupadas (${children.length}):</strong><br>`;
+        children.forEach((marker: any, index: number) => {
+          const popup = marker.getPopup();
+          if (popup) {
+            popupContent += `<small>${index + 1}. ${popup.getContent()}</small><br>`;
+          }
+        });
+        popupContent += '</div>';
+        
+        L.popup()
+          .setLatLng(cluster.getLatLng())
+          .setContent(popupContent)
+          .openOn(this.map);
+      } else {
+        // Si hay muchos marcadores, hacer zoom hacia la zona
+        this.map.setView(cluster.getLatLng(), Math.min(this.map.getZoom() + 2, 18));
+      }
+    });
+
+    this.markerClusterGroup.addTo(this.map);
+
+    this.coordenadas.forEach(coordenada => {
+      if (this.validarCoordenadas(coordenada.latitud, coordenada.longitud)) {
+        const marker = L.marker([coordenada.latitud, coordenada.longitud])
+          .bindPopup(`
+            <div>
+              <strong>Encuesta ID:</strong> ${coordenada.encuestaId}<br>
+              <strong>Latitud:</strong> ${coordenada.latitud}<br>
+              <strong>Longitud:</strong> ${coordenada.longitud}
+            </div>
+          `);
+        
+        this.markerClusterGroup.addLayer(marker);
+      }
+    });
+
+    this.ajustarVistaAMarcadores();
+  }
+
+  private async mostrarHeatmap(): Promise<void> {
+    const L = await import('leaflet');
+    
+    // Asegurar que no hay pines ni clusters antes de crear heatmap
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+      this.markersGroup = null;
+    }
+    
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.map.removeLayer(this.markerClusterGroup);
+      this.markerClusterGroup = null;
+    }
+    
+    // Preparar datos para el heatmap: [lat, lng, intensity]
+    const heatmapData = this.coordenadas
+      .filter(coordenada => this.validarCoordenadas(coordenada.latitud, coordenada.longitud))
+      .map(coordenada => [coordenada.latitud, coordenada.longitud, 1.0]); // intensidad fija de 1.0
+    
+    if (heatmapData.length > 0) {
+      // Crear el heatmap layer con configuraciones optimizadas
+      this.heatmapLayer = (L as any).heatLayer(heatmapData, {
+        radius: 25,
+        blur: 15,
+        maxZoom: 17,
+        max: 1.0,
+        gradient: {
+          0.4: 'blue',
+          0.65: 'lime', 
+          1: 'red'
+        }
+      }).addTo(this.map);
+      
+      this.ajustarVistaAMarcadores();
+    }
+  }
+
+  private limpiarMarcadores(): void {
+    // Limpiar marcadores de pines
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+      this.markersGroup = null;
+    }
+    
+    // Limpiar marcadores de clusters
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.map.removeLayer(this.markerClusterGroup);
+      this.markerClusterGroup = null;
+    }
+    
+    // Limpiar heatmap
+    if (this.heatmapLayer) {
+      this.map.removeLayer(this.heatmapLayer);
+      this.heatmapLayer = null;
+    }
+  }
+
+  private async ajustarVistaAMarcadores(): Promise<void> {
     if (this.coordenadas.length > 0) {
       const coordenadasValidas = this.coordenadas.filter(c => 
         this.validarCoordenadas(c.latitud, c.longitud)
       );
       
       if (coordenadasValidas.length > 0) {
-        const group = new L.FeatureGroup(this.markersGroup.getLayers());
-        this.map.fitBounds(group.getBounds().pad(0.1));
+        const L = await import('leaflet');
+        const bounds = L.latLngBounds(coordenadasValidas.map(c => [c.latitud, c.longitud]));
+        this.map.fitBounds(bounds.pad(0.1));
       }
     }
   }
@@ -214,19 +460,32 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   private async agregarMarcadoresFiltrados(respuestaValor: string): Promise<void> {
     if (!this.map || this.coordenadas.length === 0) return;
 
+    // Limpiar marcadores existentes ANTES de agregar filtrados
+    this.limpiarMarcadores();
+    
+    // Mostrar según el tipo seleccionado para datos filtrados
+    if (this.tipoMarcador() === 'clusters') {
+      await this.mostrarClustersFiltrados(respuestaValor);
+    } else if (this.tipoMarcador() === 'heatmap') {
+      await this.mostrarHeatmapFiltrado(respuestaValor);
+    } else {
+      await this.mostrarPinesFiltrados(respuestaValor);
+    }
+  }
+
+  private async mostrarPinesFiltrados(respuestaValor: string): Promise<void> {
     const L = await import('leaflet');
     
-    // Limpiar marcadores existentes antes de agregar nuevos
-    if (this.markersGroup) {
-      this.markersGroup.clearLayers();
-      this.map.removeLayer(this.markersGroup);
+    // Asegurar que no hay clusters
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.map.removeLayer(this.markerClusterGroup);
+      this.markerClusterGroup = null;
     }
     
-    // Crear un nuevo grupo de marcadores
     this.markersGroup = L.layerGroup().addTo(this.map);
 
     this.coordenadas.forEach(coordenada => {
-      // Validar que las coordenadas estén en un rango válido
       if (this.validarCoordenadas(coordenada.latitud, coordenada.longitud)) {
         const marker = L.marker([coordenada.latitud, coordenada.longitud])
           .bindPopup(`
@@ -242,19 +501,128 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    // Ajustar la vista del mapa para mostrar todos los marcadores filtrados
-    if (this.coordenadas.length > 0) {
-      const coordenadasValidas = this.coordenadas.filter(c => 
-        this.validarCoordenadas(c.latitud, c.longitud)
-      );
-      
-      if (coordenadasValidas.length > 0) {
-        const group = new L.FeatureGroup(this.markersGroup.getLayers());
-        this.map.fitBounds(group.getBounds().pad(0.1));
-      }
-    }
+    this.ajustarVistaAMarcadores();
+  }
 
-    console.log(`Marcadores filtrados agregados: ${this.coordenadas.length} para respuesta "${respuestaValor}"`);
+  private async mostrarClustersFiltrados(respuestaValor: string): Promise<void> {
+    const L = await import('leaflet');
+    
+    // Asegurar que no hay pines
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+      this.markersGroup = null;
+    }
+    
+    // Crear grupo de clustering con la misma configuración mejorada
+    this.markerClusterGroup = (L as any).markerClusterGroup({
+      spiderfyOnMaxZoom: false,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      disableClusteringAtZoom: 18,
+      maxClusterRadius: 80,
+      spiderfyDistanceMultiplier: 1,
+      iconCreateFunction: function(cluster: any) {
+        const count = cluster.getChildCount();
+        return new L.DivIcon({
+          html: `<div><span>${count}</span></div>`,
+          className: 'marker-cluster marker-cluster-medium',
+          iconSize: new L.Point(40, 40)
+        });
+      }
+    });
+
+    // Agregar el mismo evento personalizado para clusters filtrados
+    this.markerClusterGroup.on('clusterclick', (e: any) => {
+      const cluster = e.layer;
+      const children = cluster.getAllChildMarkers();
+      
+      if (children.length <= 5) {
+        let popupContent = `<div><strong>Ubicaciones filtradas (${children.length}):</strong><br>`;
+        popupContent += `<strong>Respuesta:</strong> ${respuestaValor}<br><br>`;
+        children.forEach((marker: any, index: number) => {
+          const popup = marker.getPopup();
+          if (popup) {
+            const content = popup.getContent();
+            // Extraer solo la información de la encuesta
+            const encuestaMatch = content.match(/Encuesta ID:<\/strong>\s*(\d+)/);
+            const encuestaId = encuestaMatch ? encuestaMatch[1] : 'N/A';
+            popupContent += `<small>${index + 1}. Encuesta ID: ${encuestaId}</small><br>`;
+          }
+        });
+        popupContent += '</div>';
+        
+        L.popup()
+          .setLatLng(cluster.getLatLng())
+          .setContent(popupContent)
+          .openOn(this.map);
+      } else {
+        this.map.setView(cluster.getLatLng(), Math.min(this.map.getZoom() + 2, 18));
+      }
+    });
+
+    this.markerClusterGroup.addTo(this.map);
+
+    this.coordenadas.forEach(coordenada => {
+      if (this.validarCoordenadas(coordenada.latitud, coordenada.longitud)) {
+        const marker = L.marker([coordenada.latitud, coordenada.longitud])
+          .bindPopup(`
+            <div>
+              <strong>Encuesta ID:</strong> ${coordenada.encuestaId}<br>
+              <strong>Respuesta:</strong> ${respuestaValor}<br>
+              <strong>Latitud:</strong> ${coordenada.latitud}<br>
+              <strong>Longitud:</strong> ${coordenada.longitud}
+            </div>
+          `);
+        
+        this.markerClusterGroup.addLayer(marker);
+      }
+    });
+
+    this.ajustarVistaAMarcadores();
+
+    console.log(`Marcadores filtrados agregados como clusters: ${this.coordenadas.length} para respuesta "${respuestaValor}"`);
+  }
+
+  private async mostrarHeatmapFiltrado(respuestaValor: string): Promise<void> {
+    const L = await import('leaflet');
+    
+    // Asegurar que no hay pines ni clusters antes de crear heatmap
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.map.removeLayer(this.markersGroup);
+      this.markersGroup = null;
+    }
+    
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.map.removeLayer(this.markerClusterGroup);
+      this.markerClusterGroup = null;
+    }
+    
+    // Preparar datos para el heatmap filtrado: [lat, lng, intensity]
+    const heatmapData = this.coordenadas
+      .filter(coordenada => this.validarCoordenadas(coordenada.latitud, coordenada.longitud))
+      .map(coordenada => [coordenada.latitud, coordenada.longitud, 1.0]); // intensidad fija de 1.0
+    
+    if (heatmapData.length > 0) {
+      // Crear el heatmap layer con configuraciones optimizadas para datos filtrados
+      this.heatmapLayer = (L as any).heatLayer(heatmapData, {
+        radius: 30, // Radio ligeramente mayor para datos filtrados
+        blur: 20,
+        maxZoom: 17,
+        max: 1.0,
+        gradient: {
+          0.4: 'blue',
+          0.65: 'lime', 
+          1: 'red'
+        }
+      }).addTo(this.map);
+      
+      this.ajustarVistaAMarcadores();
+      
+      console.log(`Heatmap filtrado creado: ${heatmapData.length} puntos para respuesta "${respuestaValor}"`);
+    }
   }
 
   private validarCoordenadas(lat: number, lng: number): boolean {

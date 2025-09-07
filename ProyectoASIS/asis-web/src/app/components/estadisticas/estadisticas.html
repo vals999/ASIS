@@ -1,0 +1,374 @@
+<div class="container-fluid p-4">
+  <!-- Header principal -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 fw-bold text-dark mb-1">
+        <i class="bi bi-bar-chart me-2" style="color: #1e5a5a;"></i>
+        Estadísticas
+      </h2>
+      <p class="text-muted mb-0">Análisis y visualización de datos del sistema</p>
+    </div>
+  </div>
+
+  <!-- Card de filtros -->
+  <div class="card mb-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">
+        <i class="bi bi-funnel me-2"></i>
+        Filtros de Búsqueda
+      </h5>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label for="categoriaDropdown" class="form-label fw-medium">Filtrar por categoría:</label>
+          <select id="categoriaDropdown" [(ngModel)]="filtros.categoria" (ngModelChange)="onCategoriaChange()" class="form-select">
+            <option value="">Todas las categorías</option>
+            <option *ngFor="let categoria of categorias" [value]="categoria">{{ categoria }}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="preguntaDropdown" class="form-label fw-medium">Filtrar por pregunta:</label>
+          <select id="preguntaDropdown" [(ngModel)]="preguntaSeleccionada" class="form-select">
+            <option value="">Todas las preguntas</option>
+            <option *ngFor="let pregunta of preguntas" [value]="pregunta">{{ pregunta }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-medium">Rango de edad:</label>
+          <div class="d-flex gap-2">
+            <select [(ngModel)]="filtros.edadDesde" class="form-select">
+              <option value="">Desde</option>
+              <option *ngFor="let edad of edadRango" [value]="edad">{{ edad }}</option>
+            </select>
+            <select [(ngModel)]="filtros.edadHasta" class="form-select">
+              <option value="">Hasta</option>
+              <option *ngFor="let edad of edadRango" [value]="edad">{{ edad }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+          <button (click)="aplicarFiltros()" class="btn btn-primary w-100">
+            <i class="bi bi-search me-1"></i>
+            Aplicar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla dinámica principal -->
+  <div class="card mb-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">
+        <i class="bi bi-table me-2"></i>
+        Tabla de Datos
+      </h5>
+    </div>
+    <div class="card-body">
+      <!-- Controles superiores -->
+      <div class="row g-3 mb-3">
+        <!-- Búsqueda -->
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" 
+                   class="form-control" 
+                   placeholder="Buscar en resultados..."
+                   [(ngModel)]="busquedaTexto"
+                   (ngModelChange)="onBusquedaCambio()">
+          </div>
+        </div>
+
+        <!-- Elementos por página -->
+        <div class="col-md-2">
+          <select class="form-select" 
+                  [(ngModel)]="elementosPorPagina"
+                  (ngModelChange)="cambiarElementosPorPagina($event)">
+            <option *ngFor="let opcion of opcionesPaginacion" [value]="opcion">
+              {{ opcion }} por página
+            </option>
+          </select>
+        </div>
+
+        <!-- Información de resultados -->
+        <div class="col-md-6 d-flex align-items-center justify-content-end">
+          <small class="text-muted">
+            Mostrando {{ (paginaActual - 1) * elementosPorPagina + 1 }} - 
+            {{ Math.min(paginaActual * elementosPorPagina, datosFiltrados.length) }} 
+            de {{ datosFiltrados.length }} resultados
+            @if (busquedaTexto) {
+              (filtrados)
+            }
+          </small>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" class="sortable" (click)="ordenarPorColumna('ranking')">
+                #
+                @if (columnaOrdenamiento === 'ranking') {
+                  <i class="bi" [ngClass]="direccionOrdenamiento === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                }
+              </th>
+              <th scope="col" class="sortable" (click)="ordenarPorColumna('respuesta')">
+                Respuesta
+                @if (columnaOrdenamiento === 'respuesta') {
+                  <i class="bi" [ngClass]="direccionOrdenamiento === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                }
+              </th>
+              <th scope="col" class="sortable" (click)="ordenarPorColumna('cantidad')">
+                Cantidad
+                @if (columnaOrdenamiento === 'cantidad') {
+                  <i class="bi" [ngClass]="direccionOrdenamiento === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                }
+              </th>
+              <th scope="col" class="sortable" (click)="ordenarPorColumna('porcentaje')">
+                Porcentaje
+                @if (columnaOrdenamiento === 'porcentaje') {
+                  <i class="bi" [ngClass]="direccionOrdenamiento === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                }
+              </th>
+              <th scope="col" class="sortable" (click)="ordenarPorColumna('preguntas')">
+                Preguntas
+                @if (columnaOrdenamiento === 'preguntas') {
+                  <i class="bi" [ngClass]="direccionOrdenamiento === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                }
+              </th>
+              <th scope="col">Categorías</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (datosPaginados.length > 0) {
+              <tr *ngFor="let item of datosPaginados">
+                <td>
+                  <span class="badge bg-primary">{{ item.ranking }}</span>
+                </td>
+                <td class="fw-medium">{{ item.respuesta }}</td>
+                <td>{{ item.cantidad }}</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <span class="me-2">{{ item.porcentaje }}%</span>
+                    <div class="progress flex-grow-1" style="height: 8px;">
+                      <div class="progress-bar" 
+                           [style.width.%]="item.porcentaje"
+                           style="background-color: #1e5a5a;"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ item.preguntas }}</td>
+                <td>
+                  <small class="text-muted">{{ item.categorias }}</small>
+                </td>
+              </tr>
+            } @else {
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  @if (busquedaTexto) {
+                    <i class="bi bi-search display-6 d-block mb-2"></i>
+                    No se encontraron resultados para "{{ busquedaTexto }}"
+                  } @else {
+                    <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                    No hay datos disponibles
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      @if (totalPaginas > 1) {
+        <nav aria-label="Paginación de tabla">
+          <ul class="pagination justify-content-center mb-0">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+              <button class="page-link" (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+            <li class="page-item" *ngFor="let pagina of paginasDisponibles" 
+                [class.active]="pagina === paginaActual">
+              <button class="page-link" (click)="cambiarPagina(pagina)">
+                {{ pagina }}
+              </button>
+            </li>
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas">
+              <button class="page-link" (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      }
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="row g-4">
+    <!-- Tarjetas de estadísticas resumidas -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-clipboard-data me-2"></i>
+            Resumen de Estadísticas
+          </h5>
+        </div>
+        <div class="card-body">
+          @if (estadisticasResumen.totalRespuestas > 0) {
+            <div class="row g-3">
+              <!-- Total de respuestas -->
+              <div class="col-md-6">
+                <div class="stats-card p-3 bg-primary text-white rounded">
+                  <div class="d-flex align-items-center">
+                    <div class="stats-icon me-3">
+                      <i class="bi bi-graph-up-arrow fs-2"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1 text-white-50">Total de respuestas</h6>
+                      <h3 class="mb-0 fw-bold">{{ estadisticasResumen.totalRespuestas }}</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Respuesta más común -->
+              <div class="col-md-6">
+                <div class="stats-card p-3 bg-success text-white rounded">
+                  <div class="d-flex align-items-center">
+                    <div class="stats-icon me-3">
+                      <i class="bi bi-trophy fs-2"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-1 text-white-50">Respuesta más común</h6>
+                      <h5 class="mb-0 fw-bold text-truncate">{{ estadisticasResumen.respuestaMasComun }}</h5>
+                      <small class="text-white-50">({{ estadisticasResumen.cantidadRespuestaMasComun }} respuestas)</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Respuestas únicas -->
+              <div class="col-md-6">
+                <div class="stats-card p-3 bg-info text-white rounded">
+                  <div class="d-flex align-items-center">
+                    <div class="stats-icon me-3">
+                      <i class="bi bi-collection fs-2"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1 text-white-50">Respuestas únicas</h6>
+                      <h3 class="mb-0 fw-bold">{{ estadisticasResumen.respuestasUnicas }}</h3>
+                      <small class="text-white-50">opciones diferentes</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tasa de respuesta válida -->
+              <div class="col-md-6">
+                <div class="stats-card p-3 bg-warning text-dark rounded">
+                  <div class="d-flex align-items-center">
+                    <div class="stats-icon me-3">
+                      <i class="bi bi-percent fs-2"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1 text-dark-50">Tasa de respuesta válida</h6>
+                      <h3 class="mb-0 fw-bold">{{ estadisticasResumen.tasaRespuestaValida }}%</h3>
+                      @if (estadisticasResumen.respuestasInvalidas > 0) {
+                        <small class="text-dark-50">({{ estadisticasResumen.respuestasInvalidas }} sin respuesta)</small>
+                      } @else {
+                        <small class="text-dark-50">(todas válidas)</small>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información adicional -->
+            @if (preguntaSeleccionada) {
+              <div class="mt-4 p-3 bg-light rounded">
+                <h6 class="mb-2">
+                  <i class="bi bi-info-circle me-2"></i>
+                  Información del filtro
+                </h6>
+                <p class="mb-0 text-muted">
+                  <strong>Pregunta seleccionada:</strong> {{ preguntaSeleccionada }}
+                </p>
+                @if (filtros.categoria) {
+                  <p class="mb-0 text-muted">
+                    <strong>Categoría:</strong> {{ filtros.categoria }}
+                  </p>
+                }
+              </div>
+            }
+          } @else {
+            <div class="text-center py-5">
+              <i class="bi bi-clipboard-data display-1 text-muted mb-3" style="opacity: 0.3;"></i>
+              <h6 class="text-muted">No hay datos disponibles</h6>
+              <p class="text-muted mb-0">Selecciona filtros y presiona "Aplicar" para ver las estadísticas</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-graph-up me-2"></i>
+            Visualización de Respuestas
+          </h5>
+        </div>
+        <div class="card-body d-flex flex-column">
+          <ng-container *ngIf="barChartData && barChartData.datasets[0].data.length > 0; else sinDatos">
+            <!-- Gráfico de barras -->
+            <div class="mb-4">
+              <h6 class="text-center mb-3">Gráfico de Barras</h6>
+              <div class="d-flex align-items-center justify-content-center" style="height: 300px;">
+                <canvas baseChart
+                      [data]="barChartData"
+                      [options]="barChartOptions"
+                      [type]="'bar'"
+                      style="max-width: 100%; max-height: 300px;"
+                ></canvas>
+              </div>
+            </div>
+            
+            <!-- Separador visual -->
+            <hr class="my-3">
+            
+            <!-- Gráfico de torta -->
+            <div class="flex-grow-1">
+              <h6 class="text-center mb-3">Gráfico de Torta</h6>
+              <div class="d-flex align-items-center justify-content-center" style="height: 350px;">
+                <canvas baseChart
+                      [data]="pieChartData"
+                      [options]="pieChartOptions"
+                      [type]="'pie'"
+                      style="max-width: 100%; max-height: 350px;"
+                ></canvas>
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #sinDatos>
+            <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center text-muted">
+              <i class="bi bi-graph-up display-1 mb-3" style="opacity: 0.3;"></i>
+              <h6>No hay datos para mostrar</h6>
+              <p class="text-center mb-0">Selecciona filtros y presiona "Aplicar" para generar los gráficos</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
