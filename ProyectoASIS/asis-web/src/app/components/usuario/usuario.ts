@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuariosService, Usuario } from '../../services/usuario.service';
+import { AuthService } from '../../services/auth.service';
 
 /*Signals son contenedores de valores que notifican automáticamente cuando cambian, 
 permitiendo que Angular actualice la UI de manera granular y optimizada.
@@ -89,6 +90,48 @@ export class UsuarioComponent implements OnInit, OnDestroy {
     return Array.from({ length: total }, (_, i) => i + 1);
   });
 
+  // Signal computado para contar administradores habilitados
+  readonly administradoresCount = computed(() => {
+    const usuarios = this.usuariosService.usuarios();
+    return usuarios.filter(u => u.habilitado && u.perfil === 'ADMINISTRADOR').length;
+  });
+
+  // Signal computado para verificar si un usuario admin puede ser eliminado
+  readonly puedeEliminarAdmin = computed(() => {
+    return this.administradoresCount() > 1;
+  });
+
+  // Signal computado para verificar si el usuario puede eliminarse (no es él mismo)
+  readonly puedeEliminarUsuario = computed(() => {
+    const usuarioActual = this.authService.currentUser();
+    return (usuario: Usuario) => {
+      // No puede eliminarse a sí mismo
+      if (usuarioActual && usuario.id === usuarioActual.id) {
+        return false;
+      }
+      // Si es admin y es el único, no puede eliminarse
+      if (usuario.perfil === 'ADMINISTRADOR' && !this.puedeEliminarAdmin()) {
+        return false;
+      }
+      return true;
+    };
+  });
+
+  // Método para obtener el tooltip dinámico del botón eliminar
+  getTooltipEliminar(usuario: Usuario): string {
+    const usuarioActual = this.authService.currentUser();
+    
+    if (usuarioActual && usuario.id === usuarioActual.id) {
+      return 'No puedes eliminar tu propia cuenta';
+    }
+    
+    if (usuario.perfil === 'ADMINISTRADOR' && !this.puedeEliminarAdmin()) {
+      return 'No se puede eliminar el último administrador';
+    }
+    
+    return 'Eliminar usuario';
+  }
+
   // Opciones del dropdown para perfil
   readonly opcionesPerfiles = [
     { value: 'ADMINISTRADOR', label: 'Administrador' },
@@ -100,7 +143,8 @@ export class UsuarioComponent implements OnInit, OnDestroy {
 
   constructor(
     public usuariosService: UsuariosService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     /*Effect para auto-limpiar mensajes después de 3 segundos
 	Se ejecuta automáticamente cuando cualquiera de sus signals dependientes cambia. para efectos secundarios
@@ -190,6 +234,22 @@ export class UsuarioComponent implements OnInit, OnDestroy {
 
   eliminarUsuario(id?: number) {
     if (id === undefined) return;
+    
+    // Buscar el usuario que se quiere eliminar
+    const usuario = this.usuariosService.usuarios().find(u => u.id === id);
+    
+    // Verificar si el usuario intenta eliminarse a sí mismo
+    const usuarioActual = this.authService.currentUser();
+    if (usuarioActual && usuario && usuarioActual.id === usuario.id) {
+      alert('No puedes eliminar tu propia cuenta mientras tienes la sesión activa. Solicita a otro administrador que realice esta acción.');
+      return;
+    }
+    
+    // Si es administrador y es el único, no permitir eliminación
+    if (usuario?.perfil === 'ADMINISTRADOR' && !this.puedeEliminarAdmin()) {
+      alert('No se puede eliminar el último administrador del sistema. Debe haber al menos un administrador activo.');
+      return;
+    }
     
     if (confirm('¿Seguro que deseas eliminar este usuario?')) {
       this.usuariosService.eliminarUsuario(id).subscribe({

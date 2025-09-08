@@ -26,7 +26,9 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   preguntas: string[] = [];
   preguntaSeleccionada: string = '';
   preguntasRespuestas: PreguntaRespuestaCategoria[] = [];
-  filtros: Filtros = {};
+  filtros: Filtros = {
+    categoria: '' // Inicializar con string vacío para que muestre "Todas las categorías"
+  };
   categorias: string[] = [];
 
   // Propiedades para tabla simplificada
@@ -113,6 +115,16 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.cargarTodasLasCategorias();
     this.cargarTodasLasPreguntas();
+    // NO cargar datos iniciales - solo mostrarlos cuando se apliquen filtros
+    // this.cargarPreguntasRespuestas(); // Comentado para no cargar datos por defecto
+    
+    // Inicializar con datos vacíos para mostrar interfaz limpia
+    this.preguntasRespuestas = [];
+    this.datosTabla = [];
+    this.datosFiltrados = [];
+    this.datosPaginados = [];
+    this.actualizarDatosGrafico();
+    this.procesarDatosTabla();
   }
 
   ngAfterViewInit() {
@@ -125,9 +137,11 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
 
   aplicarFiltros(): void {
     // Actualizar los filtros antes de cargar los datos
+    // No eliminar la propiedad categoria, solo asegurarse de que sea string vacío si no hay selección
     if (!this.filtros.categoria) {
-      delete this.filtros.categoria;
+      this.filtros.categoria = '';
     }
+    
     if (!this.preguntaSeleccionada) {
       delete (this.filtros as any).pregunta;
     } else {
@@ -148,14 +162,16 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     // Resetear la pregunta seleccionada cuando cambia la categoría
     this.preguntaSeleccionada = '';
     
-    if (!this.filtros.categoria) {
-      // Si selecciona 'Todas', eliminar el filtro y cargar todas las preguntas
-      delete this.filtros.categoria;
+    if (!this.filtros.categoria || this.filtros.categoria === '') {
+      // Si selecciona 'Todas', establecer como string vacío y cargar todas las preguntas
+      this.filtros.categoria = '';
       this.cargarTodasLasPreguntas();
     } else {
       // Si hay categoría, filtrar solo preguntas por esa categoría
       this.estadisticasService.filtrarPreguntasRespuestas({ categoria: this.filtros.categoria }).subscribe(data => {
         this.preguntas = Array.from(new Set(data.map(pr => pr.pregunta).filter(Boolean)));
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
       });
     }
   }
@@ -173,22 +189,47 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   cargarTodasLasPreguntas() {
     this.estadisticasService.filtrarPreguntasRespuestas({}).subscribe(data => {
       this.preguntas = Array.from(new Set(data.map(pr => pr.pregunta).filter(Boolean)));
+      
+      // Asegurar que el dropdown tenga el valor inicial correcto
+      if (!this.preguntaSeleccionada) {
+        this.preguntaSeleccionada = '';
+      }
+      
+      // Forzar detección de cambios después de cargar las preguntas
+      this.cdr.detectChanges();
     });
   }
 
   cargarTodasLasCategorias() {
     this.estadisticasService.filtrarPreguntasRespuestas({}).subscribe(data => {
       this.categorias = Array.from(new Set(data.map(pr => pr.categoria).filter(Boolean)));
+      
+      // Asegurar que el dropdown tenga el valor inicial correcto
+      if (!this.filtros.categoria) {
+        this.filtros.categoria = '';
+      }
+      
+      // Forzar detección de cambios después de cargar las categorías
+      this.cdr.detectChanges();
     });
   }
 
   cargarPreguntasRespuestas() {
+    // Crear una copia del filtro para enviar al backend
+    const filtrosParaBackend = { ...this.filtros };
+    
     // Si existe 'campaña', renombrar a 'campania' antes de enviar
-    if ((this.filtros as any)['campaña']) {
-      (this.filtros as any)['campania'] = (this.filtros as any)['campaña'];
-      delete (this.filtros as any)['campaña'];
+    if ((filtrosParaBackend as any)['campaña']) {
+      (filtrosParaBackend as any)['campania'] = (filtrosParaBackend as any)['campaña'];
+      delete (filtrosParaBackend as any)['campaña'];
     }
-    this.estadisticasService.filtrarPreguntasRespuestas(this.filtros).subscribe(data => {
+    
+    // Si categoria es string vacío, no enviarla al backend
+    if (filtrosParaBackend.categoria === '') {
+      delete filtrosParaBackend.categoria;
+    }
+    
+    this.estadisticasService.filtrarPreguntasRespuestas(filtrosParaBackend).subscribe(data => {
       this.preguntasRespuestas = data;
       // NO actualizar categorias aquí, solo en cargarTodasLasCategorias()
       this.zonas = Array.from(new Set(data.map((pr: any) => pr.zona).filter(Boolean)));
@@ -399,8 +440,12 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   }
 
   aplicarPaginacion() {
-    const inicio = (this.paginaActual - 1) * this.elementosPorPagina;
-    const fin = inicio + this.elementosPorPagina;
+    // Asegurar que elementosPorPagina sea un número
+    const elementosNumero = Number(this.elementosPorPagina);
+    const paginaNumero = Number(this.paginaActual);
+    
+    const inicio = (paginaNumero - 1) * elementosNumero;
+    const fin = inicio + elementosNumero;
     this.datosPaginados = this.datosFiltrados.slice(inicio, fin);
   }
 
@@ -418,12 +463,18 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   cambiarPagina(pagina: number) {
     this.paginaActual = pagina;
     this.aplicarPaginacion();
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   cambiarElementosPorPagina(cantidad: number) {
-    this.elementosPorPagina = cantidad;
+    // Asegurar que cantidad sea un número
+    const cantidadNumero = Number(cantidad);
+    this.elementosPorPagina = cantidadNumero;
     this.paginaActual = 1;
     this.aplicarPaginacion();
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   onBusquedaCambio() {
@@ -434,7 +485,8 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   }
 
   get totalPaginas(): number {
-    return Math.ceil(this.datosFiltrados.length / this.elementosPorPagina);
+    const elementosNumero = Number(this.elementosPorPagina);
+    return Math.ceil(this.datosFiltrados.length / elementosNumero);
   }
 
   get paginasDisponibles(): number[] {

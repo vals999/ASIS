@@ -1,8 +1,10 @@
-import { Component, ElementRef, ViewChild, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit, OnDestroy, signal, computed, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ReporteService, ReporteDTO } from '../../services/reporte.service';
 import { AuthService } from '../../services/auth.service';
+
+declare var bootstrap: any;
 
 @Component({
   selector: 'app-reportes',
@@ -10,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './reportes.html',
   styleUrl: './reportes.css'
 })
-export class ReportesComponent implements OnInit, OnDestroy {
+export class ReportesComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   
   // Signals para mensajes
@@ -67,6 +69,16 @@ export class ReportesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.cargarReportes();
+  }
+
+  ngAfterViewInit(): void {
+    // Inicializar tooltips de Bootstrap
+    if (typeof bootstrap !== 'undefined') {
+      const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.forEach(tooltipTriggerEl => {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -163,14 +175,45 @@ export class ReportesComponent implements OnInit, OnDestroy {
     const files = target.files;
     
     if (files && files.length > 0) {
-      // Subir cada archivo seleccionado
+      // Validar y subir cada archivo seleccionado
       for (let i = 0; i < files.length; i++) {
-        this.subirArchivo(files[i]);
+        const archivo = files[i];
+        if (this.esArchivoPermitido(archivo)) {
+          this.subirArchivo(archivo);
+        } else {
+          this._mensajeError.set(`El archivo "${archivo.name}" no es de un tipo permitido. Solo se permiten: PDF, Word (.doc/.docx), Excel (.xls/.xlsx), CSV y TXT`);
+          setTimeout(() => this._mensajeError.set(''), 5000);
+        }
       }
     }
     
     // Limpiar el input para permitir subir el mismo archivo nuevamente si es necesario
     target.value = '';
+  }
+
+  /**
+   * Valida si el archivo es de un tipo permitido
+   */
+  private esArchivoPermitido(archivo: File): boolean {
+    const extension = archivo.name.toLowerCase().split('.').pop();
+    const tiposPermitidos = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt'];
+    
+    if (extension && tiposPermitidos.includes(extension)) {
+      return true;
+    }
+    
+    // También validar por tipo MIME
+    const mimeTypesPermitidos = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv',
+      'text/plain'
+    ];
+    
+    return mimeTypesPermitidos.includes(archivo.type);
   }
 
   private subirArchivo(archivo: File): void {

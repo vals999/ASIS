@@ -169,6 +169,13 @@ public class ReporteController {
             String fileName = fileDisposition.getFileName();
             String contentType = fileDisposition.getType();
             
+            // Validar tipo de archivo permitido
+            if (!esArchivoPermitido(fileName, contentType)) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                              .entity("{\"error\": \"Tipo de archivo no permitido. Solo se permiten: PDF, Word (.doc/.docx), Excel (.xls/.xlsx), CSV y TXT\"}")
+                              .build();
+            }
+            
             // Leer el contenido del archivo
             byte[] fileContent = fileInputStream.readAllBytes();
             
@@ -305,10 +312,23 @@ public class ReporteController {
                               .build();
             }
 
+            // Validar y corregir el tipo MIME
+            String tipoMime = reporte.getTipoMime();
+            if (tipoMime == null || tipoMime.trim().isEmpty() || 
+                tipoMime.equals("form-data") || tipoMime.equals("multipart/form-data")) {
+                // Si el tipo MIME está corrupto o es form-data, usar application/octet-stream
+                tipoMime = "application/octet-stream";
+            }
+
+            String nombreArchivo = reporte.getNombreArchivoOriginal();
+            if (nombreArchivo == null || nombreArchivo.trim().isEmpty()) {
+                nombreArchivo = reporte.getNombre();
+            }
+
             return Response.ok(reporte.getContenidoArchivo())
                           .header("Content-Disposition", 
-                                 "attachment; filename=\"" + reporte.getNombreArchivoOriginal() + "\"")
-                          .header("Content-Type", reporte.getTipoMime())
+                                 "attachment; filename=\"" + nombreArchivo + "\"")
+                          .type(tipoMime)
                           .header("Content-Length", reporte.getTamanoArchivo())
                           .build();
 
@@ -403,6 +423,51 @@ public class ReporteController {
                           .entity("{\"error\": \"Error al eliminar reporte: " + e.getMessage() + "\"}")
                           .build();
         }
+    }
+
+    /**
+     * Valida si el archivo es de un tipo permitido
+     * Tipos permitidos: PDF, Word (.doc/.docx), Excel (.xls/.xlsx), CSV, TXT
+     */
+    private boolean esArchivoPermitido(String fileName, String contentType) {
+        if (fileName == null || fileName.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Obtener la extensión del archivo
+        String extension = "";
+        int lastDotIndex = fileName.lastIndexOf('.');
+        if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
+            extension = fileName.substring(lastDotIndex + 1).toLowerCase();
+        }
+        
+        // Validar por extensión de archivo
+        switch (extension) {
+            case "pdf":
+            case "doc":
+            case "docx":
+            case "xls":
+            case "xlsx":
+            case "csv":
+            case "txt":
+                return true;
+            default:
+                break;
+        }
+        
+        // Validar por content type si está disponible
+        if (contentType != null) {
+            String mimeType = contentType.toLowerCase();
+            return mimeType.equals("application/pdf") ||
+                   mimeType.equals("application/msword") ||
+                   mimeType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document") ||
+                   mimeType.equals("application/vnd.ms-excel") ||
+                   mimeType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ||
+                   mimeType.equals("text/csv") ||
+                   mimeType.equals("text/plain");
+        }
+        
+        return false;
     }
 
     private ReporteDTO convertirAReporteDTO(Reporte reporte) {

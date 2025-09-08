@@ -182,8 +182,9 @@
                         </button>
                         <button type="button" 
                                 class="btn btn-outline-danger"
+                                [disabled]="!puedeEliminarUsuario()(usuario)"
                                 (click)="eliminarUsuario(usuario.id)"
-                                title="Eliminar usuario">
+                                [title]="getTooltipEliminar(usuario)">
                           <i class="bi bi-trash"></i>
                         </button>
                       </div>

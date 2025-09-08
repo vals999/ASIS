@@ -1,5 +1,5 @@
-<!-- Sección de Importar CSV (Solo Admin) -->
-<div *ngIf="perfil === 'ADMINISTRADOR'">
+<!-- Sección de Importar CSV (Admin y Personal de Salud) -->
+<div *ngIf="perfil === 'ADMINISTRADOR' || perfil === 'PERSONAL_SALUD'">
   <div class="card border-0 shadow-sm csv-import-card">
     <div class="card-header bg-white border-bottom">
       <h5 class="card-title mb-0 d-flex align-items-center">
@@ -69,17 +69,25 @@
           <i class="bi bi-list-ul me-1"></i>
           Respuestas disponibles para esta pregunta
         </label>
+        <div *ngIf="cargandoRespuestas" class="text-center p-2">
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Cargando respuestas...
+        </div>
         <select 
+          *ngIf="!cargandoRespuestas && respuestasDisponibles.length > 0"
           id="respuestas-dropdown" 
           class="form-select dropdown-fixed"
           [(ngModel)]="respuestaSeleccionada">
           <option value="">Selecciona una respuesta...</option>
           <option 
-            *ngFor="let respuesta of respuestasDisponibles" 
+            *ngFor="let respuesta of respuestasDisponibles; trackBy: trackByRespuesta" 
             [value]="respuesta">
             {{respuesta}}
           </option>
         </select>
+        <div *ngIf="!cargandoRespuestas && respuestasDisponibles.length === 0" class="text-muted small">
+          No hay respuestas disponibles para esta pregunta.
+        </div>
       </div>
 
       <!-- Botón Filtrar -->

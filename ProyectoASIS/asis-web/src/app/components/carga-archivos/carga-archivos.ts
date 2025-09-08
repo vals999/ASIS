@@ -1,4 +1,4 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -36,7 +36,8 @@ export class CargaArchivosComponent implements OnInit {
     public authService: AuthService,
     private http: HttpClient,
     private eventService: EventService,
-    private mapaService: MapaService
+    private mapaService: MapaService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -84,6 +85,9 @@ export class CargaArchivosComponent implements OnInit {
         console.log('Preguntas cargadas:', preguntas.length);
         console.log('Preguntas Persona ordenadas:', this.preguntasPersona.length);
         console.log('Preguntas Vivienda ordenadas:', this.preguntasVivienda.length);
+        
+        // Forzar detección de cambios después de cargar las preguntas
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error al cargar preguntas hardcodeadas:', error);
@@ -241,6 +245,8 @@ export class CargaArchivosComponent implements OnInit {
       // Limpiar respuestas si no hay pregunta seleccionada
       this.respuestasDisponibles = [];
       this.respuestaSeleccionada = '';
+      // Forzar detección de cambios después de limpiar
+      this.cdr.detectChanges();
     }
   }
 
@@ -254,11 +260,22 @@ export class CargaArchivosComponent implements OnInit {
         this.respuestasDisponibles = respuestas;
         this.cargandoRespuestas = false;
         console.log(`Respuestas únicas para ${codigoPregunta}:`, respuestas.length);
+        
+        // Forzar re-renderización con timeout
+        setTimeout(() => {
+          this.cdr.detectChanges();
+          // Segundo detectChanges para asegurar que se renderice correctamente
+          setTimeout(() => {
+            this.cdr.detectChanges();
+          }, 10);
+        }, 0);
       },
       error: (error) => {
         console.error('Error al cargar respuestas:', error);
         this.cargandoRespuestas = false;
         this.respuestasDisponibles = [];
+        // Forzar detección de cambios también en caso de error
+        this.cdr.detectChanges();
       }
     });
   }
@@ -277,5 +294,10 @@ export class CargaArchivosComponent implements OnInit {
       // Notificar al mapa que debe mostrar coordenadas filtradas
       this.eventService.notifyShowFilteredMap(codigoOriginal, this.respuestaSeleccionada);
     }
+  }
+
+  // TrackBy function para optimizar el rendering del ngFor
+  trackByRespuesta(index: number, respuesta: string): string {
+    return respuesta;
   }
 }

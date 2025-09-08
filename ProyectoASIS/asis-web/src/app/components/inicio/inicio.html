@@ -1,11 +1,36 @@
-<div class="flex-fill p-4">
+<div class="flex-fill p-4 d-flex flex-column">
   <!-- Header de Bienvenida -->
-  <div class="mb-4">
+  <div class="mb-4 text-center mt-5">
     <h1 class="display-6 fw-bold text-dark mb-2">
       Bienvenido{{ authService.currentUser()?.nombre ? ', ' + authService.currentUser()?.nombre : (authService.currentUser()?.nombreUsuario ? ', ' + authService.currentUser()?.nombreUsuario : '') }}
     </h1>
     <p class="text-muted" *ngIf="perfil === 'ADMINISTRADOR'">Panel de administrador</p>
     <p class="text-muted" *ngIf="perfil === 'PERSONAL_SALUD'">Panel de personal de salud</p>
     <p class="text-muted" *ngIf="perfil === 'REFERENTE_ORG_SOCIAL'">Panel de referente de organización social</p>
+  </div>
+
+  <!-- Contenido central simple -->
+  <div class="flex-grow-1 d-flex justify-content-center" style="align-items: start; padding-top: 15%;">
+    <div class="text-center">
+      <div class="mb-4">
+        <img src="assets/logo/android-chrome-512x512.png" 
+             alt="Logo Centro de Salud Universitario" 
+             class="img-fluid" 
+             style="max-height: 120px; width: auto;">
+      </div>
+      <h4 class="text-muted fw-light mb-3">Centro de Salud Universitario</h4>
+      <p class="text-muted small">Gestión integral para la salud comunitaria</p>
+    </div>
+  </div>
+
+  <!-- Spacer para empujar el logo hacia abajo -->
+  <div class="flex-grow-1"></div>
+
+  <!-- Logo Universidad Nacional de La Plata al final de la página -->
+  <div class="text-center mt-auto mb-4">
+    <img src="assets/prosecretaria transparente.png" 
+         alt="Universidad Nacional de La Plata - Prosecretaría de Salud" 
+         class="img-fluid" 
+         style="max-height: 150px;">
   </div>
 </div>

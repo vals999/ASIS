@@ -11,6 +11,9 @@
           class="btn btn-primary"
           (click)="subirReporte()"
           [disabled]="reporteService.loading()"
+          title="Tipos de archivo permitidos: PDF, Word (.doc/.docx), Excel (.xls/.xlsx), CSV y TXT"
+          data-bs-toggle="tooltip"
+          data-bs-placement="bottom"
         >
           <i class="bi bi-upload me-2"></i>
           <span *ngIf="!reporteService.loading()">Subir Reporte</span>
@@ -27,7 +30,7 @@
     multiple 
     style="display: none;" 
     (change)="onFileSelected($event)"
-    accept="*/*"
+    accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain"
   >
 
   <!-- Filtros de visibilidad -->
