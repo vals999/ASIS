@@ -18,6 +18,179 @@
   color: #1e5a5a !important;
 }
 
+/* Estilos para dropdowns con ancho fijo */
+.dropdown-fixed-width {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.dropdown-fixed-width option {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  padding: 8px 12px !important;
+  line-height: 1.4 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  -webkit-appearance: none;
+  appearance: none;
+  direction: ltr !important;
+}
+
+/* Forzar ancho específico cuando el select está abierto */
+.dropdown-fixed-width:focus,
+.dropdown-fixed-width:active,
+.dropdown-fixed-width[size] {
+  width: 100% !important;
+  max-width: 100% !important;
+  position: relative !important;
+}
+
+/* Estilo específico para Chrome/Safari */
+@supports (-webkit-appearance: none) {
+  .dropdown-fixed-width {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+  }
+  
+  .dropdown-fixed-width option {
+    max-width: 260px !important;
+    width: 260px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+/* Para Firefox */
+@-moz-document url-prefix() {
+  .dropdown-fixed-width option {
+    max-width: 260px !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Estilo específico para el texto seleccionado */
+.dropdown-fixed-width:focus option:checked,
+.dropdown-fixed-width option:checked {
+  font-weight: 600 !important;
+  background-color: #1e5a5a !important;
+  color: white !important;
+}
+
+/* Wrapper para controlar estrictamente el ancho de los selects */
+.select-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  position: relative !important;
+  display: block !important;
+}
+
+.select-wrapper select {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* Forzar el tamaño del dropdown específicamente */
+.select-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Aplicar máximo de caracteres visualmente */
+.dropdown-fixed-width option {
+  max-width: 260px !important;
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Solución más agresiva para navegadores modernos */
+.dropdown-fixed-width {
+  clip-path: inset(0 0 0 0) !important;
+  contain: layout style !important;
+}
+
+/* Estilos adicionales para opciones largas */
+@media (max-width: 768px) {
+  .dropdown-fixed-width {
+    font-size: 0.9rem;
+  }
+}
+
+/* Estilos para el botón de limpiar edad */
+.btn-outline-danger.btn-sm {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  line-height: 1.2;
+  border-radius: 0.25rem;
+}
+
+.btn-outline-danger.btn-sm:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
+
+/* Animación para el icono de carga */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Evitar que las columnas se estiren por contenido largo */
+.col-md-3 {
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+  max-width: 28% !important;
+  width: 28% !important;
+}
+
+.col-md-3 .form-select {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Contenedor específico para los dropdowns */
+.row.g-3 .col-md-3 {
+  overflow: hidden !important;
+  max-width: 280px !important;
+  min-width: 240px !important;
+}
+
+/* Estilo específico para el contenedor de filtros */
+.card-body .row.g-3 {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  overflow: hidden !important;
+}
+
+.card-body .row.g-3 .col-md-3 {
+  flex: 0 0 280px !important;
+  max-width: 280px !important;
+  padding: 0 7.5px !important;
+}
+
 /* Estilos para cards y tablas */
 .card {
   border: 1px solid #dee2e6;

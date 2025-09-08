@@ -86,22 +86,166 @@ public class RespuestaEncuestaController {
             } else {
                 encuestaIdsFiltrados = null;
             }
+            
+            // NUEVO: Filtros múltiples - encontrar encuesta_ids que cumplan TODOS los filtros múltiples
+            final List<Long> encuestaIdsFiltrosMultiples;
+            if (filtros.getFiltrosMultiples() != null && !filtros.getFiltrosMultiples().isEmpty()) {
+                List<Long> tempEncuestaIds = new ArrayList<>();
+                
+                // Filtrar solo filtros válidos (con categoría, pregunta y respuesta)
+                List<dto.FiltroMultiple> filtrosValidos = filtros.getFiltrosMultiples().stream()
+                    .filter(f -> f.getCategoria() != null && !f.getCategoria().trim().isEmpty() &&
+                               f.getPregunta() != null && !f.getPregunta().trim().isEmpty() &&
+                               f.getRespuesta() != null && !f.getRespuesta().trim().isEmpty())
+                    .collect(Collectors.toList());
+                
+                if (!filtrosValidos.isEmpty()) {
+                    // Para cada encuesta, verificar si cumple TODOS los filtros múltiples válidos
+                    Set<Long> todasLasEncuestas = respuestas.stream()
+                        .map(r -> r.getEncuesta().getId())
+                        .collect(Collectors.toSet());
+                    
+                    for (Long encuestaId : todasLasEncuestas) {
+                        boolean cumpleTodosFiltros = true;
+                        
+                        // Verificar cada filtro múltiple válido
+                        for (dto.FiltroMultiple filtro : filtrosValidos) {
+                            boolean cumpleFiltro = false;
+                            
+                            // Manejar casos "TODAS"
+                            if ("TODAS".equalsIgnoreCase(filtro.getCategoria()) && 
+                                "TODAS".equalsIgnoreCase(filtro.getPregunta()) && 
+                                "TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                // Filtro que acepta todas las combinaciones
+                                cumpleFiltro = true;
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getCategoria()) && 
+                                      "TODAS".equalsIgnoreCase(filtro.getPregunta())) {
+                                // Todas las categorías y preguntas, respuesta específica
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getValor().equalsIgnoreCase(filtro.getRespuesta()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getCategoria()) && 
+                                      "TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                // Todas las categorías y respuestas, pregunta específica
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getPregunta()) && 
+                                      "TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                // Todas las preguntas y respuestas, categoría específica
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getCategoria() != null &&
+                                                 r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getCategoria())) {
+                                // Todas las categorías, pregunta y respuesta específicas
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta()) &&
+                                                 r.getValor().equalsIgnoreCase(filtro.getRespuesta()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getPregunta())) {
+                                // Todas las preguntas, categoría y respuesta específicas
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getCategoria() != null &&
+                                                 r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()) &&
+                                                 r.getValor().equalsIgnoreCase(filtro.getRespuesta()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                // Todas las respuestas, categoría y pregunta específicas
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getCategoria() != null &&
+                                                 r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()) &&
+                                                 r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta()));
+                            } else {
+                                // Caso normal: todos los valores específicos
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getCategoria() != null &&
+                                                 r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()) &&
+                                                 r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta()) &&
+                                                 r.getValor().equalsIgnoreCase(filtro.getRespuesta()));
+                            }
+                            
+                            if (!cumpleFiltro) {
+                                cumpleTodosFiltros = false;
+                                break;
+                            }
+                        }
+                        
+                        if (cumpleTodosFiltros) {
+                            tempEncuestaIds.add(encuestaId);
+                        }
+                    }
+                }
+                encuestaIdsFiltrosMultiples = tempEncuestaIds;
+            } else {
+                encuestaIdsFiltrosMultiples = null;
+            }
+            
             var lista = respuestas.stream()
                 .filter(r -> r.getPregunta() != null)
-                .filter(r -> filtros.getCategoria() == null || (r.getPregunta().getCategoria() != null && r.getPregunta().getCategoria().name().equalsIgnoreCase(filtros.getCategoria())))
                 .filter(r -> filtros.getTipoRespuesta() == null || (r.getPregunta().getTipoRespuesta() != null && r.getPregunta().getTipoRespuesta().name().equalsIgnoreCase(filtros.getTipoRespuesta())))
-                .filter(r -> filtros.getPregunta() == null || r.getPregunta().getTexto().equalsIgnoreCase(filtros.getPregunta()))
                 .filter(r -> {
-                    // Si hay filtro de edad, solo incluir respuestas de personas (encuesta_ids) válidas
-                    if (encuestaIdsFiltrados != null) {
-                        return encuestaIdsFiltrados.contains(r.getEncuesta().getId());
+                    Long encuestaId = r.getEncuesta().getId();
+                    
+                    // Si hay filtro de edad y no cumple, excluir
+                    if (encuestaIdsFiltrados != null && !encuestaIdsFiltrados.contains(encuestaId)) {
+                        return false;
                     }
-                    return true; // Si no hay filtro de edad, incluir todas
+                    
+                    // Si hay filtros múltiples y no cumple, excluir
+                    if (encuestaIdsFiltrosMultiples != null && !encuestaIdsFiltrosMultiples.contains(encuestaId)) {
+                        return false;
+                    }
+                    
+                    // Si SOLO hay filtros múltiples (sin filtros básicos), mostrar solo las respuestas específicas de los filtros múltiples
+                    if (encuestaIdsFiltrosMultiples != null && !encuestaIdsFiltrosMultiples.isEmpty() &&
+                        filtros.getFiltrosMultiples() != null && !filtros.getFiltrosMultiples().isEmpty()) {
+                        
+                        // Verificar si esta respuesta específica coincide con algún filtro múltiple
+                        boolean coincideConFiltroMultiple = filtros.getFiltrosMultiples().stream()
+                            .anyMatch(filtro -> {
+                                // Si todos son "TODAS", incluir todas las respuestas
+                                if ("TODAS".equalsIgnoreCase(filtro.getCategoria()) && 
+                                    "TODAS".equalsIgnoreCase(filtro.getPregunta()) && 
+                                    "TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                    return true;
+                                }
+                                
+                                // Verificar categoria
+                                boolean categoriaMatch = "TODAS".equalsIgnoreCase(filtro.getCategoria()) ||
+                                    (r.getPregunta().getCategoria() != null && 
+                                     r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()));
+                                
+                                // Verificar pregunta
+                                boolean preguntaMatch = "TODAS".equalsIgnoreCase(filtro.getPregunta()) ||
+                                    r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta());
+                                
+                                // Verificar respuesta
+                                boolean respuestaMatch = "TODAS".equalsIgnoreCase(filtro.getRespuesta()) ||
+                                    r.getValor().equalsIgnoreCase(filtro.getRespuesta());
+                                
+                                return categoriaMatch && preguntaMatch && respuestaMatch;
+                            });
+                        
+                        return coincideConFiltroMultiple;
+                    }
+                    
+                    return true;
                 })
                 .map(r -> new PreguntaRespuestaCategoriaDTO(
                     r.getPregunta().getTexto(),
                     r.getValor(),
-                    r.getPregunta().getCategoria() != null ? r.getPregunta().getCategoria().name() : null
+                    r.getPregunta().getCategoria() != null ? r.getPregunta().getCategoria().name() : null,
+                    r.getEncuesta().getId()
                 ))
                 .toList();
                 
@@ -126,7 +270,8 @@ public class RespuestaEncuestaController {
                 .map(r -> new PreguntaRespuestaCategoriaDTO(
                     r.getPregunta().getTexto(),
                     r.getValor(),
-                    r.getPregunta().getCategoria() != null ? r.getPregunta().getCategoria().name() : null
+                    r.getPregunta().getCategoria() != null ? r.getPregunta().getCategoria().name() : null,
+                    r.getEncuesta().getId()
                 ))
                 .toList();
             return Response.ok(lista).build();
