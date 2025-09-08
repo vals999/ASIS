@@ -205,7 +205,7 @@ export class ZonaComponent implements OnInit, OnDestroy {
     }
     
     this.zonaService.crearZona(zona).subscribe({
-      next: () => {
+      next: (nuevaZonaCreada) => {
         this._mensajeExito.set('Zona creada exitosamente');
         
         // Limpiar formulario
@@ -217,6 +217,12 @@ export class ZonaComponent implements OnInit, OnDestroy {
         
         // Limpiar búsqueda
         this._search.set('');
+        
+        // Cerrar el formulario de alta
+        this._mostrarFormularioAlta.set(false);
+        
+        // Forzar actualización de la vista obteniendo las zonas del servidor
+        this.obtenerZonas();
       },
       error: (error) => {
         console.error('Error al crear zona:', error);
@@ -258,15 +264,13 @@ export class ZonaComponent implements OnInit, OnDestroy {
       if (confirm('¿Seguro que deseas editar esta zona?')) {
         this.zonaService.actualizarZona(zona.id, zona).subscribe({
           next: (zonaActualizada) => {
-            // Actualizar el formulario con los datos actualizados
-            this.zonaEditada.set({
-              id: zonaActualizada.id,
-              nombre: zonaActualizada.nombre,
-              geolocalizacion: zonaActualizada.geolocalizacion,
-              barrio: zonaActualizada.barrio
-            });
-            
             this._mensajeEdicion.set('Zona actualizada exitosamente');
+            
+            // Cancelar edición primero
+            this.cancelarEdicion();
+            
+            // Forzar actualización de la vista obteniendo las zonas del servidor
+            this.obtenerZonas();
           },
           error: (error) => {
             console.error('Error al actualizar zona:', error);

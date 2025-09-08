@@ -212,7 +212,7 @@ export class CampaniaComponent implements OnInit, OnDestroy {
     }
     
     this.campaniaService.crearCampania(campania).subscribe({
-      next: () => {
+      next: (nuevaCampaniaCreada) => {
         this._mensajeExito.set('Campaña creada exitosamente');
         
         // Limpiar formulario
@@ -225,6 +225,12 @@ export class CampaniaComponent implements OnInit, OnDestroy {
         
         // Limpiar búsqueda
         this._search.set('');
+        
+        // Cerrar el formulario de alta
+        this._mostrarFormularioAlta.set(false);
+        
+        // Forzar actualización de la vista obteniendo las campañas del servidor
+        this.obtenerCampanias();
       },
       error: (error) => {
         console.error('Error al crear campaña:', error);
@@ -268,15 +274,13 @@ export class CampaniaComponent implements OnInit, OnDestroy {
       if (confirm('¿Seguro que deseas editar esta campaña?')) {
         this.campaniaService.actualizarCampania(campania.id, campania).subscribe({
           next: (campaniaActualizada) => {
-            // Actualizar el formulario con los datos actualizados
-            this.campaniaEditada.set({
-              id: campaniaActualizada.id,
-              nombre: campaniaActualizada.nombre,
-              fechaInicio: campaniaActualizada.fechaInicio,
-              fechaFin: campaniaActualizada.fechaFin
-            });
-            
             this._mensajeEdicion.set('Campaña actualizada exitosamente');
+            
+            // Cancelar edición primero
+            this.cancelarEdicion();
+            
+            // Forzar actualización de la vista obteniendo las campañas del servidor
+            this.obtenerCampanias();
           },
           error: (error) => {
             console.error('Error al actualizar campaña:', error);
