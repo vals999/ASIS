@@ -19,23 +19,18 @@
       </h5>
     </div>
     <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label for="categoriaDropdown" class="form-label fw-medium">Filtrar por categoría:</label>
-          <select id="categoriaDropdown" [(ngModel)]="filtros.categoria" (ngModelChange)="onCategoriaChange()" class="form-select">
-            <option value="">Todas las categorías</option>
-            <option *ngFor="let categoria of categorias" [value]="categoria">{{ categoria }}</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label for="preguntaDropdown" class="form-label fw-medium">Filtrar por pregunta:</label>
-          <select id="preguntaDropdown" [(ngModel)]="preguntaSeleccionada" class="form-select">
-            <option value="">Todas las preguntas</option>
-            <option *ngFor="let pregunta of preguntas" [value]="pregunta">{{ pregunta }}</option>
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label fw-medium">Rango de edad:</label>
+      <!-- Filtro de edad global (fila 1) -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label fw-medium mb-0">Rango de edad (global):</label>
+            <button *ngIf="filtros.edadDesde || filtros.edadHasta" 
+                    (click)="limpiarRangoEdad()" 
+                    class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-x me-1"></i>
+              Limpiar edad
+            </button>
+          </div>
           <div class="d-flex gap-2">
             <select [(ngModel)]="filtros.edadDesde" class="form-select">
               <option value="">Desde</option>
@@ -47,11 +42,105 @@
             </select>
           </div>
         </div>
-        <div class="col-md-1 d-flex align-items-end">
-          <button (click)="aplicarFiltros()" class="btn btn-primary w-100">
-            <i class="bi bi-search me-1"></i>
-            Aplicar
+      </div>
+
+      <!-- Filtros múltiples (fila 2) -->
+      <div class="row g-3 mb-3">
+        <div class="col-12">
+          <h6 class="mb-2">
+            <i class="bi bi-layers me-2"></i>
+            Filtros Múltiples
+          </h6>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-medium">Categoría:</label>
+          <div class="select-wrapper">
+            <select [(ngModel)]="nuevaCategoria" (ngModelChange)="onCategoriaNuevaChange()" 
+                    class="form-select dropdown-fixed-width">
+              <option value="">Seleccionar categoría</option>
+              <option value="TODAS" title="Todas las categorías">Todas las categorías</option>
+              <option *ngFor="let categoria of categorias; trackBy: trackByIndex" 
+                      [value]="categoria" 
+                      [title]="categoria">{{ truncateText(categoria, 45) }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-medium">Pregunta:</label>
+          <div class="select-wrapper">
+            <select [(ngModel)]="nuevaPregunta" (ngModelChange)="onPreguntaNuevaChange()" 
+                    class="form-select dropdown-fixed-width" [disabled]="!nuevaCategoria">
+              <option value="">Seleccionar pregunta</option>
+              <option value="TODAS" title="Todas las preguntas">Todas las preguntas</option>
+              <option *ngFor="let pregunta of preguntasPorCategoria; trackBy: trackByIndex" 
+                      [value]="pregunta" 
+                      [title]="pregunta">{{ truncateText(pregunta, 45) }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label fw-medium">Respuesta:</label>
+          <div class="select-wrapper">
+            <select [(ngModel)]="nuevaRespuesta" 
+                    class="form-select dropdown-fixed-width" [disabled]="!nuevaPregunta">
+              <option value="">Seleccionar respuesta</option>
+              <option value="TODAS" title="Todas las respuestas">Todas las respuestas</option>
+              <option *ngFor="let respuesta of respuestasPorPregunta; trackBy: trackByIndex" 
+                      [value]="respuesta" 
+                      [title]="respuesta">{{ truncateText(respuesta, 45) }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button (click)="agregarFiltroMultiple()" 
+                  [disabled]="!nuevaCategoria || !nuevaPregunta || !nuevaRespuesta" 
+                  class="btn btn-success w-100">
+            <i class="bi bi-plus me-1"></i>
+            Agregar Filtro
           </button>
+        </div>
+      </div>
+
+      <!-- Lista de filtros múltiples aplicados -->
+      <div class="row g-3 mb-3" *ngIf="filtrosMultiples.length > 0">
+        <div class="col-12">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label fw-medium mb-0">Filtros aplicados:</label>
+            <button (click)="limpiarTodosFiltros()" 
+                    class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-trash me-1"></i>
+              Limpiar Todos
+            </button>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <span *ngFor="let filtro of filtrosMultiples; let i = index" 
+                  class="badge bg-info d-flex align-items-center">
+              <small>{{ filtro.categoria }} > {{ filtro.pregunta }}: {{ filtro.respuesta }}</small>
+              <button type="button" 
+                      class="btn-close btn-close-white ms-2" 
+                      (click)="eliminarFiltroMultiple(i)"
+                      style="font-size: 0.7em;">
+              </button>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón aplicar filtros -->
+      <div class="row g-3">
+        <div class="col-12 text-center">
+          <button (click)="aplicarFiltros()" 
+                  [disabled]="!tieneAlgunFiltroActivo() || cargandoFiltros"
+                  class="btn btn-primary btn-lg">
+            <i *ngIf="!cargandoFiltros" class="bi bi-search me-2"></i>
+            <i *ngIf="cargandoFiltros" class="bi bi-arrow-clockwise spin me-2"></i>
+            <span *ngIf="!cargandoFiltros">Aplicar Filtros</span>
+            <span *ngIf="cargandoFiltros">Cargando...</span>
+          </button>
+          <div *ngIf="!tieneAlgunFiltroActivo()" class="text-muted mt-2 small">
+            <i class="bi bi-info-circle me-1"></i>
+            Debes agregar al menos un filtro múltiple completo (categoría + pregunta + respuesta) para realizar la búsqueda
+          </div>
         </div>
       </div>
     </div>
@@ -292,23 +381,6 @@
               </div>
             </div>
 
-            <!-- Información adicional -->
-            @if (preguntaSeleccionada) {
-              <div class="mt-4 p-3 bg-light rounded">
-                <h6 class="mb-2">
-                  <i class="bi bi-info-circle me-2"></i>
-                  Información del filtro
-                </h6>
-                <p class="mb-0 text-muted">
-                  <strong>Pregunta seleccionada:</strong> {{ preguntaSeleccionada }}
-                </p>
-                @if (filtros.categoria) {
-                  <p class="mb-0 text-muted">
-                    <strong>Categoría:</strong> {{ filtros.categoria }}
-                  </p>
-                }
-              </div>
-            }
           } @else {
             <div class="text-center py-5">
               <i class="bi bi-clipboard-data display-1 text-muted mb-3" style="opacity: 0.3;"></i>

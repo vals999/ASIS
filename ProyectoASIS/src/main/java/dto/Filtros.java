@@ -1,6 +1,7 @@
 package dto;
 
 import java.util.Date;
+import java.util.List;
 
 public class Filtros {
     private String pregunta;
@@ -62,4 +63,9 @@ public class Filtros {
 
     public String getEncuestador() { return encuestador; }
     public void setEncuestador(String encuestador) { this.encuestador = encuestador; }
+    
+    // NUEVO: Filtros múltiples (categor​ía + pregunta + respuesta)
+    private List<FiltroMultiple> filtrosMultiples;
+    public List<FiltroMultiple> getFiltrosMultiples() { return filtrosMultiples; }
+    public void setFiltrosMultiples(List<FiltroMultiple> filtrosMultiples) { this.filtrosMultiples = filtrosMultiples; }
 }

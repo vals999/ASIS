@@ -3,6 +3,7 @@ package controller;
 
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 
@@ -49,43 +50,205 @@ public class RespuestaEncuestaController {
     public Response filtrarPreguntasRespuestas(dto.Filtros filtros) {
         try {
             List<RespuestaEncuesta> respuestas = respuestaEncuestaDAO.obtenerTodos();
+            
             // Si hay filtro de edad, obtener los encuesta_id que cumplen el rango
             final List<Long> encuestaIdsFiltrados;
             if (filtros.getEdadDesde() != null || filtros.getEdadHasta() != null) {
-                encuestaIdsFiltrados = respuestas.stream()
-                    .filter(r -> r.getPregunta() != null && r.getPregunta().getTexto().toLowerCase().contains("edad"))
-                    .map(r -> {
-                        try {
-                            return new Object[]{r.getEncuesta().getId(), Integer.parseInt(r.getValor())};
-                        } catch (Exception ex) {
-                            return null;
+                encuestaIdsFiltrados = new ArrayList<>();
+                Set<Long> encuestasYaProcesadas = new HashSet<>(); // Para evitar duplicados
+                
+                // Cada encuesta_id representa UNA PERSONA, buscar su edad
+                for (RespuestaEncuesta r : respuestas) {
+                    if (r.getPregunta() != null && "Edad".equals(r.getPregunta().getTexto())) {
+                        Long encuestaId = r.getEncuesta().getId();
+                        
+                        // Si ya procesamos esta encuesta, ignorar edades duplicadas
+                        if (encuestasYaProcesadas.contains(encuestaId)) {
+                            continue;
                         }
-                    })
-                    .filter(obj -> obj != null)
-                    .filter(obj -> {
-                        Integer edad = (Integer) ((Object[]) obj)[1];
-                        boolean desde = filtros.getEdadDesde() == null || edad >= filtros.getEdadDesde();
-                        boolean hasta = filtros.getEdadHasta() == null || edad <= filtros.getEdadHasta();
-                        return desde && hasta;
-                    })
-                    .map(obj -> (Long) ((Object[]) obj)[0])
-                    .distinct()
-                    .toList();
+                        
+                        encuestasYaProcesadas.add(encuestaId);
+                        
+                        try {
+                            Integer edad = Integer.parseInt(r.getValor());
+                            boolean desde = filtros.getEdadDesde() == null || edad >= filtros.getEdadDesde();
+                            boolean hasta = filtros.getEdadHasta() == null || edad <= filtros.getEdadHasta();
+                            boolean cumple = desde && hasta;
+                            
+                            if (cumple) {
+                                encuestaIdsFiltrados.add(encuestaId);
+                            }
+                        } catch (NumberFormatException ex) {
+                            // Ignorar valores de edad no numéricos
+                        }
+                    }
+                }
             } else {
                 encuestaIdsFiltrados = null;
             }
+            
+            // NUEVO: Filtros múltiples - encontrar encuesta_ids que cumplan TODOS los filtros múltiples
+            final List<Long> encuestaIdsFiltrosMultiples;
+            if (filtros.getFiltrosMultiples() != null && !filtros.getFiltrosMultiples().isEmpty()) {
+                List<Long> tempEncuestaIds = new ArrayList<>();
+                
+                // Filtrar solo filtros válidos (con categoría, pregunta y respuesta)
+                List<dto.FiltroMultiple> filtrosValidos = filtros.getFiltrosMultiples().stream()
+                    .filter(f -> f.getCategoria() != null && !f.getCategoria().trim().isEmpty() &&
+                               f.getPregunta() != null && !f.getPregunta().trim().isEmpty() &&
+                               f.getRespuesta() != null && !f.getRespuesta().trim().isEmpty())
+                    .collect(Collectors.toList());
+                
+                if (!filtrosValidos.isEmpty()) {
+                    // Para cada encuesta, verificar si cumple TODOS los filtros múltiples válidos
+                    Set<Long> todasLasEncuestas = respuestas.stream()
+                        .map(r -> r.getEncuesta().getId())
+                        .collect(Collectors.toSet());
+                    
+                    for (Long encuestaId : todasLasEncuestas) {
+                        boolean cumpleTodosFiltros = true;
+                        
+                        // Verificar cada filtro múltiple válido
+                        for (dto.FiltroMultiple filtro : filtrosValidos) {
+                            boolean cumpleFiltro = false;
+                            
+                            // Manejar casos "TODAS"
+                            if ("TODAS".equalsIgnoreCase(filtro.getCategoria()) && 
+                                "TODAS".equalsIgnoreCase(filtro.getPregunta()) && 
+                                "TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                // Filtro que acepta todas las combinaciones
+                                cumpleFiltro = true;
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getCategoria()) && 
+                                      "TODAS".equalsIgnoreCase(filtro.getPregunta())) {
+                                // Todas las categorías y preguntas, respuesta específica
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getValor().equalsIgnoreCase(filtro.getRespuesta()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getCategoria()) && 
+                                      "TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                // Todas las categorías y respuestas, pregunta específica
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getPregunta()) && 
+                                      "TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                // Todas las preguntas y respuestas, categoría específica
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getCategoria() != null &&
+                                                 r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getCategoria())) {
+                                // Todas las categorías, pregunta y respuesta específicas
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta()) &&
+                                                 r.getValor().equalsIgnoreCase(filtro.getRespuesta()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getPregunta())) {
+                                // Todas las preguntas, categoría y respuesta específicas
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getCategoria() != null &&
+                                                 r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()) &&
+                                                 r.getValor().equalsIgnoreCase(filtro.getRespuesta()));
+                            } else if ("TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                // Todas las respuestas, categoría y pregunta específicas
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getCategoria() != null &&
+                                                 r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()) &&
+                                                 r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta()));
+                            } else {
+                                // Caso normal: todos los valores específicos
+                                cumpleFiltro = respuestas.stream()
+                                    .anyMatch(r -> r.getEncuesta().getId().equals(encuestaId) &&
+                                                 r.getPregunta() != null &&
+                                                 r.getPregunta().getCategoria() != null &&
+                                                 r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()) &&
+                                                 r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta()) &&
+                                                 r.getValor().equalsIgnoreCase(filtro.getRespuesta()));
+                            }
+                            
+                            if (!cumpleFiltro) {
+                                cumpleTodosFiltros = false;
+                                break;
+                            }
+                        }
+                        
+                        if (cumpleTodosFiltros) {
+                            tempEncuestaIds.add(encuestaId);
+                        }
+                    }
+                }
+                encuestaIdsFiltrosMultiples = tempEncuestaIds;
+            } else {
+                encuestaIdsFiltrosMultiples = null;
+            }
+            
             var lista = respuestas.stream()
                 .filter(r -> r.getPregunta() != null)
-                .filter(r -> filtros.getCategoria() == null || (r.getPregunta().getCategoria() != null && r.getPregunta().getCategoria().name().equalsIgnoreCase(filtros.getCategoria())))
                 .filter(r -> filtros.getTipoRespuesta() == null || (r.getPregunta().getTipoRespuesta() != null && r.getPregunta().getTipoRespuesta().name().equalsIgnoreCase(filtros.getTipoRespuesta())))
-                .filter(r -> filtros.getPregunta() == null || r.getPregunta().getTexto().equalsIgnoreCase(filtros.getPregunta()))
-                .filter(r -> encuestaIdsFiltrados == null || encuestaIdsFiltrados.contains(r.getEncuesta().getId()))
+                .filter(r -> {
+                    Long encuestaId = r.getEncuesta().getId();
+                    
+                    // Si hay filtro de edad y no cumple, excluir
+                    if (encuestaIdsFiltrados != null && !encuestaIdsFiltrados.contains(encuestaId)) {
+                        return false;
+                    }
+                    
+                    // Si hay filtros múltiples y no cumple, excluir
+                    if (encuestaIdsFiltrosMultiples != null && !encuestaIdsFiltrosMultiples.contains(encuestaId)) {
+                        return false;
+                    }
+                    
+                    // Si SOLO hay filtros múltiples (sin filtros básicos), mostrar solo las respuestas específicas de los filtros múltiples
+                    if (encuestaIdsFiltrosMultiples != null && !encuestaIdsFiltrosMultiples.isEmpty() &&
+                        filtros.getFiltrosMultiples() != null && !filtros.getFiltrosMultiples().isEmpty()) {
+                        
+                        // Verificar si esta respuesta específica coincide con algún filtro múltiple
+                        boolean coincideConFiltroMultiple = filtros.getFiltrosMultiples().stream()
+                            .anyMatch(filtro -> {
+                                // Si todos son "TODAS", incluir todas las respuestas
+                                if ("TODAS".equalsIgnoreCase(filtro.getCategoria()) && 
+                                    "TODAS".equalsIgnoreCase(filtro.getPregunta()) && 
+                                    "TODAS".equalsIgnoreCase(filtro.getRespuesta())) {
+                                    return true;
+                                }
+                                
+                                // Verificar categoria
+                                boolean categoriaMatch = "TODAS".equalsIgnoreCase(filtro.getCategoria()) ||
+                                    (r.getPregunta().getCategoria() != null && 
+                                     r.getPregunta().getCategoria().name().equalsIgnoreCase(filtro.getCategoria()));
+                                
+                                // Verificar pregunta
+                                boolean preguntaMatch = "TODAS".equalsIgnoreCase(filtro.getPregunta()) ||
+                                    r.getPregunta().getTexto().equalsIgnoreCase(filtro.getPregunta());
+                                
+                                // Verificar respuesta
+                                boolean respuestaMatch = "TODAS".equalsIgnoreCase(filtro.getRespuesta()) ||
+                                    r.getValor().equalsIgnoreCase(filtro.getRespuesta());
+                                
+                                return categoriaMatch && preguntaMatch && respuestaMatch;
+                            });
+                        
+                        return coincideConFiltroMultiple;
+                    }
+                    
+                    return true;
+                })
                 .map(r -> new PreguntaRespuestaCategoriaDTO(
                     r.getPregunta().getTexto(),
                     r.getValor(),
-                    r.getPregunta().getCategoria() != null ? r.getPregunta().getCategoria().name() : null
+                    r.getPregunta().getCategoria() != null ? r.getPregunta().getCategoria().name() : null,
+                    r.getEncuesta().getId()
                 ))
                 .toList();
+                
             return Response.ok(lista).build();
         } catch (Exception e) {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
@@ -107,7 +270,8 @@ public class RespuestaEncuestaController {
                 .map(r -> new PreguntaRespuestaCategoriaDTO(
                     r.getPregunta().getTexto(),
                     r.getValor(),
-                    r.getPregunta().getCategoria() != null ? r.getPregunta().getCategoria().name() : null
+                    r.getPregunta().getCategoria() != null ? r.getPregunta().getCategoria().name() : null,
+                    r.getEncuesta().getId()
                 ))
                 .toList();
             return Response.ok(lista).build();
@@ -152,15 +316,11 @@ public class RespuestaEncuestaController {
         try {
             List<RespuestaEncuesta> respuestas = respuestaEncuestaDAO.obtenerNoBorrados();
             
-            System.out.println("Total respuestas encontradas: " + respuestas.size());
-            
             // Filtrar solo las respuestas de preguntas 1 y 2 (latitud y longitud)
             List<RespuestaEncuesta> respuestasCoordenas = respuestas.stream()
                 .filter(r -> r.getPregunta() != null && 
                            (r.getPregunta().getId() == 1 || r.getPregunta().getId() == 2))
                 .collect(Collectors.toList());
-                
-            System.out.println("Respuestas con coordenadas encontradas: " + respuestasCoordenas.size());
             
             // Separar latitudes y longitudes
             List<RespuestaEncuesta> latitudes = respuestasCoordenas.stream()
@@ -172,9 +332,6 @@ public class RespuestaEncuestaController {
                 .filter(r -> r.getPregunta().getId() == 2)
                 .sorted((a, b) -> a.getId().compareTo(b.getId())) // Ordenar por ID
                 .collect(Collectors.toList());
-            
-            System.out.println("Latitudes encontradas: " + latitudes.size());
-            System.out.println("Longitudes encontradas: " + longitudes.size());
             
             // Crear coordenadas válidas emparejando secuencialmente
             List<CoordenadaMapaDTO> coordenadasCompletas = new ArrayList<>();
@@ -203,19 +360,12 @@ public class RespuestaEncuestaController {
                             "Ubicación " + (i + 1)
                         );
                         coordenadasCompletas.add(coordenada);
-                        
-                        System.out.println("Coordenada " + (i + 1) + "emparejada secuencialmente:");
-                        System.out.println("  Latitud: " + latitud + " (Respuesta ID: " + respuestaLatitud.getId() + ")");
-                        System.out.println("  Longitud: " + longitud + " (Respuesta ID: " + respuestaLongitud.getId() + ")");
-                    } else {
-                        System.out.println("Coordenada fuera de rango ignorada - Lat: " + latitud + ", Lng: " + longitud);
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println("Error al parsear coordenadas en índice " + i + ": " + e.getMessage());
+                    // Ignorar coordenadas con formato inválido
                 }
             }
             
-            System.out.println("Coordenadas completas generadas: " + coordenadasCompletas.size());
             return Response.ok(coordenadasCompletas).build();
             
         } catch (Exception e) {
@@ -230,19 +380,12 @@ public class RespuestaEncuestaController {
     public Response obtenerCoordenadasFiltradas(@QueryParam("preguntaCodigo") String preguntaCodigo, 
                                                @QueryParam("respuestaValor") String respuestaValor) {
         try {
-            System.out.println("Filtrando coordenadas - Pregunta: " + preguntaCodigo + ", Respuesta: " + respuestaValor);
-            
             // Obtener respuestas que coincidan con la pregunta y valor específicos
             List<RespuestaEncuesta> respuestasFiltradas = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaYValor(preguntaCodigo, respuestaValor);
-            
-            System.out.println("Respuestas filtradas encontradas: " + respuestasFiltradas.size());
             
             // Obtener todas las respuestas de latitud y longitud
             List<RespuestaEncuesta> todasLatitudes = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaCodigo("lat_1_Presione_actualiza");
             List<RespuestaEncuesta> todasLongitudes = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaCodigo("long_1_Presione_actualiza");
-            
-            System.out.println("Total latitudes disponibles: " + todasLatitudes.size());
-            System.out.println("Total longitudes disponibles: " + todasLongitudes.size());
             
             List<CoordenadaMapaDTO> coordenadasFiltradas = new ArrayList<>();
             

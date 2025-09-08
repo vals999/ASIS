@@ -4,6 +4,7 @@ public class PreguntaRespuestaCategoriaDTO {
     private String pregunta;
     private String respuesta;
     private String categoria;
+    private Long encuestaId;
 
     public PreguntaRespuestaCategoriaDTO() {}
 
@@ -11,6 +12,13 @@ public class PreguntaRespuestaCategoriaDTO {
         this.pregunta = pregunta;
         this.respuesta = respuesta;
         this.categoria = categoria;
+    }
+
+    public PreguntaRespuestaCategoriaDTO(String pregunta, String respuesta, String categoria, Long encuestaId) {
+        this.pregunta = pregunta;
+        this.respuesta = respuesta;
+        this.categoria = categoria;
+        this.encuestaId = encuestaId;
     }
 
     public String getPregunta() {
@@ -35,5 +43,13 @@ public class PreguntaRespuestaCategoriaDTO {
 
     public void setCategoria(String categoria) {
         this.categoria = categoria;
+    }
+
+    public Long getEncuestaId() {
+        return encuestaId;
+    }
+
+    public void setEncuestaId(Long encuestaId) {
+        this.encuestaId = encuestaId;
     }
 }

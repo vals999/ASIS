@@ -2,7 +2,7 @@ import { BaseChartDirective } from 'ng2-charts';
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { EstadisticasService, PreguntaRespuestaCategoria, Filtros } from '../../services/estadisticas.service';
+import { EstadisticasService, PreguntaRespuestaCategoria, Filtros, FiltroMultiple } from '../../services/estadisticas.service';
 import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
@@ -23,18 +23,34 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   sexos: string[] = [];
   edades: number[] = [];
   edadRango: number[] = Array.from({length: 101}, (_, i) => i);
-  preguntas: string[] = [];
-  preguntaSeleccionada: string = '';
   preguntasRespuestas: PreguntaRespuestaCategoria[] = [];
   filtros: Filtros = {
-    categoria: '' // Inicializar con string vacío para que muestre "Todas las categorías"
+    edadDesde: undefined,
+    edadHasta: undefined,
+    filtrosMultiples: []
   };
   categorias: string[] = [];
+
+  // NUEVO: Filtros múltiples (categoría + pregunta + respuesta)
+  filtrosMultiples: FiltroMultiple[] = [];
+  
+  // Campos para nuevo filtro múltiple
+  nuevaCategoria: string = '';
+  nuevaPregunta: string = '';
+  nuevaRespuesta: string = '';
+  
+  // Datos dinámicos para filtros múltiples
+  preguntasPorCategoria: string[] = [];
+  respuestasPorPregunta: string[] = [];
+  todasLasRespuestas: any[] = [];
 
   // Propiedades para tabla simplificada
   busquedaTexto: string = '';
   columnaOrdenamiento: string = '';
   direccionOrdenamiento: 'asc' | 'desc' = 'asc';
+  
+  // Control de estado de carga
+  cargandoFiltros: boolean = false;
   paginaActual: number = 1;
   elementosPorPagina: number = 10;
   opcionesPaginacion: number[] = [5, 10, 20, 50];
@@ -114,17 +130,11 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.cargarTodasLasCategorias();
-    this.cargarTodasLasPreguntas();
-    // NO cargar datos iniciales - solo mostrarlos cuando se apliquen filtros
-    // this.cargarPreguntasRespuestas(); // Comentado para no cargar datos por defecto
+    // NO cargar datos iniciales automáticamente
+    // Los datos se cargarán solo cuando el usuario haga clic en "Aplicar filtros"
     
-    // Inicializar con datos vacíos para mostrar interfaz limpia
-    this.preguntasRespuestas = [];
-    this.datosTabla = [];
-    this.datosFiltrados = [];
-    this.datosPaginados = [];
-    this.actualizarDatosGrafico();
-    this.procesarDatosTabla();
+    // Inicializar tabla vacía
+    this.inicializarTablaVacia();
   }
 
   ngAfterViewInit() {
@@ -136,17 +146,13 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   }
 
   aplicarFiltros(): void {
-    // Actualizar los filtros antes de cargar los datos
-    // No eliminar la propiedad categoria, solo asegurarse de que sea string vacío si no hay selección
-    if (!this.filtros.categoria) {
-      this.filtros.categoria = '';
+    // Evitar múltiples ejecuciones simultáneas
+    if (this.cargandoFiltros) {
+      return;
     }
     
-    if (!this.preguntaSeleccionada) {
-      delete (this.filtros as any).pregunta;
-    } else {
-      (this.filtros as any).pregunta = this.preguntaSeleccionada;
-    }
+    this.cargandoFiltros = true;
+    
     // Edad: si no hay valor, eliminar del filtro
     if (!this.filtros.edadDesde) {
       delete this.filtros.edadDesde;
@@ -154,63 +160,201 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     if (!this.filtros.edadHasta) {
       delete this.filtros.edadHasta;
     }
-    // Ahora sí cargar los datos y el gráfico
-    this.cargarPreguntasRespuestas();
+    
+    // Agregar filtros múltiples si existen
+    if (this.filtrosMultiples.length > 0) {
+      this.filtros.filtrosMultiples = [...this.filtrosMultiples];
+    } else {
+      delete this.filtros.filtrosMultiples;
+    }
+    
+    // Forzar detección de cambios antes de cargar datos
+    this.cdr.detectChanges();
+    
+    // Usar setTimeout para asegurar que la detección de cambios se complete
+    setTimeout(() => {
+      this.cargarPreguntasRespuestas();
+    }, 0);
   }
 
-  onCategoriaChange() {
-    // Resetear la pregunta seleccionada cuando cambia la categoría
-    this.preguntaSeleccionada = '';
+  // NUEVO: Métodos para filtros múltiples
+  onCategoriaNuevaChange() {
+    // Cuando cambia la categoría del nuevo filtro, cargar sus preguntas
+    this.nuevaPregunta = '';
+    this.nuevaRespuesta = '';
+    this.respuestasPorPregunta = [];
     
-    if (!this.filtros.categoria || this.filtros.categoria === '') {
-      // Si selecciona 'Todas', establecer como string vacío y cargar todas las preguntas
-      this.filtros.categoria = '';
-      this.cargarTodasLasPreguntas();
+    if (this.nuevaCategoria && this.nuevaCategoria !== 'TODAS') {
+      // Categoría específica - filtrar preguntas de esa categoría solamente
+      this.preguntasPorCategoria = Array.from(new Set(
+        this.todasLasRespuestas
+          .filter(pr => pr.categoria === this.nuevaCategoria)
+          .map(pr => pr.pregunta)
+          .filter(Boolean)
+      ));
+      // Forzar detección de cambios
+      this.cdr.detectChanges();
+    } else if (this.nuevaCategoria === 'TODAS') {
+      // Todas las categorías - cargar todas las preguntas
+      this.preguntasPorCategoria = Array.from(new Set(
+        this.todasLasRespuestas
+          .map(pr => pr.pregunta)
+          .filter(Boolean)
+      ));
+      // Forzar detección de cambios
+      this.cdr.detectChanges();
     } else {
-      // Si hay categoría, filtrar solo preguntas por esa categoría
-      this.estadisticasService.filtrarPreguntasRespuestas({ categoria: this.filtros.categoria }).subscribe(data => {
-        this.preguntas = Array.from(new Set(data.map(pr => pr.pregunta).filter(Boolean)));
+      this.preguntasPorCategoria = [];
+      this.cdr.detectChanges();
+    }
+  }
+
+  onPreguntaNuevaChange() {
+    // Cuando cambia la pregunta del nuevo filtro, cargar sus respuestas
+    this.nuevaRespuesta = '';
+    
+    if (this.nuevaPregunta && this.nuevaCategoria) {
+      if (this.nuevaPregunta === 'TODAS') {
+        // Todas las preguntas - mostrar todas las respuestas de la categoría
+        if (this.nuevaCategoria === 'TODAS') {
+          this.respuestasPorPregunta = Array.from(new Set(
+            this.todasLasRespuestas
+              .map(pr => pr.respuesta)
+              .filter(Boolean)
+          ));
+        } else {
+          this.respuestasPorPregunta = Array.from(new Set(
+            this.todasLasRespuestas
+              .filter(pr => pr.categoria === this.nuevaCategoria)
+              .map(pr => pr.respuesta)
+              .filter(Boolean)
+          ));
+        }
         // Forzar detección de cambios
         this.cdr.detectChanges();
-      });
-    }
-  }
-
-  onPreguntaSeleccionada(pregunta: string) {
-    this.preguntaSeleccionada = pregunta;
-    if (!pregunta) {
-      // Si selecciona 'Todas', eliminar el filtro
-      delete (this.filtros as any).pregunta;
-    } else {
-      (this.filtros as any).pregunta = pregunta;
-    }
-  }
-
-  cargarTodasLasPreguntas() {
-    this.estadisticasService.filtrarPreguntasRespuestas({}).subscribe(data => {
-      this.preguntas = Array.from(new Set(data.map(pr => pr.pregunta).filter(Boolean)));
-      
-      // Asegurar que el dropdown tenga el valor inicial correcto
-      if (!this.preguntaSeleccionada) {
-        this.preguntaSeleccionada = '';
+      } else {
+        // Pregunta específica
+        if (this.nuevaCategoria === 'TODAS') {
+          this.respuestasPorPregunta = Array.from(new Set(
+            this.todasLasRespuestas
+              .filter(pr => pr.pregunta === this.nuevaPregunta)
+              .map(pr => pr.respuesta)
+              .filter(Boolean)
+          ));
+        } else {
+          // Categoría específica + Pregunta específica
+          this.respuestasPorPregunta = Array.from(new Set(
+            this.todasLasRespuestas
+              .filter(pr => pr.categoria === this.nuevaCategoria && pr.pregunta === this.nuevaPregunta)
+              .map(pr => pr.respuesta)
+              .filter(Boolean)
+          ));
+        }
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
       }
-      
-      // Forzar detección de cambios después de cargar las preguntas
+    } else {
+      this.respuestasPorPregunta = [];
       this.cdr.detectChanges();
-    });
+    }
+  }
+
+  agregarFiltroMultiple() {
+    if (this.nuevaCategoria && this.nuevaPregunta && this.nuevaRespuesta) {
+      // Verificar que no existe ya este filtro
+      const existe = this.filtrosMultiples.find(f => 
+        f.categoria === this.nuevaCategoria && 
+        f.pregunta === this.nuevaPregunta && 
+        f.respuesta === this.nuevaRespuesta
+      );
+      
+      if (!existe) {
+        this.filtrosMultiples.push({
+          categoria: this.nuevaCategoria,
+          pregunta: this.nuevaPregunta,
+          respuesta: this.nuevaRespuesta
+        });
+        
+        // Limpiar campos
+        this.nuevaCategoria = '';
+        this.nuevaPregunta = '';
+        this.nuevaRespuesta = '';
+        this.preguntasPorCategoria = [];
+        this.respuestasPorPregunta = [];
+        
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  eliminarFiltroMultiple(index: number) {
+    this.filtrosMultiples.splice(index, 1);
+    
+    // Auto-actualizar la tabla solo si quedan filtros múltiples
+    if (this.tieneAlgunFiltroActivo()) {
+      this.aplicarFiltros();
+    } else {
+      // Si no quedan filtros múltiples, limpiar la tabla
+      this.inicializarTablaVacia();
+      this.preguntasRespuestas = [];
+      this.actualizarDatosGrafico();
+    }
+  }
+
+  limpiarTodosFiltros() {
+    this.filtrosMultiples = [];
+    // También limpiar los campos del formulario de nuevo filtro
+    this.nuevaCategoria = '';
+    this.nuevaPregunta = '';
+    this.nuevaRespuesta = '';
+    this.preguntasPorCategoria = [];
+    this.respuestasPorPregunta = [];
+    
+    // Como no quedan filtros múltiples, limpiar la tabla
+    this.inicializarTablaVacia();
+    this.preguntasRespuestas = [];
+    this.actualizarDatosGrafico();
+    
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+  }
+
+  limpiarRangoEdad() {
+    this.filtros.edadDesde = undefined;
+    this.filtros.edadHasta = undefined;
+    
+    // Si hay filtros múltiples activos, recargar la tabla con los filtros actualizados
+    if (this.filtrosMultiples.length > 0) {
+      this.aplicarFiltros();
+    }
+    
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+  }
+
+  tieneAlgunFiltroActivo(): boolean {
+    // Solo permitir aplicar filtros si hay al menos un filtro múltiple completo
+    // El filtro de edad por sí solo no es suficiente
+    const tieneFiltrosMultiples = this.filtrosMultiples.length > 0;
+    
+    return tieneFiltrosMultiples;
+  }
+
+  // Función para mejorar el rendimiento de los dropdowns
+  trackByIndex(index: number, item: any): any {
+    return index;
   }
 
   cargarTodasLasCategorias() {
     this.estadisticasService.filtrarPreguntasRespuestas({}).subscribe(data => {
       this.categorias = Array.from(new Set(data.map(pr => pr.categoria).filter(Boolean)));
+      this.todasLasRespuestas = data; // Guardar todas las respuestas para filtros múltiples
       
-      // Asegurar que el dropdown tenga el valor inicial correcto
-      if (!this.filtros.categoria) {
-        this.filtros.categoria = '';
-      }
-      
-      // Forzar detección de cambios después de cargar las categorías
-      this.cdr.detectChanges();
+      // Forzar detección de cambios con setTimeout para asegurar que se ejecute
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
     });
   }
 
@@ -248,23 +392,112 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
           })
       )).filter((e: any): e is number => typeof e === 'number' && !isNaN(e));
 
+      // Actualizar datos y tabla de manera síncrona
       this.actualizarDatosGrafico();
       this.procesarDatosTabla();
+      
+      // Liberar el estado de carga
+      this.cargandoFiltros = false;
+      
+      // Forzar detección de cambios múltiples veces para asegurar actualización
       this.cdr.detectChanges();
+      
+      // Usar setTimeout para asegurar que la vista se actualice completamente
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
     });
   }
 
   actualizarDatosGrafico() {
-    // Agrupar respuestas por opción (para la pregunta seleccionada)
-    // Si hay pregunta seleccionada, agrupar solo las respuestas de esa pregunta
-    let datosParaGraficar = this.preguntasRespuestas;
-    if (this.preguntaSeleccionada) {
-      datosParaGraficar = this.preguntasRespuestas.filter(pr => pr.pregunta === this.preguntaSeleccionada);
+    // Verificar los diferentes tipos de filtros (igual que en generarDatosTabla)
+    const hayFiltrosMultiples = this.filtrosMultiples.length > 0;
+    
+    if (!hayFiltrosMultiples) {
+      this.generarGraficoComportamientoNormal();
+      return;
     }
     
-    // Agrupar por tipo de respuesta (ej: 'Sí', 'No', etc.)
+    const todosSonEspecificos = this.filtrosMultiples.every(f => 
+      f.categoria !== 'TODAS' && f.pregunta !== 'TODAS' && f.respuesta !== 'TODAS'
+    );
+    
+    const todosSonTodas = this.filtrosMultiples.every(f => 
+      f.categoria === 'TODAS' && f.pregunta === 'TODAS' && f.respuesta === 'TODAS'
+    );
+    
+    const esMixto = !todosSonEspecificos && !todosSonTodas;
+    
+    if (todosSonEspecificos) {
+      // CASO 1: Filtros específicos - mostrar personas únicas
+      this.generarGraficoFiltrosEspecificos();
+    } else if (todosSonTodas) {
+      // CASO 2: Todos "TODAS" - desglose normal
+      this.generarGraficoComportamientoNormal();
+    } else {
+      // CASO 3: Mixto - desglose filtrado
+      this.generarGraficoMixto();
+    }
+  }
+
+  generarGraficoFiltrosEspecificos() {
+    // Contar encuestaId únicos (igual que en tabla)
+    const encuestaIdsUnicos = new Set();
+    
+    this.preguntasRespuestas.forEach(pr => {
+      const encuestaId = pr.encuestaId || pr.encuesta_id || (pr as any).id;
+      if (encuestaId) {
+        encuestaIdsUnicos.add(encuestaId);
+      }
+    });
+    
+    const totalPersonasUnicas = encuestaIdsUnicos.size;
+    
+    const descripcionFiltros = this.filtrosMultiples.map(f => 
+      `${f.categoria} > ${f.pregunta}: ${f.respuesta}`
+    ).join(' Y ');
+    
+    const labels = [`Personas que cumplen filtros específicos`];
+    const data = [totalPersonasUnicas];
+
+    this.barChartData = {
+      labels: labels,
+      datasets: [{ data: data, label: 'Personas únicas' }]
+    };
+
+    this.pieChartData = {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: ['#1e5a5a']
+      }]
+    };
+
+    this.calcularEstadisticasResumenFiltros(totalPersonasUnicas, descripcionFiltros);
+  }
+
+  generarGraficoMixto() {
+    // CASO 3: Mixto - mostrar desglose solo de los filtros que tienen "TODAS"
+    
+    // Identificar qué filtros tienen "TODAS"
+    const filtrosConTodas = this.filtrosMultiples.filter(f => 
+      f.categoria === 'TODAS' || f.pregunta === 'TODAS' || f.respuesta === 'TODAS'
+    );
+    
+    // Filtrar datos para mostrar solo las respuestas que corresponden a los filtros "TODAS"
+    const datosParaDesglose = this.preguntasRespuestas.filter(pr => {
+      return filtrosConTodas.some(filtro => {
+        const categoriaMatch = filtro.categoria === 'TODAS' || pr.categoria === filtro.categoria;
+        const preguntaMatch = filtro.pregunta === 'TODAS' || pr.pregunta === filtro.pregunta;
+        const respuestaMatch = filtro.respuesta === 'TODAS' || pr.respuesta === filtro.respuesta;
+        
+        return categoriaMatch && preguntaMatch && respuestaMatch;
+      });
+    });
+    
+    // Agrupar por tipo de respuesta (solo los datos filtrados)
     const conteo: { [tipo: string]: number } = {};
-    datosParaGraficar.forEach(pr => {
+    datosParaDesglose.forEach(pr => {
       const tipo = pr.respuesta ? pr.respuesta.toString().trim() : '-';
       conteo[tipo] = (conteo[tipo] || 0) + 1;
     });
@@ -272,13 +505,11 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     const labels = Object.keys(conteo);
     const data = Object.values(conteo);
 
-    // Actualizar gráfico de barras
     this.barChartData = {
       labels: labels,
       datasets: [{ data: data, label: 'Cantidad' }]
     };
 
-    // Actualizar gráfico de torta
     this.pieChartData = {
       labels: labels,
       datasets: [{
@@ -287,8 +518,34 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
       }]
     };
 
-    // Calcular estadísticas resumidas
-    this.calcularEstadisticasResumen(conteo, datosParaGraficar.length);
+    this.calcularEstadisticasResumen(conteo, datosParaDesglose.length);
+  }
+
+  generarGraficoComportamientoNormal() {
+    // Agrupar por tipo de respuesta
+    const conteo: { [tipo: string]: number } = {};
+    this.preguntasRespuestas.forEach(pr => {
+      const tipo = pr.respuesta ? pr.respuesta.toString().trim() : '-';
+      conteo[tipo] = (conteo[tipo] || 0) + 1;
+    });
+
+    const labels = Object.keys(conteo);
+    const data = Object.values(conteo);
+
+    this.barChartData = {
+      labels: labels,
+      datasets: [{ data: data, label: 'Cantidad' }]
+    };
+
+    this.pieChartData = {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: this.generatePieColors(labels.length)
+      }]
+    };
+
+    this.calcularEstadisticasResumen(conteo, this.preguntasRespuestas.length);
   }
 
   private calcularEstadisticasResumen(conteo: { [tipo: string]: number }, total: number) {
@@ -358,6 +615,16 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
       Math.round((respuestasValidasCount / total) * 100 * 100) / 100 : 0;
   }
 
+  private calcularEstadisticasResumenFiltros(totalPersonas: number, descripcionFiltros: string) {
+    // Estadísticas específicas para cuando hay filtros múltiples
+    this.estadisticasResumen.totalRespuestas = totalPersonas;
+    this.estadisticasResumen.respuestaMasComun = 'Personas que cumplen filtros';
+    this.estadisticasResumen.cantidadRespuestaMasComun = totalPersonas;
+    this.estadisticasResumen.respuestasUnicas = 1;
+    this.estadisticasResumen.tasaRespuestaValida = 100;
+    this.estadisticasResumen.respuestasInvalidas = 0;
+  }
+
   private generatePieColors(count: number): string[] {
     const colors = [];
     for (let i = 0; i < count; i++) {
@@ -375,9 +642,164 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     this.aplicarFiltrosBusqueda();
     this.aplicarOrdenamiento();
     this.aplicarPaginacion();
+    
+    // Forzar detección de cambios después de procesar la tabla
+    this.cdr.detectChanges();
   }
 
   generarDatosTabla() {
+    // Verificar los diferentes tipos de filtros
+    const hayFiltrosMultiples = this.filtrosMultiples.length > 0;
+    
+    if (!hayFiltrosMultiples) {
+      // Sin filtros múltiples: comportamiento normal
+      this.generarTablaComportamientoNormal();
+      return;
+    }
+    
+    // Clasificar el tipo de filtros
+    const todosSonEspecificos = this.filtrosMultiples.every(f => 
+      f.categoria !== 'TODAS' && f.pregunta !== 'TODAS' && f.respuesta !== 'TODAS'
+    );
+    
+    const todosSonTodas = this.filtrosMultiples.every(f => 
+      f.categoria === 'TODAS' && f.pregunta === 'TODAS' && f.respuesta === 'TODAS'
+    );
+    
+    const esMixto = !todosSonEspecificos && !todosSonTodas;
+    
+    console.log('=== ANÁLISIS DE FILTROS ===');
+    console.log('Filtros aplicados:', this.filtrosMultiples);
+    console.log('Todos específicos:', todosSonEspecificos);
+    console.log('Todos TODAS:', todosSonTodas);
+    console.log('Es mixto:', esMixto);
+    console.log('Total registros:', this.preguntasRespuestas.length);
+    
+    if (todosSonEspecificos) {
+      // CASO 1: Filtros específicos - contar personas únicas
+      this.generarTablaFiltrosEspecificos();
+    } else if (todosSonTodas) {
+      // CASO 2: Todos "TODAS" - desglose normal
+      this.generarTablaComportamientoNormal();
+    } else {
+      // CASO 3: Mixto - desglose filtrado
+      this.generarTablaMixto();
+    }
+  }
+
+  generarTablaFiltrosEspecificos() {
+    // Contar encuestaId únicos
+    const encuestaIdsUnicos = new Set();
+    
+    this.preguntasRespuestas.forEach((pr, index) => {
+      const encuestaId = pr.encuestaId || pr.encuesta_id || (pr as any).id;
+      
+      if (encuestaId) {
+        encuestaIdsUnicos.add(encuestaId);
+      }
+      
+      if (index < 3) {
+        console.log(`[ESPECÍFICOS] Registro ${index + 1}:`, {
+          encuestaId: encuestaId,
+          categoria: pr.categoria,
+          pregunta: pr.pregunta,
+          respuesta: pr.respuesta
+        });
+      }
+    });
+    
+    const totalPersonasUnicas = encuestaIdsUnicos.size;
+    console.log('Personas únicas encontradas:', totalPersonasUnicas);
+    
+    const filtrosDescripcion = this.filtrosMultiples.map(f => 
+      `${f.categoria} > ${f.pregunta}: ${f.respuesta}`
+    ).join(' Y ');
+    
+    this.datosTabla = [{
+      respuesta: `Personas que cumplen: ${filtrosDescripcion}`,
+      cantidad: totalPersonasUnicas,
+      porcentaje: '100.00',
+      categorias: this.filtrosMultiples.map(f => f.categoria).join(', '),
+      preguntas: this.filtrosMultiples.length,
+      ranking: 1
+    }];
+  }
+
+  generarTablaMixto() {
+    // CASO 3: Mixto - mostrar desglose solo de los filtros que tienen "TODAS"
+    console.log('[MIXTO] Generando desglose solo de filtros con TODAS');
+    
+    // Identificar qué filtros tienen "TODAS" y cuáles son específicos
+    const filtrosConTodas = this.filtrosMultiples.filter(f => 
+      f.categoria === 'TODAS' || f.pregunta === 'TODAS' || f.respuesta === 'TODAS'
+    );
+    
+    const filtrosEspecificos = this.filtrosMultiples.filter(f => 
+      f.categoria !== 'TODAS' && f.pregunta !== 'TODAS' && f.respuesta !== 'TODAS'
+    );
+    
+    console.log('[MIXTO] Filtros con TODAS:', filtrosConTodas);
+    console.log('[MIXTO] Filtros específicos:', filtrosEspecificos);
+    
+    // Filtrar datos para mostrar solo las respuestas que corresponden a los filtros "TODAS"
+    const datosParaDesglose = this.preguntasRespuestas.filter(pr => {
+      // Solo incluir registros que correspondan a preguntas de filtros con "TODAS"
+      return filtrosConTodas.some(filtro => {
+        // Verificar si esta respuesta corresponde a un filtro "TODAS"
+        const categoriaMatch = filtro.categoria === 'TODAS' || pr.categoria === filtro.categoria;
+        const preguntaMatch = filtro.pregunta === 'TODAS' || pr.pregunta === filtro.pregunta;
+        const respuestaMatch = filtro.respuesta === 'TODAS' || pr.respuesta === filtro.respuesta;
+        
+        return categoriaMatch && preguntaMatch && respuestaMatch;
+      });
+    });
+    
+    console.log('[MIXTO] Datos filtrados para desglose:', datosParaDesglose.length);
+    console.log('[MIXTO] Ejemplos de datos para desglose:', datosParaDesglose.slice(0, 3));
+    
+    // Agrupar por tipo de respuesta (solo los datos filtrados)
+    const resumenPorRespuesta: { [key: string]: any } = {};
+    
+    datosParaDesglose.forEach((pr, index) => {
+      const respuesta = pr.respuesta || '-';
+      if (!resumenPorRespuesta[respuesta]) {
+        resumenPorRespuesta[respuesta] = {
+          respuesta: respuesta,
+          cantidad: 0,
+          porcentaje: 0,
+          categorias: new Set(),
+          preguntas: new Set()
+        };
+      }
+      resumenPorRespuesta[respuesta].cantidad++;
+      resumenPorRespuesta[respuesta].categorias.add(pr.categoria || '-');
+      resumenPorRespuesta[respuesta].preguntas.add(pr.pregunta || '-');
+      
+      if (index < 3) {
+        console.log(`[MIXTO] Registro procesado ${index + 1}:`, {
+          categoria: pr.categoria,
+          pregunta: pr.pregunta,
+          respuesta: pr.respuesta
+        });
+      }
+    });
+
+    const total = datosParaDesglose.length;
+    this.datosTabla = Object.values(resumenPorRespuesta).map((item: any) => ({
+      respuesta: item.respuesta,
+      cantidad: item.cantidad,
+      porcentaje: total > 0 ? ((item.cantidad / total) * 100).toFixed(2) : '0',
+      categorias: Array.from(item.categorias).join(', '),
+      preguntas: Array.from(item.preguntas).length,
+      ranking: 0
+    })).sort((a, b) => b.cantidad - a.cantidad)
+      .map((item, index) => ({ ...item, ranking: index + 1 }));
+    
+    console.log('[MIXTO] Desglose final generado:', this.datosTabla);
+  }
+
+  generarTablaComportamientoNormal() {
+    // Comportamiento normal: agrupar por respuesta
     const resumenPorRespuesta: { [key: string]: any } = {};
     
     this.preguntasRespuestas.forEach(pr => {
@@ -510,5 +932,37 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
       paginas.push(i);
     }
     return paginas;
+  }
+
+  /**
+   * Inicializa la tabla con datos vacíos para que no se muestren datos hasta aplicar filtros
+   */
+  inicializarTablaVacia() {
+    this.datosTabla = [];
+    this.datosFiltrados = [];
+    this.datosPaginados = [];
+    this.preguntasRespuestas = [];
+    this.paginaActual = 1;
+    
+    // Resetear estadísticas
+    this.estadisticasResumen = {
+      totalRespuestas: 0,
+      respuestaMasComun: '',
+      cantidadRespuestaMasComun: 0,
+      respuestasUnicas: 0,
+      tasaRespuestaValida: 0,
+      respuestasInvalidas: 0
+    };
+
+    // Limpiar gráficos
+    this.barChartData = { datasets: [{ data: [], label: 'Cantidad' }], labels: [] };
+    this.pieChartData = { datasets: [{ data: [], backgroundColor: [] }], labels: [] };
+  }
+
+  // Función helper para truncar texto largo
+  truncateText(text: string, maxLength: number = 50): string {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 }
