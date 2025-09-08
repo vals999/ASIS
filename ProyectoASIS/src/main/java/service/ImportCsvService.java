@@ -203,22 +203,30 @@ public class ImportCsvService {
 
             // Guardar solo respuestas de columnas mapeadas
             String[] fila;
+            Map<String, Integer> contadoresPorVivienda = new HashMap<>(); // Contador por vivienda
             while ((fila = reader.readNext()) != null) {
-                // Obtener el identificador externo de la primera columna
-                String idExterno = (fila.length > 0 && fila[0] != null) ? fila[0].trim() : null;
+                // Obtener el identificador de vivienda de la primera columna
+                String idVivienda = (fila.length > 0 && fila[0] != null) ? fila[0].trim() : null;
                 
-                if (idExterno == null || idExterno.isEmpty()) {
-                    // Si no hay identificador externo, saltar esta fila
+                if (idVivienda == null || idVivienda.isEmpty()) {
+                    // Si no hay identificador de vivienda, saltar esta fila
                     continue;
                 }
                 
-                // Buscar si ya existe una encuesta con este idExterno
+                // Incrementar contador para esta vivienda específica
+                int contadorPersona = contadoresPorVivienda.getOrDefault(idVivienda, 0) + 1;
+                contadoresPorVivienda.put(idVivienda, contadorPersona);
+                
+                // Crear un idExterno único por persona: vivienda + contador
+                String idExterno = idVivienda + "_persona_" + contadorPersona;
+                
+                // Buscar si ya existe una encuesta con este idExterno (debería ser único)
                 Encuesta encuesta = encuestaDao.findByIdExterno(idExterno);
                 
                 if (encuesta == null) {
-                    // Si no existe, crear una nueva encuesta
+                    // Si no existe, crear una nueva encuesta única por persona
                     encuesta = new Encuesta();
-                    encuesta.setIdExterno(idExterno);
+                    encuesta.setIdExterno(idExterno); // ej: "vivienda123_persona_1"
                     encuestaDao.crear(encuesta);
                 }
 
