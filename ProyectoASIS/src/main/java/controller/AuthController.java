@@ -45,8 +45,10 @@ public class AuthController {
     @Inject
     private EntityManager em;
 
-    // Clave secreta para JWT (en producción debe estar en variables de entorno)
-    private static final String JWT_SECRET = "miClaveSecretaParaJWTDeProyectoASIS2024";
+    // Clave secreta para JWT (obtenida de variables de entorno)
+    private static final String JWT_SECRET = System.getenv("JWT_SECRET") != null 
+        ? System.getenv("JWT_SECRET") 
+        : "default-dev-key-change-in-production";
     private static final long JWT_EXPIRATION = 1800000; // 30 minutos
 
     @POST

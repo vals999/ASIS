@@ -187,14 +187,14 @@ public class DTOMapper {
         );
     }
 
-    public static ReporteSimpleDTO toReporteSimpleDTO(Reporte reporte) {
+    /*public static ReporteSimpleDTO toReporteSimpleDTO(Reporte reporte) {
         if (reporte == null) return null;
         return new ReporteSimpleDTO(
             reporte.getId(),
             reporte.getNombre(),
             reporte.getFecha()
         );
-    }
+    }*/
 
     public static EncuestaSimpleDTO toEncuestaSimpleDTO(Encuesta encuesta) {
         if (encuesta == null) return null;
