@@ -72,6 +72,24 @@ export class UsuarioComponent implements OnInit, OnDestroy {
     );
   });
 
+  // Signals computados para paginación
+  readonly totalPaginas = computed(() => {
+    const totalUsuarios = this.usuariosFiltrados().length;
+    return Math.ceil(totalUsuarios / this._elementosPorPagina());
+  });
+
+  readonly usuariosPaginados = computed(() => {
+    const usuarios = this.usuariosFiltrados();
+    const inicio = (this._paginaActual() - 1) * this._elementosPorPagina();
+    const fin = inicio + this._elementosPorPagina();
+    return usuarios.slice(inicio, fin);
+  });
+
+  readonly paginasArray = computed(() => {
+    const total = this.totalPaginas();
+    return Array.from({ length: total }, (_, i) => i + 1);
+  });
+
   // Signal computado para contar administradores habilitados
   readonly administradoresCount = computed(() => {
     const usuarios = this.usuariosService.usuarios();

@@ -115,8 +115,16 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.cargarTodasLasCategorias();
     this.cargarTodasLasPreguntas();
-    // Cargar datos iniciales para poblar los dropdowns y la tabla
-    this.cargarPreguntasRespuestas();
+    // NO cargar datos iniciales - solo mostrarlos cuando se apliquen filtros
+    // this.cargarPreguntasRespuestas(); // Comentado para no cargar datos por defecto
+    
+    // Inicializar con datos vacíos para mostrar interfaz limpia
+    this.preguntasRespuestas = [];
+    this.datosTabla = [];
+    this.datosFiltrados = [];
+    this.datosPaginados = [];
+    this.actualizarDatosGrafico();
+    this.procesarDatosTabla();
   }
 
   ngAfterViewInit() {
