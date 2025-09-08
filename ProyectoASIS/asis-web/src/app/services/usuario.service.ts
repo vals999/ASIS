@@ -102,8 +102,9 @@ export class UsuariosService {
     return this.http.delete(`${this.apiUrl}/${id}`, { responseType: 'text' })
       .pipe(
         tap(() => {
-          // Actualizar el signal removiendo el usuario eliminado
+          // Actualizar ambos signals removiendo el usuario eliminado
           this._usuarios.update(usuarios => usuarios.filter(u => u.id !== id));
+          this._usuariosPendientes.update(usuarios => usuarios.filter(u => u.id !== id));
           this._loading.set(false);
         }),
         catchError(error => {

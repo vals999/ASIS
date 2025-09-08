@@ -105,3 +105,29 @@
   background-color: #1e5a5a;
   border-color: #1e5a5a;
 }
+
+/* Solución para el problema de dropdowns cortados en el panel de control */
+.panel-control-container {
+  /* Mantener scroll vertical pero permitir que los dropdowns se expandan */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Asegurar que los dropdowns del componente hijo puedan escapar del contenedor */
+.panel-control-container app-carga-archivos {
+  /* Permitir que los elementos hijos se expandan fuera del contenedor */
+  overflow: visible !important;
+}
+
+/* Estilos específicos para dropdowns dentro del panel de control */
+.panel-control-container .dropdown-container {
+  /* Asegurar que el contenedor del dropdown tenga suficiente z-index */
+  position: relative;
+  z-index: 1050 !important;
+}
+
+.panel-control-container .form-select {
+  /* Forzar que el dropdown aparezca por encima de todo */
+  position: relative;
+  z-index: 1051 !important;
+}
