@@ -8,6 +8,19 @@ export interface PreguntaRespuestaCategoria {
   pregunta: string;
   respuesta: string;
   categoria: string;
+  encuestaId?: number;
+  zona?: string;
+  barrio?: string;
+  campania?: string;
+  sexo?: string;
+  encuesta_id?: number;
+  [key: string]: any; // Para propiedades adicionales
+}
+
+export interface FiltroMultiple {
+  categoria: string;
+  pregunta: string;
+  respuesta: string;
 }
 
 export interface Filtros {
@@ -25,6 +38,8 @@ export interface Filtros {
   perfil?: string;
   jornada?: string;
   encuestador?: string;
+  // NUEVO: Filtros múltiples
+  filtrosMultiples?: FiltroMultiple[];
 }
 
 @Injectable({ providedIn: 'root' })

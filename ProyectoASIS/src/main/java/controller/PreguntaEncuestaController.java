@@ -118,127 +118,132 @@ public class PreguntaEncuestaController {
             // Obtener todas las preguntas del ImportCsvService
             List<Map<String, String>> preguntas = new ArrayList<>();
             
-            // Agregar preguntas de persona (MAPEO_PERSONA) con numeración secuencial
+            // Agregar preguntas de persona (MAPEO_PERSONA) - sin numeración automática
             String[] preguntasPersonaTextos = {
-                "Número de persona",
-                "Nombre",
-                "Edad",
-                "¿Con cuál de las siguientes se identifica? (identidad de género)",
-                "¿En qué país nació?",
-                "Otro país: ¿cuál?",
-                "¿Sabe leer y escribir? (mayores de 10 años)",
-                "¿Cuál es el máximo nivel educativo que alcanzó? (mayores de 4 años)",
-                "¿Trabajó al menos una hora la semana pasada? (mayores de 14 años)",
-                "¿Está registrado/a en ese trabajo?",
-                "¿En cuál de las siguientes ramas ubica la actividad principal?",
-                "¿Realiza tareas domésticas y/o crianza de niñxs?",
-                "¿Cobra jubilación o pensión?",
-                "¿Recibió notificación para auditoría de pensión no contributiva?",
-                "¿Recibe algún programa, subsidio del Estado?",
-                "¿Cuál programa/subsidio recibe?",
-                "¿Tiene alguna cobertura de salud?",
-                "¿Realizó un control de salud en el último año?",
-                "¿Cuenta con el calendario de vacunación completo?",
-                "¿Pudo acceder a la vacunación?",
-                "¿Le han hablado sobre el calendario de vacunación?",
-                "¿Sabe si tiene o tuvo alguna de estas enfermedades o situaciones de salud?",
-                "¿Considera que tiene o tuvo problemas de consumo de sustancias?",
-                "¿Qué sustancias consume?",
-                "¿Sufre/ha sufrido situaciones de violencia?",
-                "¿Qué tipo de violencia?",
-                "¿Presenta alguna discapacidad?",
-                "¿De qué tipo?",
-                "¿Tiene certificado único de discapacidad (CUD)?",
-                "¿Conoce la fecha de vencimiento del CUD?",
-                "Fecha de vencimiento del CUD"
+                "2. Número de persona",
+                "3. Nombre",
+                "4. Edad",
+                "5. ¿Con cuál de las siguientes se identifica? (identidad de género)",
+                "6. ¿En qué país nació?",
+                "6.a Otro país: ¿cuál?",
+                "7. ¿Sabe leer y escribir? (mayores de 10 años)",
+                "8. ¿Cuál es el máximo nivel educativo que alcanzó? (mayores de 4 años)",
+                "9. ¿Trabajó al menos una hora la semana pasada? (mayores de 14 años)",
+                "10. ¿Está registrado/a en ese trabajo?",
+                "11. ¿En cuál de las siguientes ramas ubica la actividad principal?",
+                "12. ¿Realiza tareas domésticas y/o crianza de niñxs?",
+                "13. ¿Cobra jubilación o pensión?",
+                "14. ¿Recibió notificación para auditoría de pensión no contributiva?",
+                "15. ¿Recibe algún programa, subsidio del Estado?",
+                "15.a. ¿Cuál programa/subsidio recibe?",
+                "16. ¿Tiene alguna cobertura de salud?",
+                "17. ¿Realizó un control de salud en el último año?",
+                "18. ¿Cuenta con el calendario de vacunación completo?",
+                "19. ¿Pudo acceder a la vacunación?",
+                "20. ¿Le han hablado sobre el calendario de vacunación?",
+                "21. ¿Sabe si tiene o tuvo alguna de estas enfermedades o situaciones de salud?",
+                "22. ¿Considera que tiene o tuvo problemas de consumo de sustancias?",
+                "22.a. ¿Qué sustancias consume?",
+                "23. ¿Sufre/ha sufrido situaciones de violencia?",
+                "23.a. ¿Qué tipo de violencia?",
+                "24. ¿Presenta alguna discapacidad?",
+                "24.a. ¿De qué tipo?",
+                "25. ¿Tiene certificado único de discapacidad (CUD)?",
+                "25.a. ¿Conoce la fecha de vencimiento del CUD?",
+                "25.b. Fecha de vencimiento del CUD"
             };
 
-            // Agregar preguntas de vivienda (MAPEO_VIVIENDA) con numeración secuencial
+            // Agregar preguntas de vivienda (MAPEO_VIVIENDA) - sin numeración automática
             String[] preguntasViviendaTextos = {
-                "Latitud de la ubicación",
-                "Longitud de la ubicación",
-                "Dirección (en caso de no tener numeración, describirlo, por ej. 'casa cerca de la esquina con puerta roja')",
-                "Marque según la posibilidad de realizar la entrevista",
-                "¿Cuántas personas viven la mayor parte del tiempo en esta vivienda?",
-                "Complete esta sección por cada persona de la vivienda",
-                "¿Con qué material está construida la vivienda, en su mayoría?",
-                "¿Tiene acceso a agua?",
-                "¿Cómo es el acceso al agua?",
-                "¿El agua que se usa para beber y cocinar es potable?",
-                "Esta vivienda, ¿tiene (baño, letrina, no tiene, no sabe o no contesta)?",
-                "El desagüe del inodoro, ¿es a … (red pública, cámara séptica, pozo ciego, etc.)?",
-                "¿Qué usa principalmente para cocinar?",
-                "¿Cómo es la calefacción en esta vivienda?",
-                "La conexión de electricidad, ¿es…?",
-                "Con respecto a internet, ¿Tiene…?",
-                "¿Cuántos ambientes, habitaciones o piezas para dormir tiene en total?",
-                "La vivienda, ¿es…?",
-                "Sumando todos los ingresos económicos de la vivienda, considera que:",
-                "En esta vivienda, ¿reciben alguna asistencia alimentaria?",
-                "Si respondió SÍ, ¿De qué tipo?",
-                "Ante un problema de salud, ¿a dónde concurren?",
-                "Cuando tuvieron que atenderse en un efector de salud, ¿tuvieron alguna dificultad?",
-                "Si respondió SÍ, ¿podría seleccionar qué tipo de dificultades?",
-                "¿A qué disciplinas consultaron en el último año?",
-                "¿Hay personas embarazadas?",
-                "¿Cuántas personas embarazadas?",
-                "¿Sabe en qué etapa del embarazo se encuentran?",
-                "¿Cuántas se encuentran en esa etapa?",
-                "¿Cuántas se encuentran en esa etapa?",
-                "¿Cuántas se encuentran en esa etapa?",
-                "¿Sabe si han realizado algún control del embarazo?",
-                "¿Cuántas realizaron controles?",
-                "¿Cuántas realizaron controles?",
-                "¿Cuántas NO han realizado controles?",
-                "¿Dónde los realizan?",
-                "¿Alguien realiza tratamiento en Salud Mental (psicológico/psiquiátrico)?",
-                "En caso de responder SÍ, ¿dónde?",
-                "¿Alguien lo necesitó y no lo obtuvo?",
-                "¿Cuántos?",
-                "¿Cuál fue el motivo por el que no pudo acceder?",
-                "¿En algún caso fue por derivación de juzgado/escuela/organismo de niñez?",
-                "¿Cuántos?",
-                "En esta vivienda, ¿participan en alguna institución u organización en tu barrio?",
-                "Si respondió SÍ: ¿Podría identificar cuál/es?",
-                "¿Cuál?",
-                "¿Cuál o cuáles de los siguiente servicios llegan a tu barrio?",
-                "¿Identificás algunos de estos problemas en tu barrio?",
-                "¿Cuáles?",
-                "¿Fuiste atendido/a por una situación o problema de salud en el último año?",
-                "¿Te indicaron tomar alguna medicación?",
-                "¿Pudiste acceder a esa medicación?",
-                "¿Cómo conseguís la medicación?",
-                "¿En el último año tuviste que interrumpir algún tratamiento por dificultades en el acceso a la medicación?",
-                "¿Hace cuánto que te realizaste un estudio de papanicolau o PAP para rastreo de cáncer de cuello de útero?",
-                "¿Ha tenido relaciones sexuales alguna vez?",
-                "¿Actualmente usa algún método anticonceptivo?",
-                "¿Qué método anticonceptivo usa?",
-                "¿Cómo lo consigue?",
-                "¿En el último año ha tenido dificultad para conseguirlo?",
-                "En caso de responder SÍ, ¿Le ofrecieron otras opciones?",
-                "¿Hay algún método que te gustaría usar y no conseguís?",
-                "¿Cuál?",
-                "¿Utiliza preservativo/campo látex como prevención de infecciones de transmisión?",
-                "Pregunta de cierre: Luego de terminar el trabajo pensamos compartir con los...",
-                "Observaciones",
-                "Nombre y contacto opcional"
+                "0.a. Latitud de la ubicación",
+                "0.b. Longitud de la ubicación",
+                "0.c. Dirección (en caso de no tener numeración, describirlo, por ej. 'casa cerca de la esquina con puerta roja')",
+                "0.d. Marque según la posibilidad de realizar la entrevista",
+                "1. ¿Cuántas personas viven la mayor parte del tiempo en esta vivienda?",
+                "0.e. Complete esta sección por cada persona de la vivienda",
+                "26. ¿Con qué material está construida la vivienda, en su mayoría?",
+                "27. ¿Tiene acceso a agua?",
+                "28. ¿Cómo es el acceso al agua?",
+                "29. ¿El agua que se usa para beber y cocinar es potable?",
+                "30. Esta vivienda, ¿tiene (baño, letrina, no tiene, no sabe o no contesta)?",
+                "31. El desagüe del inodoro, ¿es a … (red pública, cámara séptica, pozo ciego, etc.)?",
+                "32. ¿Qué usa principalmente para cocinar?",
+                "33. ¿Cómo es la calefacción en esta vivienda?",
+                "34. La conexión de electricidad, ¿es…?",
+                "35. Con respecto a internet, ¿Tiene…?",
+                "36. ¿Cuántos ambientes, habitaciones o piezas para dormir tiene en total?",
+                "37. La vivienda, ¿es…?",
+                "38. Sumando todos los ingresos económicos de la vivienda, considera que:",
+                "39. En esta vivienda, ¿reciben alguna asistencia alimentaria?",
+                "40. Si respondió SÍ, ¿De qué tipo?",
+                "41. Ante un problema de salud, ¿a dónde concurren?",
+                "42. Cuando tuvieron que atenderse en un efector de salud, ¿tuvieron alguna dificultad?",
+                "43 Si respondió SÍ, ¿podría seleccionar qué tipo de dificultades?",
+                "44. ¿A qué disciplinas consultaron en el último año?",
+                "45. ¿Hay personas embarazadas?",
+                "45.a. ¿Cuántas personas embarazadas?",
+                "46. ¿Sabe en qué etapa del embarazo se encuentran?",
+                "46.a. ¿Cuántas se encuentran en el 1° trimestre?",
+                "46.b. ¿Cuántas se encuentran en el 2° trimestre?",
+                "46.c. ¿Cuántas se encuentran en el 3° trimestre?",
+                "47. ¿Sabe si han realizado algún control del embarazo?",
+                "47.a. ¿Cuántas realizaron un solo control?",
+                "47.b. Cuántas realizaron más de un control?",
+                "47.c. ¿Cuántas NO han realizado controles?",
+                "48. ¿Dónde los realizan?",
+                "49. ¿Alguien realiza tratamiento en Salud Mental (psicológico/psiquiátrico)?",
+                "50. En caso de responder SÍ, ¿dónde?",
+                "51. ¿Alguien lo necesitó y no lo obtuvo?",
+                "51.a. ¿Cuántos?",
+                "52. ¿Cuál fue el motivo por el que no pudo acceder?",
+                "53. ¿En algún caso fue por derivación de juzgado/escuela/organismo de niñez?",
+                "53.a. ¿Cuántos?",
+                "54. En esta vivienda, ¿participan en alguna institución u organización en tu barrio?",
+                "55. Si respondió SÍ: ¿Podría identificar cuál/es?",
+                "55.a. ¿Cuál?",
+                "56. ¿Cuál o cuáles de los siguiente servicios llegan a tu barrio?",
+                "57. ¿Identificás algunos de estos problemas en tu barrio?",
+                "57.a. ¿Cuáles (otros)?",
+                "58. ¿Fuiste atendido/a por una situación o problema de salud en el último año?",
+                "59. ¿Te indicaron tomar alguna medicación?",
+                "60. ¿Pudiste acceder a esa medicación?",
+                "61. ¿Cómo conseguís la medicación?",
+                "62. ¿En el último año tuviste que interrumpir algún tratamiento por dificultades en el acceso a la medicación?",
+                "63. ¿Hace cuánto que te realizaste un estudio de papanicolau o PAP para rastreo de cáncer de cuello de útero?",
+                "64. ¿Ha tenido relaciones sexuales alguna vez?",
+                "65. ¿Actualmente usa algún método anticonceptivo?",
+                "66. ¿Qué método anticonceptivo usa?",
+                "67. ¿Cómo lo consigue?",
+                "68. ¿En el último año ha tenido dificultad para conseguirlo?",
+                "69. En caso de responder SÍ, ¿Le ofrecieron otras opciones?",
+                "70. ¿Hay algún método que te gustaría usar y no conseguís?",
+                "70.a. ¿Cuál?",
+                "71. ¿Utiliza preservativo/campo látex como prevención de infecciones de transmisión?",
+                "72. Pregunta de cierre: Luego de terminar el trabajo pensamos compartir con los barrios lo que fuimos recolectando. ¿Te gustaría participar?",
+                "0.e. Observaciones",
+                "0.f. Nombre y contacto opcional"
             };
 
-            // Convertir a formato de lista con numeración secuencial
-            for (int i = 0; i < preguntasPersonaTextos.length; i++) {
-                Map<String, String> pregunta = new HashMap<>();
-                pregunta.put("numero", String.valueOf(i + 1));
-                pregunta.put("texto", preguntasPersonaTextos[i]);
-                pregunta.put("categoria", "Persona");
-                preguntas.add(pregunta);
+            // Agregar preguntas de persona (filtrar las que NO empiecen con "0.[letra]")
+            for (String texto : preguntasPersonaTextos) {
+                if (!esPatronIgnorado(texto)) {
+                    Map<String, String> pregunta = new HashMap<>();
+                    pregunta.put("numero", extraerNumero(texto));
+                    pregunta.put("texto", texto);
+                    pregunta.put("categoria", "Persona");
+                    preguntas.add(pregunta);
+                }
             }
 
-            for (int i = 0; i < preguntasViviendaTextos.length; i++) {
-                Map<String, String> pregunta = new HashMap<>();
-                pregunta.put("numero", String.valueOf(i + 1));
-                pregunta.put("texto", preguntasViviendaTextos[i]);
-                pregunta.put("categoria", "Vivienda");
-                preguntas.add(pregunta);
+            // Agregar preguntas de vivienda (filtrar las que NO empiecen con "0.[letra]")
+            for (String texto : preguntasViviendaTextos) {
+                if (!esPatronIgnorado(texto)) {
+                    Map<String, String> pregunta = new HashMap<>();
+                    pregunta.put("numero", extraerNumero(texto));
+                    pregunta.put("texto", texto);
+                    pregunta.put("categoria", "Vivienda");
+                    preguntas.add(pregunta);
+                }
             }
 
             return Response.ok(preguntas).build();
@@ -246,5 +251,26 @@ public class PreguntaEncuestaController {
             return Response.status(Status.INTERNAL_SERVER_ERROR)
                     .entity("Error: " + e.getMessage()).build();
         }
+    }
+
+    /**
+     * Verifica si una pregunta tiene el patrón "0.[letra]" que debe ser ignorado
+     */
+    private boolean esPatronIgnorado(String texto) {
+        // Buscar patrón "0." seguido de una letra minúscula al inicio del texto
+        return texto.matches("^0\\.[a-z]\\..*");
+    }
+
+    /**
+     * Extrae el número de la pregunta del texto
+     */
+    private String extraerNumero(String texto) {
+        // Buscar el patrón de número al inicio del texto
+        if (texto.matches("^\\d+\\..*")) {
+            return texto.substring(0, texto.indexOf('.'));
+        } else if (texto.matches("^\\d+\\.[a-z]\\..*")) {
+            return texto.substring(0, texto.indexOf('.', texto.indexOf('.') + 1));
+        }
+        return ""; // Si no encuentra patrón, devuelve vacío
     }
 }
