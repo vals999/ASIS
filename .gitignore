@@ -5,3 +5,4 @@ ProyectoASIS/.project
 ProyectoASIS/.settings/
 ProyectoASIS/.project
 ProyectoASIS/.classpath
+ProyectoASIS/src/main/resources/META-INF/persistence.xml

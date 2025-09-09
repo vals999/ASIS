@@ -1,4 +1,3 @@
-
 package controller;
 
 import java.util.List;
@@ -36,6 +35,7 @@ public class RespuestaEncuestaController {
                 .map(r -> r.getPregunta())
                 .filter(p -> p != null)
                 .filter(p -> categoria == null || (p.getCategoria() != null && p.getCategoria().name().equalsIgnoreCase(categoria)))
+                .filter(p -> !esPatronIgnorado(p.getTexto())) // Filtrar preguntas con patrón "0.[letra]"
                 .map(p -> p.getTexto())
                 .distinct()
                 .toList();
@@ -45,6 +45,16 @@ public class RespuestaEncuestaController {
                     .entity("Error: " + e.getMessage()).build();
         }
     }
+
+    /**
+     * Verifica si una pregunta tiene el patrón "0.[letra]" que debe ser ignorado
+     */
+    private boolean esPatronIgnorado(String texto) {
+        if (texto == null) return false;
+        // Buscar patrón "0." seguido de una letra minúscula al inicio del texto
+        return texto.matches("^0\\.[a-z]\\..*");
+    }
+
     @POST
     @Path("/filtrar-preguntas-respuestas")
     public Response filtrarPreguntasRespuestas(dto.Filtros filtros) {
@@ -192,6 +202,7 @@ public class RespuestaEncuestaController {
             
             var lista = respuestas.stream()
                 .filter(r -> r.getPregunta() != null)
+                .filter(r -> !esPatronIgnorado(r.getPregunta().getTexto())) // Filtrar preguntas con patrón "0.[letra]"
                 .filter(r -> filtros.getTipoRespuesta() == null || (r.getPregunta().getTipoRespuesta() != null && r.getPregunta().getTipoRespuesta().name().equalsIgnoreCase(filtros.getTipoRespuesta())))
                 .filter(r -> {
                     Long encuestaId = r.getEncuesta().getId();
@@ -266,6 +277,7 @@ public class RespuestaEncuestaController {
             List<RespuestaEncuesta> respuestas = respuestaEncuestaDAO.obtenerTodos();
             var lista = respuestas.stream()
                 .filter(r -> r.getPregunta() != null)
+                .filter(r -> !esPatronIgnorado(r.getPregunta().getTexto())) // Filtrar preguntas con patrón "0.[letra]"
                 .filter(r -> categoria == null || (r.getPregunta().getCategoria() != null && r.getPregunta().getCategoria().name().equalsIgnoreCase(categoria)))
                 .map(r -> new PreguntaRespuestaCategoriaDTO(
                     r.getPregunta().getTexto(),

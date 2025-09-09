@@ -199,8 +199,8 @@ export class ZonaComponent implements OnInit, OnDestroy {
   crearZona() {
     const zona = this.nuevaZona();
     
-    if (!zona.nombre || !zona.geolocalizacion) {
-      this._mensajeExito.set('Completa todos los campos');
+    if (!zona.nombre || !zona.geolocalizacion || !zona.barrio) {
+      this._mensajeExito.set('Completa todos los campos obligatorios (nombre, geolocalización y barrio)');
       return;
     }
     
@@ -254,8 +254,8 @@ export class ZonaComponent implements OnInit, OnDestroy {
   confirmarEdicion() {
     const zona = this.zonaEditada();
     
-    if (!zona.nombre || !zona.geolocalizacion) {
-      this._mensajeEdicion.set('Completa todos los campos obligatorios');
+    if (!zona.nombre || !zona.geolocalizacion || !zona.barrio) {
+      this._mensajeEdicion.set('Completa todos los campos obligatorios (nombre, geolocalización y barrio)');
       return;
     }
     

@@ -194,8 +194,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
   crearJornada() {
     const jornada = this.nuevaJornada();
     
-    if (!jornada.fecha) {
-      this._mensajeExito.set('Completa todos los campos');
+    if (!jornada.fecha || !jornada.campaña) {
+      this._mensajeExito.set('Completa todos los campos obligatorios (fecha y campaña)');
       return;
     }
     
@@ -246,8 +246,8 @@ export class JornadaComponent implements OnInit, OnDestroy {
   confirmarEdicion() {
     const jornada = this.jornadaEditada();
     
-    if (!jornada.fecha) {
-      this._mensajeEdicion.set('Completa todos los campos obligatorios');
+    if (!jornada.fecha || !jornada.campaña) {
+      this._mensajeEdicion.set('Completa todos los campos obligatorios (fecha y campaña)');
       return;
     }
     
