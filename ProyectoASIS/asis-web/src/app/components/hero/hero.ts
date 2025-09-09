@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-hero',
@@ -11,7 +11,11 @@ import { CommonModule } from '@angular/common';
 })
 export class HeroComponent {
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(DOCUMENT) private document: Document
+  ) {}
 
   scheduleAppointment() {
     // Por ahora, scroll al contacto - puedes implementar la lógica de agendamiento más tarde
@@ -23,7 +27,9 @@ export class HeroComponent {
   }
 
   private scrollToSection(sectionId: string) {
-    const element = document.getElementById(sectionId);
+    if (!isPlatformBrowser(this.platformId)) return;
+    
+    const element = this.document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ 
         behavior: 'smooth',

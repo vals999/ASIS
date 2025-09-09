@@ -1,6 +1,6 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { HeaderComponent } from '../header/header';
 import { HeroComponent } from '../hero/hero';
@@ -29,6 +29,8 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(DOCUMENT) private document: Document,
     private reporteService: ReporteService
   ) {}
 
@@ -102,15 +104,19 @@ export class LandingComponent implements OnInit, OnDestroy {
   }
 
   goToContact() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    
     // Scroll to contact section
-    document.getElementById('contacto')?.scrollIntoView({ 
+    this.document.getElementById('contacto')?.scrollIntoView({ 
       behavior: 'smooth' 
     });
   }
 
   goToReportes() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    
     // Scroll to reportes section
-    document.getElementById('reportes')?.scrollIntoView({ 
+    this.document.getElementById('reportes')?.scrollIntoView({ 
       behavior: 'smooth' 
     });
   }

@@ -1,9 +1,10 @@
 import { BaseChartDirective } from 'ng2-charts';
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EstadisticasService, PreguntaRespuestaCategoria, Filtros, FiltroMultiple } from '../../services/estadisticas.service';
 import { ChangeDetectorRef } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-estadisticas',
@@ -126,7 +127,11 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     '#E67E22', '#1ABC9C', '#34495E', '#F1C40F', '#E91E63'
   ];
 
-  constructor(private estadisticasService: EstadisticasService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private estadisticasService: EstadisticasService, 
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit() {
     this.cargarTodasLasCategorias();
@@ -138,11 +143,14 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Forzar detección de cambios después de que la vista se haya inicializado
-    // Esto ayuda a resolver problemas de renderizado de dropdowns
-    setTimeout(() => {
-      this.cdr.detectChanges();
-    }, 0);
+    // Solo ejecutar setTimeout en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      // Forzar detección de cambios después de que la vista se haya inicializado
+      // Esto ayuda a resolver problemas de renderizado de dropdowns
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
+    }
   }
 
   aplicarFiltros(): void {
@@ -171,10 +179,14 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     // Forzar detección de cambios antes de cargar datos
     this.cdr.detectChanges();
     
-    // Usar setTimeout para asegurar que la detección de cambios se complete
-    setTimeout(() => {
+    // Solo usar setTimeout en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => {
+        this.cargarPreguntasRespuestas();
+      }, 0);
+    } else {
       this.cargarPreguntasRespuestas();
-    }, 0);
+    }
   }
 
   // NUEVO: Métodos para filtros múltiples
@@ -351,10 +363,14 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
       this.categorias = Array.from(new Set(data.map(pr => pr.categoria).filter(Boolean)));
       this.todasLasRespuestas = data; // Guardar todas las respuestas para filtros múltiples
       
-      // Forzar detección de cambios con setTimeout para asegurar que se ejecute
-      setTimeout(() => {
+      // Solo usar setTimeout en el navegador
+      if (isPlatformBrowser(this.platformId)) {
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 0);
+      } else {
         this.cdr.detectChanges();
-      }, 0);
+      }
     });
   }
 
@@ -402,10 +418,12 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
       // Forzar detección de cambios múltiples veces para asegurar actualización
       this.cdr.detectChanges();
       
-      // Usar setTimeout para asegurar que la vista se actualice completamente
-      setTimeout(() => {
-        this.cdr.detectChanges();
-      }, 0);
+      // Solo usar setTimeout en el navegador
+      if (isPlatformBrowser(this.platformId)) {
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 0);
+      }
     });
   }
 
@@ -668,13 +686,6 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     
     const esMixto = !todosSonEspecificos && !todosSonTodas;
     
-    console.log('=== ANÁLISIS DE FILTROS ===');
-    console.log('Filtros aplicados:', this.filtrosMultiples);
-    console.log('Todos específicos:', todosSonEspecificos);
-    console.log('Todos TODAS:', todosSonTodas);
-    console.log('Es mixto:', esMixto);
-    console.log('Total registros:', this.preguntasRespuestas.length);
-    
     if (todosSonEspecificos) {
       // CASO 1: Filtros específicos - contar personas únicas
       this.generarTablaFiltrosEspecificos();
@@ -698,18 +709,9 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
         encuestaIdsUnicos.add(encuestaId);
       }
       
-      if (index < 3) {
-        console.log(`[ESPECÍFICOS] Registro ${index + 1}:`, {
-          encuestaId: encuestaId,
-          categoria: pr.categoria,
-          pregunta: pr.pregunta,
-          respuesta: pr.respuesta
-        });
-      }
     });
     
     const totalPersonasUnicas = encuestaIdsUnicos.size;
-    console.log('Personas únicas encontradas:', totalPersonasUnicas);
     
     const filtrosDescripcion = this.filtrosMultiples.map(f => 
       `${f.categoria} > ${f.pregunta}: ${f.respuesta}`
@@ -727,7 +729,6 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
 
   generarTablaMixto() {
     // CASO 3: Mixto - mostrar desglose solo de los filtros que tienen "TODAS"
-    console.log('[MIXTO] Generando desglose solo de filtros con TODAS');
     
     // Identificar qué filtros tienen "TODAS" y cuáles son específicos
     const filtrosConTodas = this.filtrosMultiples.filter(f => 
@@ -737,9 +738,6 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     const filtrosEspecificos = this.filtrosMultiples.filter(f => 
       f.categoria !== 'TODAS' && f.pregunta !== 'TODAS' && f.respuesta !== 'TODAS'
     );
-    
-    console.log('[MIXTO] Filtros con TODAS:', filtrosConTodas);
-    console.log('[MIXTO] Filtros específicos:', filtrosEspecificos);
     
     // Filtrar datos para mostrar solo las respuestas que corresponden a los filtros "TODAS"
     const datosParaDesglose = this.preguntasRespuestas.filter(pr => {
@@ -753,9 +751,6 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
         return categoriaMatch && preguntaMatch && respuestaMatch;
       });
     });
-    
-    console.log('[MIXTO] Datos filtrados para desglose:', datosParaDesglose.length);
-    console.log('[MIXTO] Ejemplos de datos para desglose:', datosParaDesglose.slice(0, 3));
     
     // Agrupar por tipo de respuesta (solo los datos filtrados)
     const resumenPorRespuesta: { [key: string]: any } = {};
@@ -775,13 +770,6 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
       resumenPorRespuesta[respuesta].categorias.add(pr.categoria || '-');
       resumenPorRespuesta[respuesta].preguntas.add(pr.pregunta || '-');
       
-      if (index < 3) {
-        console.log(`[MIXTO] Registro procesado ${index + 1}:`, {
-          categoria: pr.categoria,
-          pregunta: pr.pregunta,
-          respuesta: pr.respuesta
-        });
-      }
     });
 
     const total = datosParaDesglose.length;
@@ -795,7 +783,6 @@ export class EstadisticasComponent implements OnInit, AfterViewInit {
     })).sort((a, b) => b.cantidad - a.cantidad)
       .map((item, index) => ({ ...item, ranking: index + 1 }));
     
-    console.log('[MIXTO] Desglose final generado:', this.datosTabla);
   }
 
   generarTablaComportamientoNormal() {

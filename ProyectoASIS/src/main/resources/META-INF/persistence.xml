@@ -24,9 +24,9 @@
         
         <properties>
             <property name="hibernate.connection.driver_class" value="com.mysql.cj.jdbc.Driver" />
-            <property name="hibernate.connection.url" value="jdbc:mysql://127.0.0.1:3306/jyaa" />
-            <property name="hibernate.connection.username" value="root" />
-			<property name="hibernate.connection.password" value="password"/>
+            <property name="hibernate.connection.url" value="jdbc:mysql://mysql.java.linti.unlp.edu.ar:3306/jyaa2025_bd4" />
+            <property name="hibernate.connection.username" value="jyaa2025_usr4" />
+			<property name="hibernate.connection.password" value="jyaa2025_pwd4"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.hbm2ddl.auto" value="update" />

@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { isPlatformBrowser, DOCUMENT } from '@angular/common';
 
 @Component({
   selector: 'app-header',
@@ -11,19 +12,30 @@ import { CommonModule } from '@angular/common';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
 
-  constructor(private router: Router, private elementRef: ElementRef) {}
+  constructor(
+    private router: Router, 
+    private elementRef: ElementRef,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(DOCUMENT) private document: Document
+  ) {}
 
   ngOnInit() {
-    // Agregar listener para el evento scroll
-    window.addEventListener('scroll', this.onScroll.bind(this));
+    // Solo agregar listener si estamos en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      window.addEventListener('scroll', this.onScroll.bind(this));
+    }
   }
 
   ngOnDestroy() {
-    // Limpiar el listener cuando el componente se destruya
-    window.removeEventListener('scroll', this.onScroll.bind(this));
+    // Solo remover listener si estamos en el navegador
+    if (isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('scroll', this.onScroll.bind(this));
+    }
   }
 
   private onScroll() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    
     const header = this.elementRef.nativeElement.querySelector('header');
     if (header) {
       if (window.scrollY > 50) {
@@ -43,7 +55,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   scrollToSection(sectionId: string) {
-    const element = document.getElementById(sectionId);
+    if (!isPlatformBrowser(this.platformId)) return;
+    
+    const element = this.document.getElementById(sectionId);
     if (element) {
       // Ajustar el offset para compensar el header fijo
       const headerHeight = 80; // Altura aproximada del header
