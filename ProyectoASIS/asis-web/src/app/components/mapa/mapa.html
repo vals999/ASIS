@@ -44,12 +44,26 @@
           </div>
         }
       </div>
+      
+      <!-- Mensaje informativo sobre encuestas sin coordenadas -->
+      @if (encuestasSinCoordenadas() > 0) {
+        <div class="alert alert-warning mx-3 mb-0" role="alert">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill me-2" style="color: #856404;"></i>
+            <div class="small">
+              <strong>Información:</strong> 
+              {{ encuestasSinCoordenadas() }} de {{ totalEncuestasFiltradas() }} encuestas filtradas no tienen coordenadas disponibles y no se muestran en el mapa.
+            </div>
+          </div>
+        </div>
+      }
+      
       <div class="flex-fill">
         <div id="map" class="map-display h-100 w-100"></div>
       </div>
     </div>
 
-    <!-- Columna derecha - Controles de carga y preguntas (50% de la pantalla) -->
+    <!-- Columna derecha - Controles de carga y filtros (50% de la pantalla) -->
     <div class="col-6 d-flex flex-column bg-white border-start">
       <div class="p-3 bg-light border-bottom">
         <h4 class="mb-0 d-flex align-items-center">
@@ -59,7 +73,193 @@
       </div>
       <div class="flex-fill overflow-auto panel-control-container">
         <div class="p-3">
+          <!-- Componente de carga de archivos -->
           <app-carga-archivos></app-carga-archivos>
+          
+          <!-- Separador -->
+          <hr class="my-4">
+          
+          <!-- Sección de filtros múltiples -->
+          <div class="filtros-section">
+            <h5 class="mb-3 d-flex align-items-center">
+              <i class="bi bi-funnel me-2" style="color: #1e5a5a;"></i>
+              Filtros de Mapa
+            </h5>
+            
+            <!-- Agregar nuevo filtro -->
+            <div class="card mb-3">
+              <div class="card-header bg-light">
+                <h6 class="mb-0">Agregar Filtro</h6>
+              </div>
+              <div class="card-body">
+                <div class="row g-2 mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold">Categoría</label>
+                    <div class="dropdown-container">
+                      <select 
+                        class="form-select form-select-sm dropdown-fixed-width" 
+                        [(ngModel)]="nuevaCategoria" 
+                        (change)="onCategoriaChange()">
+                        <option value="">Seleccionar...</option>
+                        <option value="TODAS">TODAS</option>
+                        <option *ngFor="let categoria of categorias; trackBy: trackByIndex" 
+                                [value]="categoria" 
+                                [title]="categoria">
+                          {{ categoria }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold">Pregunta</label>
+                    <div class="dropdown-container">
+                      <select 
+                        class="form-select form-select-sm dropdown-fixed-width" 
+                        [(ngModel)]="nuevaPregunta" 
+                        (change)="onPreguntaChange()"
+                        [disabled]="!nuevaCategoria">
+                        <option value="">Seleccionar...</option>
+                        <option value="TODAS">TODAS</option>
+                        <option *ngFor="let pregunta of preguntasPorCategoria; trackBy: trackByIndex" 
+                                [value]="pregunta" 
+                                [title]="pregunta">
+                          {{ pregunta }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold">Respuesta</label>
+                    <div class="dropdown-container">
+                      <select 
+                        class="form-select form-select-sm dropdown-fixed-width" 
+                        [(ngModel)]="nuevaRespuesta"
+                        [disabled]="!nuevaPregunta">
+                        <option value="">Seleccionar...</option>
+                        <option value="TODAS">TODAS</option>
+                        <option *ngFor="let respuesta of respuestasPorPregunta; trackBy: trackByIndex" 
+                                [value]="respuesta" 
+                                [title]="respuesta">
+                          {{ respuesta }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-end">
+                  <button 
+                    type="button" 
+                    class="btn btn-primary btn-sm"
+                    (click)="agregarFiltro()"
+                    [disabled]="!nuevaCategoria || !nuevaPregunta || !nuevaRespuesta">
+                    <i class="bi bi-plus me-1"></i>
+                    Agregar Filtro
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Lista de filtros aplicados -->
+            @if (filtrosMultiples.length > 0) {
+              <div class="card mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Filtros Aplicados ({{ filtrosMultiples.length }})</h6>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-danger btn-sm"
+                    (click)="limpiarTodosFiltros()">
+                    <i class="bi bi-trash me-1"></i>
+                    Limpiar Todos
+                  </button>
+                </div>
+                <div class="card-body p-2">
+                  <div class="filtros-list">
+                    <div 
+                      *ngFor="let filtro of filtrosMultiples; let i = index; trackBy: trackByIndex" 
+                      class="filtro-item d-flex justify-content-between align-items-center p-2 mb-1 border rounded">
+                      <div class="filtro-texto">
+                        <small class="text-muted">{{ filtro.categoria }}</small>
+                        <br>
+                        <strong class="small">{{ filtro.pregunta }}</strong>
+                        <br>
+                        <span class="badge bg-info">{{ filtro.respuesta }}</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        class="btn btn-outline-danger btn-sm"
+                        (click)="eliminarFiltro(i)"
+                        title="Eliminar filtro">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+            
+            <!-- Filtro de edad (igual que en estadísticas) -->
+            <div class="card mb-3">
+              <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Filtro por Edad</h6>
+                @if (filtros.edadDesde || filtros.edadHasta) {
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="limpiarRangoEdad()"
+                    title="Limpiar rango de edad">
+                    <i class="bi bi-x me-1"></i>
+                    Limpiar
+                  </button>
+                }
+              </div>
+              <div class="card-body">
+                <div class="row g-2">
+                  <div class="col-6">
+                    <label class="form-label small fw-bold">Edad mínima</label>
+                    <input 
+                      type="number" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="filtros.edadDesde"
+                      placeholder="Ej: 18"
+                      min="0" 
+                      max="120">
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small fw-bold">Edad máxima</label>
+                    <input 
+                      type="number" 
+                      class="form-control form-control-sm" 
+                      [(ngModel)]="filtros.edadHasta"
+                      placeholder="Ej: 65"
+                      min="0" 
+                      max="120">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Botón aplicar filtros -->
+            @if (tieneAlgunFiltroActivo()) {
+              <div class="d-grid">
+                <button 
+                  type="button" 
+                  class="btn btn-success"
+                  (click)="aplicarFiltros()"
+                  [disabled]="cargandoFiltros">
+                  @if (cargandoFiltros) {
+                    <span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>
+                    Cargando...
+                  } @else {
+                    <i class="bi bi-map me-2"></i>
+                    Aplicar Filtros al Mapa
+                  }
+                </button>
+              </div>
+            }
+          </div>
         </div>
       </div>
     </div>

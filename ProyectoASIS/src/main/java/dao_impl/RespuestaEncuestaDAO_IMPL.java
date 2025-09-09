@@ -36,20 +36,6 @@ public class RespuestaEncuestaDAO_IMPL extends GenericDAO_IMPL<RespuestaEncuesta
 	}
 
 	@Override
-	public List<RespuestaEncuesta> obtenerRespuestasPorPreguntaYValor(String preguntaCodigo, String valor) {
-		String jpql = "SELECT r FROM RespuestaEncuesta r " +
-					  "INNER JOIN r.preguntaEncuesta p " +
-					  "WHERE p.preguntaCsv = :preguntaCodigo " +
-					  "AND r.valor = :valor " +
-					  "AND r.fechaEliminacion IS NULL";
-		
-		Query query = em.createQuery(jpql, RespuestaEncuesta.class);
-		query.setParameter("preguntaCodigo", preguntaCodigo);
-		query.setParameter("valor", valor);
-		return query.getResultList();
-	}
-
-	@Override
 	public List<RespuestaEncuesta> obtenerRespuestasPorPreguntaCodigo(String preguntaCodigo) {
 		String jpql = "SELECT r FROM RespuestaEncuesta r " +
 					  "INNER JOIN r.preguntaEncuesta p " +

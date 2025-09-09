@@ -3,10 +3,13 @@ package controller;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.ArrayList;
 
 import dao_interfaces.I_RespuestaEncuestaDAO;
+import dao_interfaces.I_EncuestaDAO;
 import dto.CoordenadaMapaDTO;
 import dto.RespuestaEncuestaDTO;
 import dto.DTOMapper;
@@ -18,6 +21,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import model.RespuestaEncuesta;
+import model.Encuesta;
 import dto.PreguntaRespuestaCategoriaDTO;
 
 @Path("/respuestas-encuesta")
@@ -269,6 +273,9 @@ public class RespuestaEncuestaController {
 
     @Inject
     private I_RespuestaEncuestaDAO respuestaEncuestaDAO;
+    
+    @Inject
+    private I_EncuestaDAO encuestaDAO;
 
     @GET
     @Path("/preguntas-respuestas-categoria")
@@ -326,108 +333,131 @@ public class RespuestaEncuestaController {
     @Path("/coordenadas-mapa")
     public Response obtenerCoordenadasParaMapa() {
         try {
-            List<RespuestaEncuesta> respuestas = respuestaEncuestaDAO.obtenerNoBorrados();
+            // Obtener todas las respuestas de coordenadas (estas están en las encuestas de vivienda)
+            List<RespuestaEncuesta> latitudes = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaCodigo("lat_1_Presione_actualiza");
+            List<RespuestaEncuesta> longitudes = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaCodigo("long_1_Presione_actualiza");
             
-            // Filtrar solo las respuestas de preguntas 1 y 2 (latitud y longitud)
-            List<RespuestaEncuesta> respuestasCoordenas = respuestas.stream()
-                .filter(r -> r.getPregunta() != null && 
-                           (r.getPregunta().getId() == 1 || r.getPregunta().getId() == 2))
-                .collect(Collectors.toList());
+            System.out.println("Coordenadas de viviendas - Latitudes: " + latitudes.size() + ", Longitudes: " + longitudes.size());
             
-            // Separar latitudes y longitudes
-            List<RespuestaEncuesta> latitudes = respuestasCoordenas.stream()
-                .filter(r -> r.getPregunta().getId() == 1)
-                .sorted((a, b) -> a.getId().compareTo(b.getId())) // Ordenar por ID
-                .collect(Collectors.toList());
+            // Agrupar coordenadas por encuestaId de vivienda
+            Map<Long, RespuestaEncuesta> latitudesPorEncuesta = latitudes.stream()
+                .collect(Collectors.toMap(
+                    r -> r.getEncuesta().getId(),
+                    r -> r,
+                    (existing, replacement) -> existing
+                ));
+            
+            Map<Long, RespuestaEncuesta> longitudesPorEncuesta = longitudes.stream()
+                .collect(Collectors.toMap(
+                    r -> r.getEncuesta().getId(),
+                    r -> r,
+                    (existing, replacement) -> existing
+                ));
+            
+            // Obtener todas las encuestas para mapear personas a viviendas
+            List<Encuesta> todasLasEncuestas = encuestaDAO.obtenerNoBorrados();
+            System.out.println("Total de encuestas encontradas: " + todasLasEncuestas.size());
+            
+            // Crear mapeo de vivienda a coordenadas
+            Map<String, CoordenadaMapaDTO> coordenadasPorVivienda = new HashMap<>();
+            
+            // Procesar cada encuesta de vivienda que tiene coordenadas
+            for (Long encuestaViviendaId : latitudesPorEncuesta.keySet()) {
+                if (longitudesPorEncuesta.containsKey(encuestaViviendaId)) {
+                    try {
+                        RespuestaEncuesta respuestaLatitud = latitudesPorEncuesta.get(encuestaViviendaId);
+                        RespuestaEncuesta respuestaLongitud = longitudesPorEncuesta.get(encuestaViviendaId);
+                        
+                        String latitudStr = respuestaLatitud.getValor();
+                        String longitudStr = respuestaLongitud.getValor();
+                        
+                        Double latitud = Double.parseDouble(latitudStr);
+                        Double longitud = Double.parseDouble(longitudStr);
+                        
+                        if (latitud >= -90 && latitud <= 90 && longitud >= -180 && longitud <= 180) {
+                            // Extraer el ID de vivienda del idExterno
+                            Encuesta encuestaVivienda = respuestaLatitud.getEncuesta();
+                            String idExterno = encuestaVivienda.getIdExterno();
+                            
+                            // El idExterno podría ser "viviendaX_persona_Y", extraer solo "viviendaX"
+                            String idVivienda = idExterno;
+                            if (idExterno.contains("_persona_")) {
+                                idVivienda = idExterno.split("_persona_")[0];
+                            }
+                            
+                            CoordenadaMapaDTO coordenada = new CoordenadaMapaDTO(
+                                encuestaViviendaId,
+                                respuestaLatitud.getId(),
+                                latitud + "," + longitud,
+                                1L,
+                                "Vivienda " + idVivienda
+                            );
+                            
+                            coordenadasPorVivienda.put(idVivienda, coordenada);
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Error parseando coordenadas para encuesta " + encuestaViviendaId + ": " + e.getMessage());
+                    }
+                }
+            }
+            
+            System.out.println("Coordenadas mapeadas por vivienda: " + coordenadasPorVivienda.size());
+            
+            // Ahora crear coordenadas para TODAS las encuestas (incluidas las de personas)
+            List<CoordenadaMapaDTO> todasLasCoordenadas = new ArrayList<>();
+            
+            for (Encuesta encuesta : todasLasEncuestas) {
+                String idExterno = encuesta.getIdExterno();
+                if (idExterno == null) continue;
                 
-            List<RespuestaEncuesta> longitudes = respuestasCoordenas.stream()
-                .filter(r -> r.getPregunta().getId() == 2)
-                .sorted((a, b) -> a.getId().compareTo(b.getId())) // Ordenar por ID
-                .collect(Collectors.toList());
-            
-            // Crear coordenadas válidas emparejando secuencialmente
-            List<CoordenadaMapaDTO> coordenadasCompletas = new ArrayList<>();
-            
-            // Emparejar secuencialmente: latitud[i] con longitud[i]
-            int minSize = Math.min(latitudes.size(), longitudes.size());
-            
-            for (int i = 0; i < minSize; i++) {
-                try {
-                    RespuestaEncuesta respuestaLatitud = latitudes.get(i);
-                    RespuestaEncuesta respuestaLongitud = longitudes.get(i);
+                // DEBUG específico para encuesta 456
+                if (encuesta.getId() == 456) {
+                    System.out.println("DEBUG ENCUESTA 456:");
+                    System.out.println("  ID: " + encuesta.getId());
+                    System.out.println("  ID Externo: " + idExterno);
+                }
+                
+                // Extraer el ID de vivienda
+                String idVivienda = idExterno;
+                if (idExterno.contains("_persona_")) {
+                    idVivienda = idExterno.split("_persona_")[0];
                     
-                    String latitudStr = respuestaLatitud.getValor();
-                    String longitudStr = respuestaLongitud.getValor();
-                    
-                    Double latitud = Double.parseDouble(latitudStr);
-                    Double longitud = Double.parseDouble(longitudStr);
-                    
-                    // Validar rango de coordenadas
-                    if (latitud >= -90 && latitud <= 90 && longitud >= -180 && longitud <= 180) {
-                        CoordenadaMapaDTO coordenada = new CoordenadaMapaDTO(
-                            (long) (i + 1), // ID único secuencial
-                            respuestaLatitud.getId(), // ID de respuesta de latitud
-                            latitud + "," + longitud,
-                            1L, // ID de pregunta de latitud
-                            "Ubicación " + (i + 1)
-                        );
-                        coordenadasCompletas.add(coordenada);
+                    if (encuesta.getId() == 456) {
+                        System.out.println("  Es persona, ID Vivienda extraído: " + idVivienda);
                     }
-                } catch (NumberFormatException e) {
-                    // Ignorar coordenadas con formato inválido
+                }
+                
+                // Si esta vivienda tiene coordenadas, asignarlas a esta encuesta
+                if (coordenadasPorVivienda.containsKey(idVivienda)) {
+                    CoordenadaMapaDTO coordenadaVivienda = coordenadasPorVivienda.get(idVivienda);
+                    
+                    if (encuesta.getId() == 456) {
+                        System.out.println("  ENCONTRADA coordenada para vivienda " + idVivienda);
+                        System.out.println("  Coordenada: " + coordenadaVivienda.getValor());
+                    }
+                    
+                    // Crear nueva coordenada para esta encuesta específica
+                    CoordenadaMapaDTO coordenadaEncuesta = new CoordenadaMapaDTO(
+                        encuesta.getId(), // ID de la encuesta (persona o vivienda)
+                        coordenadaVivienda.getRespuestaId(),
+                        coordenadaVivienda.getValor(),
+                        coordenadaVivienda.getPreguntaId(),
+                        "Encuesta " + encuesta.getId() + " (Vivienda " + idVivienda + ")"
+                    );
+                    
+                    todasLasCoordenadas.add(coordenadaEncuesta);
+                } else {
+                    if (encuesta.getId() == 456) {
+                        System.out.println("  NO se encontró coordenada para vivienda " + idVivienda);
+                        System.out.println("  Viviendas con coordenadas disponibles: " + coordenadasPorVivienda.keySet().stream().limit(10).toList());
+                    }
                 }
             }
             
-            return Response.ok(coordenadasCompletas).build();
+            System.out.println("Coordenadas totales asignadas a todas las encuestas: " + todasLasCoordenadas.size());
             
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Response.status(Status.INTERNAL_SERVER_ERROR)
-                    .entity("Error: " + e.getMessage()).build();
-        }
-    }
-
-    @GET
-    @Path("/coordenadas-filtradas")
-    public Response obtenerCoordenadasFiltradas(@QueryParam("preguntaCodigo") String preguntaCodigo, 
-                                               @QueryParam("respuestaValor") String respuestaValor) {
-        try {
-            // Obtener respuestas que coincidan con la pregunta y valor específicos
-            List<RespuestaEncuesta> respuestasFiltradas = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaYValor(preguntaCodigo, respuestaValor);
+            return Response.ok(todasLasCoordenadas).build();
             
-            // Obtener todas las respuestas de latitud y longitud
-            List<RespuestaEncuesta> todasLatitudes = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaCodigo("lat_1_Presione_actualiza");
-            List<RespuestaEncuesta> todasLongitudes = respuestaEncuestaDAO.obtenerRespuestasPorPreguntaCodigo("long_1_Presione_actualiza");
-            
-            List<CoordenadaMapaDTO> coordenadasFiltradas = new ArrayList<>();
-            
-            // Crear un índice simple basado en las respuestas filtradas
-            // Asumiendo que las respuestas están en el mismo orden que las coordenadas
-            for (int i = 0; i < respuestasFiltradas.size() && i < todasLatitudes.size() && i < todasLongitudes.size(); i++) {
-                try {
-                    RespuestaEncuesta latitud = todasLatitudes.get(i);
-                    RespuestaEncuesta longitud = todasLongitudes.get(i);
-                    
-                    Double lat = Double.parseDouble(latitud.getValor());
-                    Double lng = Double.parseDouble(longitud.getValor());
-                    
-                    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                        CoordenadaMapaDTO coordenada = new CoordenadaMapaDTO(
-                            (long)(i + 1), // ID secuencial
-                            latitud.getId(),
-                            lat + "," + lng,
-                            1L,
-                            "Filtro: " + respuestaValor
-                        );
-                        coordenadasFiltradas.add(coordenada);
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("Error al parsear coordenadas en índice " + i);
-                }
-            }
-            
-            System.out.println("Coordenadas válidas encontradas: " + coordenadasFiltradas.size());
-            return Response.ok(coordenadasFiltradas).build();
         } catch (Exception e) {
             e.printStackTrace();
             return Response.status(Status.INTERNAL_SERVER_ERROR)

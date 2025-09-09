@@ -1,6 +1,8 @@
-import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID, OnDestroy, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MapaService, Coordenada } from '../../services/mapa.service';
+import { EstadisticasService, FiltroMultiple, Filtros } from '../../services/estadisticas.service';
 import { CargaArchivosComponent } from '../carga-archivos/carga-archivos';
 import { EventService } from '../../services/event.service';
 import { Subscription } from 'rxjs';
@@ -8,7 +10,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-mapa',
   standalone: true,
-  imports: [CommonModule, CargaArchivosComponent],
+  imports: [CommonModule, FormsModule, CargaArchivosComponent],
   templateUrl: './mapa.html',
   styleUrl: './mapa.css'
 })
@@ -19,7 +21,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   public cargandoDatos = false;
   private csvUploadSubscription?: Subscription;
   private showMapSubscription?: Subscription;
-  private showFilteredMapSubscription?: Subscription;
   private markersGroup: any;
   private markerClusterGroup: any;
   private heatmapLayer: any;
@@ -31,16 +32,43 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   // Signal para controlar el tipo de marcador (pines, clusters o heatmap)
   public tipoMarcador = signal<'pines' | 'clusters' | 'heatmap'>('pines');
 
+  // === FILTROS MÚLTIPLES (igual que en estadísticas) ===
+  public filtros: Filtros = {};
+  public filtrosMultiples: FiltroMultiple[] = [];
+  
+  // Datos para dropdowns
+  public categorias: string[] = [];
+  public preguntasPorCategoria: string[] = [];
+  public respuestasPorPregunta: string[] = [];
+  public todasLasRespuestas: any[] = [];
+  
+  // Campos para nuevo filtro
+  public nuevaCategoria: string = '';
+  public nuevaPregunta: string = '';
+  public nuevaRespuesta: string = '';
+  
+  // Estado de carga
+  public cargandoFiltros = false;
+
+  // Información sobre encuestas sin coordenadas
+  public encuestasSinCoordenadas = signal<number>(0);
+  public totalEncuestasFiltradas = signal<number>(0);
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private mapaService: MapaService,
-    private eventService: EventService
+    private estadisticasService: EstadisticasService,
+    private eventService: EventService,
+    private cdr: ChangeDetectorRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   ngOnInit(): void {
     if (this.isBrowser) {
+      // Cargar todas las categorías al inicializar
+      this.cargarTodasLasCategorias();
+      
       // Verificar si ya existen datos al cargar el componente
       this.verificarDatosExistentes();
       
@@ -49,18 +77,14 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log('CSV cargado, esperando instrucción para mostrar mapa...');
         this.csvCargado = true;
         this.datosDisponibles.set(true);
+        // Recargar categorías después de cargar CSV
+        this.cargarTodasLasCategorias();
       });
 
       // Suscribirse al evento para mostrar el mapa
       this.showMapSubscription = this.eventService.showMap$.subscribe(() => {
         console.log('Solicitado mostrar coordenadas en el mapa...');
         this.cargarYMostrarCoordenadas();
-      });
-
-      // Suscribirse al evento para mostrar coordenadas filtradas
-      this.showFilteredMapSubscription = this.eventService.showFilteredMap$.subscribe((filtro) => {
-        console.log(`Solicitado mostrar coordenadas filtradas - Pregunta: ${filtro.preguntaCodigo}, Respuesta: ${filtro.respuestaValor}`);
-        this.cargarYMostrarCoordenadasFiltradas(filtro.preguntaCodigo, filtro.respuestaValor);
       });
     }
   }
@@ -77,9 +101,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.showMapSubscription) {
       this.showMapSubscription.unsubscribe();
-    }
-    if (this.showFilteredMapSubscription) {
-      this.showFilteredMapSubscription.unsubscribe();
     }
   }
 
@@ -127,6 +148,11 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (coordenadasDTO) => {
         this.coordenadas = this.mapaService.procesarCoordenadas(coordenadasDTO);
         console.log('Coordenadas procesadas:', this.coordenadas);
+        
+        // Resetear información de filtros cuando se cargan todas las coordenadas
+        this.totalEncuestasFiltradas.set(0);
+        this.encuestasSinCoordenadas.set(0);
+        
         this.cargandoDatos = false;
         
         // Si el mapa ya está inicializado, agregar los marcadores
@@ -136,26 +162,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error al cargar coordenadas:', error);
-        this.cargandoDatos = false;
-      }
-    });
-  }
-
-  private cargarYMostrarCoordenadasFiltradas(preguntaCodigo: string, respuestaValor: string): void {
-    this.cargandoDatos = true;
-    this.mapaService.obtenerCoordenadasFiltradas(preguntaCodigo, respuestaValor).subscribe({
-      next: (coordenadasDTO) => {
-        this.coordenadas = this.mapaService.procesarCoordenadas(coordenadasDTO);
-        console.log('Coordenadas filtradas procesadas:', this.coordenadas);
-        this.cargandoDatos = false;
-        
-        // Si el mapa ya está inicializado, agregar los marcadores filtrados
-        if (this.map) {
-          this.agregarMarcadoresFiltrados(respuestaValor);
-        }
-      },
-      error: (error) => {
-        console.error('Error al cargar coordenadas filtradas:', error);
         this.cargandoDatos = false;
       }
     });
@@ -258,7 +264,10 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async agregarMarcadores(): Promise<void> {
-    if (!this.map || this.coordenadas.length === 0) return;
+    if (!this.map || this.coordenadas.length === 0) {
+      console.log('Sin coordenadas para mostrar en el mapa');
+      return;
+    }
 
     // Limpiar marcadores existentes ANTES de agregar nuevos
     this.limpiarMarcadores();
@@ -286,21 +295,59 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     // Crear un nuevo grupo de marcadores normal
     this.markersGroup = L.layerGroup().addTo(this.map);
 
+    // Agrupar coordenadas por ubicación exacta para aplicar jitter
+    const coordenadasPorUbicacion = new Map<string, any[]>();
+    
     this.coordenadas.forEach(coordenada => {
       if (this.validarCoordenadas(coordenada.latitud, coordenada.longitud)) {
-        const marker = L.marker([coordenada.latitud, coordenada.longitud])
-          .bindPopup(`
-            <div>
-              <strong>Encuesta ID:</strong> ${coordenada.encuestaId}<br>
-              <strong>Latitud:</strong> ${coordenada.latitud}<br>
-              <strong>Longitud:</strong> ${coordenada.longitud}
-            </div>
-          `);
-        
-        this.markersGroup.addLayer(marker);
+        const key = `${coordenada.latitud.toFixed(6)},${coordenada.longitud.toFixed(6)}`;
+        if (!coordenadasPorUbicacion.has(key)) {
+          coordenadasPorUbicacion.set(key, []);
+        }
+        coordenadasPorUbicacion.get(key)!.push(coordenada);
       }
     });
 
+    // Agregar jitter (dispersión) a coordenadas duplicadas y crear marcadores
+    let marcadoresAgregados = 0;
+    coordenadasPorUbicacion.forEach((encuestas, ubicacion) => {
+      const [lat, lng] = ubicacion.split(',').map(Number);
+      
+      if (encuestas.length === 1) {
+        // Marcador único - sin jitter
+        const marker = L.marker([lat, lng])
+          .bindPopup(`
+            <div>
+              <strong>Encuesta ID:</strong> ${encuestas[0].encuestaId}<br>
+              <strong>Latitud:</strong> ${lat.toFixed(6)}<br>
+              <strong>Longitud:</strong> ${lng.toFixed(6)}
+            </div>
+          `);
+        this.markersGroup.addLayer(marker);
+        marcadoresAgregados++;
+      } else {
+        // Múltiples encuestas en la misma ubicación - aplicar jitter
+        encuestas.forEach((encuesta, index) => {
+          const jitterRange = 0.0001; // Aproximadamente 11 metros
+          const jitterLat = lat + (Math.random() - 0.5) * jitterRange;
+          const jitterLng = lng + (Math.random() - 0.5) * jitterRange;
+          
+          const marker = L.marker([jitterLat, jitterLng])
+            .bindPopup(`
+              <div>
+                <strong>Encuesta ID:</strong> ${encuesta.encuestaId}<br>
+                <strong>Ubicación:</strong> ${encuestas.length} encuesta(s) en esta área<br>
+                <strong>Latitud original:</strong> ${lat.toFixed(6)}<br>
+                <strong>Longitud original:</strong> ${lng.toFixed(6)}
+              </div>
+            `);
+          this.markersGroup.addLayer(marker);
+          marcadoresAgregados++;
+        });
+      }
+    });
+
+    console.log(`${marcadoresAgregados} marcadores agregados al mapa`);
     this.ajustarVistaAMarcadores();
   }
 
@@ -364,6 +411,7 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.markerClusterGroup.addTo(this.map);
 
+    let marcadoresAgregados = 0;
     this.coordenadas.forEach(coordenada => {
       if (this.validarCoordenadas(coordenada.latitud, coordenada.longitud)) {
         const marker = L.marker([coordenada.latitud, coordenada.longitud])
@@ -376,9 +424,11 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
           `);
         
         this.markerClusterGroup.addLayer(marker);
+        marcadoresAgregados++;
       }
     });
 
+    console.log(`${marcadoresAgregados} clusters agregados al mapa`);
     this.ajustarVistaAMarcadores();
   }
 
@@ -417,7 +467,10 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }).addTo(this.map);
       
+      console.log(`Heatmap con ${heatmapData.length} puntos agregado al mapa`);
       this.ajustarVistaAMarcadores();
+    } else {
+      console.log('No hay datos válidos para el heatmap');
     }
   }
 
@@ -485,22 +538,61 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     
     this.markersGroup = L.layerGroup().addTo(this.map);
 
+    // Agrupar coordenadas por ubicación exacta para aplicar jitter
+    const coordenadasPorUbicacion = new Map<string, any[]>();
+    
     this.coordenadas.forEach(coordenada => {
       if (this.validarCoordenadas(coordenada.latitud, coordenada.longitud)) {
-        const marker = L.marker([coordenada.latitud, coordenada.longitud])
-          .bindPopup(`
-            <div>
-              <strong>Encuesta ID:</strong> ${coordenada.encuestaId}<br>
-              <strong>Respuesta:</strong> ${respuestaValor}<br>
-              <strong>Latitud:</strong> ${coordenada.latitud}<br>
-              <strong>Longitud:</strong> ${coordenada.longitud}
-            </div>
-          `);
-        
-        this.markersGroup.addLayer(marker);
+        const key = `${coordenada.latitud.toFixed(6)},${coordenada.longitud.toFixed(6)}`;
+        if (!coordenadasPorUbicacion.has(key)) {
+          coordenadasPorUbicacion.set(key, []);
+        }
+        coordenadasPorUbicacion.get(key)!.push(coordenada);
       }
     });
 
+    // Agregar jitter (dispersión) a coordenadas duplicadas y crear marcadores
+    let marcadoresAgregados = 0;
+    coordenadasPorUbicacion.forEach((encuestas, ubicacion) => {
+      const [lat, lng] = ubicacion.split(',').map(Number);
+      
+      if (encuestas.length === 1) {
+        // Marcador único - sin jitter
+        const marker = L.marker([lat, lng])
+          .bindPopup(`
+            <div>
+              <strong>Encuesta ID:</strong> ${encuestas[0].encuestaId}<br>
+              <strong>Respuesta:</strong> ${respuestaValor}<br>
+              <strong>Latitud:</strong> ${lat.toFixed(6)}<br>
+              <strong>Longitud:</strong> ${lng.toFixed(6)}
+            </div>
+          `);
+        this.markersGroup.addLayer(marker);
+        marcadoresAgregados++;
+      } else {
+        // Múltiples encuestas en la misma ubicación - aplicar jitter
+        encuestas.forEach((encuesta, index) => {
+          const jitterRange = 0.0001; // Aproximadamente 11 metros
+          const jitterLat = lat + (Math.random() - 0.5) * jitterRange;
+          const jitterLng = lng + (Math.random() - 0.5) * jitterRange;
+          
+          const marker = L.marker([jitterLat, jitterLng])
+            .bindPopup(`
+              <div>
+                <strong>Encuesta ID:</strong> ${encuesta.encuestaId}<br>
+                <strong>Respuesta:</strong> ${respuestaValor}<br>
+                <strong>Ubicación:</strong> ${encuestas.length} encuesta(s) en esta área<br>
+                <strong>Latitud original:</strong> ${lat.toFixed(6)}<br>
+                <strong>Longitud original:</strong> ${lng.toFixed(6)}
+              </div>
+            `);
+          this.markersGroup.addLayer(marker);
+          marcadoresAgregados++;
+        });
+      }
+    });
+
+    console.log(`${marcadoresAgregados} marcadores filtrados agregados al mapa`);
     this.ajustarVistaAMarcadores();
   }
 
@@ -627,5 +719,328 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private validarCoordenadas(lat: number, lng: number): boolean {
     return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  }
+
+  // === MÉTODOS DE FILTROS MÚLTIPLES (copiados de estadísticas) ===
+
+  cargarTodasLasCategorias() {
+    this.estadisticasService.filtrarPreguntasRespuestas({}).subscribe(data => {
+      this.categorias = Array.from(new Set(data.map(pr => pr.categoria).filter(Boolean)));
+      this.todasLasRespuestas = data;
+      
+      // Forzar detección de cambios
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
+    });
+  }
+
+  onCategoriaChange() {
+    if (this.nuevaCategoria) {
+      this.estadisticasService.getPreguntasPorCategoria(this.nuevaCategoria).subscribe(preguntas => {
+        this.preguntasPorCategoria = preguntas;
+        this.nuevaPregunta = '';
+        this.respuestasPorPregunta = [];
+        this.nuevaRespuesta = '';
+        this.cdr.detectChanges();
+      });
+    } else {
+      this.preguntasPorCategoria = [];
+      this.respuestasPorPregunta = [];
+      this.nuevaPregunta = '';
+      this.nuevaRespuesta = '';
+    }
+  }
+
+  onPreguntaChange() {
+    // Cuando cambia la pregunta del nuevo filtro, cargar sus respuestas
+    this.nuevaRespuesta = '';
+    
+    if (this.nuevaPregunta && this.nuevaCategoria) {
+      if (this.nuevaPregunta === 'TODAS') {
+        // Todas las preguntas - mostrar todas las respuestas de la categoría
+        if (this.nuevaCategoria === 'TODAS') {
+          this.respuestasPorPregunta = Array.from(new Set(
+            this.todasLasRespuestas
+              .map(pr => pr.respuesta)
+              .filter(Boolean)
+          ));
+        } else {
+          this.respuestasPorPregunta = Array.from(new Set(
+            this.todasLasRespuestas
+              .filter(pr => pr.categoria === this.nuevaCategoria)
+              .map(pr => pr.respuesta)
+              .filter(Boolean)
+          ));
+        }
+      } else {
+        // Pregunta específica
+        if (this.nuevaCategoria === 'TODAS') {
+          this.respuestasPorPregunta = Array.from(new Set(
+            this.todasLasRespuestas
+              .filter(pr => pr.pregunta === this.nuevaPregunta)
+              .map(pr => pr.respuesta)
+              .filter(Boolean)
+          ));
+        } else {
+          // Categoría específica + Pregunta específica
+          this.respuestasPorPregunta = Array.from(new Set(
+            this.todasLasRespuestas
+              .filter(pr => pr.categoria === this.nuevaCategoria && pr.pregunta === this.nuevaPregunta)
+              .map(pr => pr.respuesta)
+              .filter(Boolean)
+          ));
+        }
+      }
+      this.cdr.detectChanges();
+    } else {
+      this.respuestasPorPregunta = [];
+      this.cdr.detectChanges();
+    }
+  }
+
+  agregarFiltro() {
+    if (this.nuevaCategoria && this.nuevaPregunta && this.nuevaRespuesta) {
+      // Verificar si el filtro ya existe
+      const existe = this.filtrosMultiples.some(f => 
+        f.categoria === this.nuevaCategoria && 
+        f.pregunta === this.nuevaPregunta && 
+        f.respuesta === this.nuevaRespuesta
+      );
+
+      if (!existe) {
+        this.filtrosMultiples.push({
+          categoria: this.nuevaCategoria,
+          pregunta: this.nuevaPregunta,
+          respuesta: this.nuevaRespuesta
+        });
+
+        // Limpiar campos
+        this.nuevaCategoria = '';
+        this.nuevaPregunta = '';
+        this.nuevaRespuesta = '';
+        this.preguntasPorCategoria = [];
+        this.respuestasPorPregunta = [];
+        
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  eliminarFiltro(index: number) {
+    this.filtrosMultiples.splice(index, 1);
+    this.cdr.detectChanges();
+  }
+
+  aplicarFiltros(): void {
+    if (!this.tieneAlgunFiltroActivo()) {
+      return;
+    }
+
+    this.cargandoFiltros = true;
+
+    // Crear filtros para enviar al backend (igual que en estadísticas)
+    const filtrosParaBackend = { ...this.filtros };
+    filtrosParaBackend.filtrosMultiples = this.filtrosMultiples;
+
+    // Usar el servicio de estadísticas para obtener los datos filtrados
+    this.estadisticasService.filtrarPreguntasRespuestas(filtrosParaBackend).subscribe({
+      next: (data) => {
+        console.log('Datos filtrados recibidos para mapa:', data);
+        
+        // Procesar los datos para extraer coordenadas
+        this.procesarDatosFiltrados(data);
+        
+        this.cargandoFiltros = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al aplicar filtros:', error);
+        this.cargandoFiltros = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private procesarDatosFiltrados(data: any[]) {
+    // Extraer encuestaIds únicos según la lógica de estadísticas
+    const hayFiltrosMultiples = this.filtrosMultiples.length > 0;
+    
+    if (!hayFiltrosMultiples) {
+      return;
+    }
+    
+    const todosSonEspecificos = this.filtrosMultiples.every(f => 
+      f.categoria !== 'TODAS' && f.pregunta !== 'TODAS' && f.respuesta !== 'TODAS'
+    );
+    
+    let encuestaIdsUnicos: Set<number>;
+    
+    if (todosSonEspecificos) {
+      // CASO 1: Filtros específicos - obtener encuestaIds únicos
+      encuestaIdsUnicos = new Set();
+      data.forEach(item => {
+        if (item.encuestaId) {
+          encuestaIdsUnicos.add(item.encuestaId);
+        }
+      });
+    } else {
+      // CASO 2 y 3: Mostrar todas las coordenadas de los datos filtrados
+      encuestaIdsUnicos = new Set();
+      data.forEach(item => {
+        if (item.encuestaId) {
+          encuestaIdsUnicos.add(item.encuestaId);
+        }
+      });
+    }
+
+    console.log('EncuestaIds únicos para mostrar en mapa:', Array.from(encuestaIdsUnicos));
+    
+    // Cargar coordenadas solo para estos encuestaIds
+    this.cargarCoordenadasPorEncuestaIds(Array.from(encuestaIdsUnicos));
+  }
+
+  private cargarCoordenadasPorEncuestaIds(encuestaIds: number[]) {
+    console.log('=== ANÁLISIS DE FILTRADO DE COORDENADAS ===');
+    console.log('EncuestaIds solicitados:', encuestaIds.length, encuestaIds.slice(0, 10));
+    
+    // Obtener todas las coordenadas y filtrar por los encuestaIds
+    this.mapaService.obtenerCoordenadasMapa().subscribe({
+      next: (coordenadasDTO) => {
+        console.log('Coordenadas crudas del backend:', coordenadasDTO.length);
+        
+        // Analizar encuestaIds en las coordenadas crudas
+        const encuestaIdsEnCoordenadas = coordenadasDTO.map(c => c.encuestaId);
+        const encuestaIdsUnicos = [...new Set(encuestaIdsEnCoordenadas)];
+        console.log('EncuestaIds únicos en coordenadas crudas:', encuestaIdsUnicos.length, encuestaIdsUnicos.slice(0, 10));
+        
+        const todasLasCoordenadas = this.mapaService.procesarCoordenadas(coordenadasDTO);
+        console.log('Coordenadas procesadas:', todasLasCoordenadas.length);
+        
+        // Analizar encuestaIds en las coordenadas procesadas
+        const encuestaIdsProcesados = todasLasCoordenadas.map(c => c.encuestaId);
+        const encuestaIdsUnicosProcesados = [...new Set(encuestaIdsProcesados)];
+        console.log('EncuestaIds únicos procesados:', encuestaIdsUnicosProcesados.length, encuestaIdsUnicosProcesados.slice(0, 10));
+        
+        // Filtrar solo las coordenadas de las encuestas que nos interesan
+        this.coordenadas = todasLasCoordenadas.filter(coord => 
+          encuestaIds.includes(coord.encuestaId)
+        );
+        
+        // Analizar el match
+        const encuestaIdsEncontrados = this.coordenadas.map(c => c.encuestaId);
+        const encuestaIdsUnicosEncontrados = [...new Set(encuestaIdsEncontrados)];
+        console.log('EncuestaIds que hicieron match:', encuestaIdsUnicosEncontrados.length, encuestaIdsUnicosEncontrados.slice(0, 10));
+        
+        // Verificar qué encuestaIds no se encontraron
+        const noEncontrados = encuestaIds.filter(id => !encuestaIdsUnicosEncontrados.includes(id));
+        console.log('EncuestaIds solicitados pero NO encontrados:', noEncontrados.length, noEncontrados);
+        
+        // Actualizar signals con la información de encuestas sin coordenadas
+        this.totalEncuestasFiltradas.set(encuestaIds.length);
+        this.encuestasSinCoordenadas.set(noEncontrados.length);
+        
+        // Verificar si los no encontrados existen en las coordenadas crudas
+        const noEncontradosEnCrudas = noEncontrados.filter(id => encuestaIdsUnicos.includes(id));
+        console.log('De los no encontrados, cuántos SÍ están en coordenadas crudas:', noEncontradosEnCrudas.length, noEncontradosEnCrudas);
+        
+        console.log(`RESULTADO: ${this.coordenadas.length} coordenadas filtradas de ${todasLasCoordenadas.length} totales`);
+        
+        // DEBUG: Verificar coordenadas duplicadas
+        const coordenadasUnicas = new Map();
+        this.coordenadas.forEach(coord => {
+          const key = `${coord.latitud},${coord.longitud}`;
+          if (coordenadasUnicas.has(key)) {
+            coordenadasUnicas.get(key).push(coord.encuestaId);
+          } else {
+            coordenadasUnicas.set(key, [coord.encuestaId]);
+          }
+        });
+        
+        const ubicacionesDuplicadas = Array.from(coordenadasUnicas.entries()).filter(([key, encuestaIds]) => encuestaIds.length > 1);
+        console.log(`Ubicaciones únicas: ${coordenadasUnicas.size} de ${this.coordenadas.length} coordenadas`);
+        if (ubicacionesDuplicadas.length > 0) {
+          console.log('Ubicaciones con múltiples encuestas:', ubicacionesDuplicadas);
+        }
+        
+        console.log('=== FIN ANÁLISIS ===');
+        
+        // Actualizar el mapa
+        if (this.map) {
+          // Aplicar jitter para coordenadas duplicadas
+          this.aplicarJitterACoordenadasDuplicadas();
+          this.agregarMarcadores();
+        } else {
+          console.error('El mapa no está inicializado');
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar coordenadas filtradas:', error);
+      }
+    });
+  }
+
+  limpiarTodosFiltros() {
+    this.filtrosMultiples = [];
+    this.nuevaCategoria = '';
+    this.nuevaPregunta = '';
+    this.nuevaRespuesta = '';
+    this.preguntasPorCategoria = [];
+    this.respuestasPorPregunta = [];
+    
+    // Recargar todas las coordenadas
+    this.cargarYMostrarCoordenadas();
+    
+    this.cdr.detectChanges();
+  }
+
+  limpiarRangoEdad() {
+    this.filtros.edadDesde = undefined;
+    this.filtros.edadHasta = undefined;
+    
+    if (this.filtrosMultiples.length > 0) {
+      this.aplicarFiltros();
+    }
+    
+    this.cdr.detectChanges();
+  }
+
+  tieneAlgunFiltroActivo(): boolean {
+    return this.filtrosMultiples.length > 0;
+  }
+
+  trackByIndex(index: number, item: any): any {
+    return index;
+  }
+
+  // Aplicar pequeño desplazamiento a coordenadas duplicadas para que sean visibles en el mapa
+  private aplicarJitterACoordenadasDuplicadas(): void {
+    const coordenadasPorUbicacion = new Map<string, any[]>();
+    
+    // Agrupar coordenadas por ubicación
+    this.coordenadas.forEach(coord => {
+      const key = `${coord.latitud},${coord.longitud}`;
+      if (!coordenadasPorUbicacion.has(key)) {
+        coordenadasPorUbicacion.set(key, []);
+      }
+      coordenadasPorUbicacion.get(key)!.push(coord);
+    });
+    
+    // Aplicar jitter solo a ubicaciones con múltiples encuestas
+    coordenadasPorUbicacion.forEach((coords, ubicacion) => {
+      if (coords.length > 1) {
+        coords.forEach((coord, index) => {
+          if (index > 0) { // Mantener la primera sin cambios
+            // Desplazamiento muy pequeño (aproximadamente 5-10 metros)
+            const jitterLat = (Math.random() - 0.5) * 0.0001; // ~11 metros
+            const jitterLng = (Math.random() - 0.5) * 0.0001; // ~11 metros
+            
+            coord.latitud += jitterLat;
+            coord.longitud += jitterLng;
+          }
+        });
+        console.log(`Aplicado jitter a ${coords.length} encuestas en ubicación ${ubicacion}`);
+      }
+    });
   }
 }
