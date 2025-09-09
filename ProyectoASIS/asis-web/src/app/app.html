@@ -47,8 +47,35 @@
               </a>
             </div>
           </div>
+        }
 
-          <!-- Sección Control (Solo Admin) -->
+        <!-- Otros elementos del menú -->
+        @if (authService.currentUser()?.perfil !== 'REFERENTE_ORG_SOCIAL') {
+          <a routerLink="/estadisticas" 
+             routerLinkActive="sidebar-main-btn-active"
+             class="w-100 d-flex align-items-center p-3 btn btn-link text-light sidebar-main-btn mb-2 text-decoration-none">
+            <i class="bi bi-bar-chart me-2"></i>
+            <span>Estadísticas</span>
+          </a>
+        }
+
+        <a routerLink="/reportes" 
+           routerLinkActive="sidebar-main-btn-active"
+           class="w-100 d-flex align-items-center p-3 btn btn-link text-light sidebar-main-btn mb-2 text-decoration-none">
+          <i class="bi bi-file-text me-2"></i>
+          <span>Reportes</span>
+        </a>
+
+        @if (authService.currentUser()?.perfil !== 'REFERENTE_ORG_SOCIAL') {
+          <a routerLink="/mapa" 
+             routerLinkActive="sidebar-main-btn-active"
+             class="w-100 d-flex align-items-center p-3 btn btn-link text-light sidebar-main-btn mb-2 text-decoration-none">
+            <i class="bi bi-geo-alt me-2"></i>
+            <span>Mapa</span>
+          </a>
+        }
+
+        @if (authService.currentUser()?.perfil !== 'REFERENTE_ORG_SOCIAL') {
           <div class="mb-2">
             <button 
               (click)="toggleAbmlMenu()"
@@ -88,33 +115,7 @@
               </a>
             </div>
           </div>
-        }
-
-        <!-- Otros elementos del menú -->
-        @if (authService.currentUser()?.perfil !== 'REFERENTE_ORG_SOCIAL') {
-          <a routerLink="/estadisticas" 
-             routerLinkActive="sidebar-main-btn-active"
-             class="w-100 d-flex align-items-center p-3 btn btn-link text-light sidebar-main-btn mb-2 text-decoration-none">
-            <i class="bi bi-bar-chart me-2"></i>
-            <span>Estadísticas</span>
-          </a>
-        }
-
-        <a routerLink="/reportes" 
-           routerLinkActive="sidebar-main-btn-active"
-           class="w-100 d-flex align-items-center p-3 btn btn-link text-light sidebar-main-btn mb-2 text-decoration-none">
-          <i class="bi bi-file-text me-2"></i>
-          <span>Reportes</span>
-        </a>
-
-        @if (authService.currentUser()?.perfil !== 'REFERENTE_ORG_SOCIAL') {
-          <a routerLink="/mapa" 
-             routerLinkActive="sidebar-main-btn-active"
-             class="w-100 d-flex align-items-center p-3 btn btn-link text-light sidebar-main-btn mb-2 text-decoration-none">
-            <i class="bi bi-geo-alt me-2"></i>
-            <span>Mapa</span>
-          </a>
-        }
+}
       </nav>
 
       <!-- Botón de Perfil y Cerrar Sesión -->
